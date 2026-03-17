@@ -1,5 +1,5 @@
 <template>
-    <lightning-card title="Firearms Qualification – Qual Roster" icon-name="standard:employee">
+    <lightning-card title="Create – Qual Roster" icon-name="standard:employee">
         <!-- Top Filter Bar -->
         <div class="slds-m-around_medium">
             <div class="slds-grid slds-gutters slds-wrap slds-align_absolute-center">
@@ -13,7 +13,7 @@
                         onchange={handleSearchChange}>
                     </lightning-input>
                 </div>
-                <!-- Test Date -->
+                <!-- Test Date (stored on FIR_Form__c.Test_Date__c) -->
                 <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12">
                     <lightning-input
                         type="date"
@@ -22,7 +22,8 @@
                         onchange={handleTestDateChange}>
                     </lightning-input>
                 </div>
-                <!-- Firearm Instructor (Freeform Text) -->
+ 
+                <!-- Firearm Instructor (stored on FIR_Form__c.Firearm_Instructor__c → User lookup) -->
                 <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12">
                     <lightning-input
                         type="text"
@@ -30,6 +31,17 @@
                         placeholder="Enter instructor name..."
                         value={firearmInstructor}
                         onchange={handleInstructorChange}>
+                    </lightning-input>
+                </div>
+ 
+                <!-- Location (stored on FIR_Form__c.Location__c - freeform text) -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-12">
+                    <lightning-input
+                        type="text"
+                        label="Location"
+                        placeholder="Enter location..."
+                        value={location}
+                        onchange={handleLocationChange}>
                     </lightning-input>
                 </div>
             </div>
@@ -42,7 +54,7 @@
             </template>
  
             <template if:false={isLoading}>
-                <template if:true={filteredRecords.length}>
+                <!--template if:true={filteredRecords.length}-->
                     <lightning-datatable
                         key-field="Id"
                         data={filteredRecords}
@@ -52,14 +64,14 @@
                         draft-values={draftValues}
                         onsave={handleSave}>
                     </lightning-datatable>
-                </template>
+                <!--/template-->
  
-                <template if:false={filteredRecords.length}>
+                <!--template if:false={filteredRecords.length}>
                     <div class="slds-illustration slds-illustration_small slds-m-top_large slds-align_absolute-center">
                         <p class="slds-text-heading_medium">No records found.</p>
                         <p class="slds-text-body_regular slds-text-color_weak">Try adjusting your search or filters.</p>
                     </div>
-                </template>
+                </template-->
             </template>
         </div>
 

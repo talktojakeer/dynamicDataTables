@@ -30,3 +30,98 @@
 .error-text{
     color: red;
 }
+/* Wrapper keeps tooltip positioned relative to the ℹ icon */
+.tooltip-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-right: 12px;
+}
+ 
+/* The ℹ icon itself */
+.tooltip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #0176d3;
+    background-color: #0176d3;
+    color: #dbe1e6;
+    font-size: 13px;
+    font-weight: 900;
+    font-style: italic;
+    font-family: Georgia, serif;
+    cursor: pointer;
+    user-select: none;
+    line-height: 1;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+ 
+.tooltip-icon:hover {
+    background-color: #014486;
+    transform: scale(1.1);
+}
+ 
+/* The tooltip bubble */
+.tooltip-box {
+    position: absolute;
+    right: 36px;           /* appears to the LEFT of the icon */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 320px;
+    background-color: #032d60;   /* deep Salesforce navy */
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 16px 18px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    z-index: 9999;
+    font-size: 13px;
+    line-height: 1.6;
+    pointer-events: none;   /* doesn't block mouse events below */
+}
+ 
+/* Small arrow pointing RIGHT toward the icon */
+.tooltip-box::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -10px;
+    transform: translateY(-50%);
+    border-width: 8px 0 8px 10px;
+    border-style: solid;
+    border-color: transparent transparent transparent #032d60;
+}
+ 
+.tooltip-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+    color: #7ec8f7;          /* light blue accent */
+    letter-spacing: 0.3px;
+}
+ 
+.tooltip-list {
+    margin: 0 0 10px 0;
+    padding: 0;
+    list-style: none;
+}
+ 
+.tooltip-list li {
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 13px;
+}
+ 
+.tooltip-list li:last-child {
+    border-bottom: none;
+}
+ 
+.tooltip-note {
+    margin: 8px 0 0 0;
+    font-size: 12px;
+    color: #f4bc25;          /* amber warning color */
+    font-style: italic;
+}
+/* ─────────────────────────────────────────────────────────────────────── */

@@ -50,6 +50,10 @@ export default class RecruitClassNewButton extends LightningElement {
         return this.selectedIdSet.size;
     }
 
+    @track isTooltipVisible = false;
+    showTooltip() { this.isTooltipVisible = true;  }
+    hideTooltip() { this.isTooltipVisible = false; }
+
     isDuplicateRecruitClass= true;
     async handleNameChange(event){        
         this.recruitClassName = event.target.value.toUpperCase();

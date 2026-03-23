@@ -1,5 +1,6 @@
 public with sharing class QualRosterController {
 
+    // ─── 1. Recruit Classes ────────────────────────────────────────────────
     @AuraEnabled(cacheable=true)
     public static List<Account> getRecruitClasses() {
         Id rtId = Schema.SObjectType.Account
@@ -16,6 +17,7 @@ public with sharing class QualRosterController {
         ];
     }
 
+    // ─── 2. Contact Members ────────────────────────────────────────────────
     @AuraEnabled(cacheable=false)
     public static List<FAQP_Members__c> getContactMembers(Id recruitClassId) {
         if (recruitClassId == null) return new List<FAQP_Members__c>();
@@ -36,6 +38,12 @@ public with sharing class QualRosterController {
         ];
     }
 
+    // ─── 3. Add To Roster ──────────────────────────────────────────────────
+    // Per selected member:
+    //   a. FIR_Qualification_Form__c   (Test_Date__c, Location__c, Firearm_Instructor__c)
+    //   b. 3 × Weapon_Qualification__c (Pistol / Shot Gun / Riffle)
+    //      → Qualified__c = true if value is 'Yes'
+    //   c. Update Contact.FIR_Qualification_Form__c 
     @AuraEnabled
     public static Integer addToRoster(
         String   rosterPayload,
@@ -49,6 +57,7 @@ public with sharing class QualRosterController {
 
         if (payloadList == null || payloadList.isEmpty()) return 0;
 
+        // Load FAQP_Members__c
         List<Id> memberIds = new List<Id>();
         for (MemberPayload mp : payloadList) memberIds.add(mp.memberId);
 
@@ -58,6 +67,7 @@ public with sharing class QualRosterController {
             WHERE Id IN :memberIds
         ]);
 
+        // Resolve instructor name → User Id
         Id instructorId = null;
         if (String.isNotBlank(firearmInstructor)) {
             List<User> users = [
@@ -68,6 +78,7 @@ public with sharing class QualRosterController {
             if (!users.isEmpty()) instructorId = users[0].Id;
         }
 
+        // Build aligned lists
         List<MemberPayload> aligned  = new List<MemberPayload>();
         List<FIR_Qualification_Form__c>   firForms = new List<FIR_Qualification_Form__c>();
 
@@ -85,25 +96,28 @@ public with sharing class QualRosterController {
         }
         insert firForms;
 
+        // Build FIR_Weapon_Qualification_Detail__c 
+        // Pistol__c, Shot Gun, Riffle — Qualified__c = Yes means true
         List<FIR_Weapon_Qualification_Detail__c> weapons = new List<FIR_Weapon_Qualification_Detail__c>();
         for (Integer i = 0; i < aligned.size(); i++) {
             MemberPayload mp  = aligned[i];
             Id            fir = firForms[i].Id;
 
+            // Pistol
             weapons.add(new FIR_Weapon_Qualification_Detail__c(
                 FIR_Qualification_Form__c     = fir,
                 Weapon_Type__c        = 'Pistol',
                 Attempt_Date__c = testDate,
                 Qualified__c    = 'Yes'
             ));
-
+            // Shot Gun
             weapons.add(new FIR_Weapon_Qualification_Detail__c(
                 FIR_Qualification_Form__c     = fir,
                 Weapon_Type__c        = 'Shot Gun',
                 Attempt_Date__c = testDate,
                 Qualified__c    = 'Yes'
             ));
-
+            // Riffle
             weapons.add(new FIR_Weapon_Qualification_Detail__c(
                 FIR_Qualification_Form__c     = fir,
                 Weapon_Type__c        = 'Riffle',
@@ -113,6 +127,7 @@ public with sharing class QualRosterController {
         }
         insert weapons;
 
+        // Update Contact.FIR_Qualification_Form__c
         List<Contact> contacts = new List<Contact>();
         for (Integer i = 0; i < aligned.size(); i++) {
             FAQP_Members__c m = memberMap.get(aligned[i].memberId);
@@ -127,6 +142,7 @@ public with sharing class QualRosterController {
         return aligned.size();
     }
 
+    // ─── Payload wrapper ───────────────────────────────────────────────────
     public class MemberPayload {
         public String memberId;
         public String pistol;

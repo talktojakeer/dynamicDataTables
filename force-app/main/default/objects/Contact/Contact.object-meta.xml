@@ -328,7 +328,7 @@
     <externalSharingModel>ControlledByParent</externalSharingModel>
     <profileSearchLayouts>
         <fields>FULL_NAME</fields>
-        <fields>FAQP_TINS_NUMBER__c</fields>
+        <fields>TINS_NUMBER__c</fields>
         <fields>CORE.USERS.FIRST_NAME</fields>
         <fields>UPDATEDBY_USER.NAME</fields>
         <profileName>System Administrator</profileName>
@@ -336,16 +336,16 @@
     <recordTypeTrackFeedHistory>false</recordTypeTrackFeedHistory>
     <searchLayouts>
         <customTabListAdditionalFields>FULL_NAME</customTabListAdditionalFields>
-        <customTabListAdditionalFields>FAQP_TINS_NUMBER__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>TINS_NUMBER__c</customTabListAdditionalFields>
         <customTabListAdditionalFields>CORE.USERS.FIRST_NAME</customTabListAdditionalFields>
         <lookupDialogsAdditionalFields>FULL_NAME</lookupDialogsAdditionalFields>
-        <lookupDialogsAdditionalFields>FAQP_TINS_NUMBER__c</lookupDialogsAdditionalFields>
+        <lookupDialogsAdditionalFields>TINS_NUMBER__c</lookupDialogsAdditionalFields>
         <lookupDialogsAdditionalFields>CORE.USERS.FIRST_NAME</lookupDialogsAdditionalFields>
         <lookupPhoneDialogsAdditionalFields>FULL_NAME</lookupPhoneDialogsAdditionalFields>
-        <lookupPhoneDialogsAdditionalFields>FAQP_TINS_NUMBER__c</lookupPhoneDialogsAdditionalFields>
+        <lookupPhoneDialogsAdditionalFields>TINS_NUMBER__c</lookupPhoneDialogsAdditionalFields>
         <lookupPhoneDialogsAdditionalFields>CORE.USERS.FIRST_NAME</lookupPhoneDialogsAdditionalFields>
         <searchResultsAdditionalFields>FULL_NAME</searchResultsAdditionalFields>
-        <searchResultsAdditionalFields>FAQP_TINS_NUMBER__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>TINS_NUMBER__c</searchResultsAdditionalFields>
         <searchResultsAdditionalFields>CORE.USERS.FIRST_NAME</searchResultsAdditionalFields>
         <searchResultsAdditionalFields>UPDATEDBY_USER.NAME</searchResultsAdditionalFields>
     </searchLayouts>

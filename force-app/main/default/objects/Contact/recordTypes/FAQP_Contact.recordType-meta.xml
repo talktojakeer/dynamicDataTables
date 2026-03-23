@@ -4,9 +4,13 @@
     <active>true</active>
     <label>FAQP Contact</label>
     <picklistValues>
-        <picklist>FAQP_Retired_Peace_Officer_Type__c</picklist>
+        <picklist>FAQP_Division__c</picklist>
         <values>
-            <fullName>Retired Peace Officer%2FNon-DPS</fullName>
+            <fullName>ABV</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>AV</fullName>
             <default>false</default>
         </values>
     </picklistValues>
@@ -118,6 +122,13 @@
         </values>
         <values>
             <fullName>They%2FThem</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>Retired_Peace_Officer_Type__c</picklist>
+        <values>
+            <fullName>Retired Peace Officer%2FNon-DPS</fullName>
             <default>false</default>
         </values>
     </picklistValues>

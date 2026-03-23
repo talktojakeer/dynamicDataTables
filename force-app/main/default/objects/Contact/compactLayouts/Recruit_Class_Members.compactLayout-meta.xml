@@ -2,7 +2,7 @@
 <CompactLayout xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Recruit_Class_Members</fullName>
     <fields>Name</fields>
-    <fields>FAQP_TINS_NUMBER__c</fields>
+    <fields>TINS_NUMBER__c</fields>
     <fields>MobilePhone</fields>
     <fields>AccountId</fields>
     <label>Recruit Class Members</label>

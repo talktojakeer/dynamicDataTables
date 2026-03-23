@@ -1,22 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FAQP_Division__c</fullName>
-    <label>FAQP Division</label>
+    <fullName>Retired_Peace_Officer_Type__c</fullName>
+    <label>Retired Peace Officer Type</label>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
     <type>Picklist</type>
     <valueSet>
+        <restricted>true</restricted>
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>ABV</fullName>
+                <fullName>Retired Peace Officer/Non-DPS</fullName>
                 <default>false</default>
-                <label>ABV</label>
-            </value>
-            <value>
-                <fullName>AV</fullName>
-                <default>false</default>
-                <label>AV</label>
+                <label>Retired Peace Officer/Non-DPS</label>
             </value>
         </valueSetDefinition>
     </valueSet>

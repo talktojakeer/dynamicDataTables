@@ -3,7 +3,7 @@
     <fullName>FIR_Form__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <label>FIR Form</label>
-    <referenceTo>FIR_Form__c</referenceTo>
+    <referenceTo>FIR_Qualification_Form__c</referenceTo>
     <relationshipLabel>FIR Forms</relationshipLabel>
     <relationshipName>FIRForm</relationshipName>
     <required>false</required>

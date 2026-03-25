@@ -9,7 +9,7 @@ import searchUsers                      from '@salesforce/apex/QualRosterControl
 import getContactMembers                from '@salesforce/apex/QualRosterController.getContactMembers';
 import addToRoster                      from '@salesforce/apex/QualRosterController.addToRoster';
 
-// All weapon field keys
+// All weapon field keys — used for validation
 const WEAPON_FIELDS = ['pistol', 'shotgun', 'rifle', 'autoWeapon', 'precisionRifle'];
 
 export default class CreateQualRoster extends LightningElement {
@@ -64,7 +64,7 @@ export default class CreateQualRoster extends LightningElement {
     // ── Computed ───────────────────────────────────────────────────────────
     get memberCount() { return this.rowData.length; }
 
-    // Add To Roster is disabled only when no test date
+    // Disabled only when no test date — weapon validation happens on submit
     get isAddDisabled() { return !this.testDate; }
 
     get filteredRows() {
@@ -271,12 +271,13 @@ export default class CreateQualRoster extends LightningElement {
             return;
         }
 
-        // Validate: every member must have at least one weapon selected
+        // ── Weapon validation: every member must have at least one weapon checked
         const membersWithNoWeapon = this.rowData.filter(
             r => !WEAPON_FIELDS.some(f => r[f])
         );
 
         if (membersWithNoWeapon.length > 0) {
+            // Show up to 3 names, then "and X more"
             const names = membersWithNoWeapon
                 .slice(0, 3)
                 .map(r => r.contactName)
@@ -289,6 +290,7 @@ export default class CreateQualRoster extends LightningElement {
             return;
         }
 
+        // Build payload — only 'Yes'/'No' per weapon, Apex will skip 'No' weapons
         const rosterPayload = this.rowData.map(r => ({
             memberId          : r.memberId,
             pistol            : r.pistol         ? 'Yes' : 'No',

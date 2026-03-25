@@ -150,40 +150,53 @@ public with sharing class QualRosterController {
         }
         insert firForms;
 
-        // Build FIR_Weapon_Qualification_Detail__c — 3 per form
+        // Build FIR_Weapon_Qualification_Detail__c — only for selected (Yes) weapons
         List<FIR_Weapon_Qualification_Detail__c> weapons =
             new List<FIR_Weapon_Qualification_Detail__c>();
 
         for (Integer i = 0; i < aligned.size(); i++) {
-            Id fir = firForms[i].Id;
-            MemberPayload mp = aligned[i];
-            weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                FIR_Qualification_Form__c = fir,
-                Weapon_Type__c            = 'Pistol',
-                Attempt_Date__c           = testDate
-            ));
-            weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                FIR_Qualification_Form__c = fir,
-                Weapon_Type__c            = 'Shot Gun',
-                Attempt_Date__c           = testDate
-            ));
-            weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                FIR_Qualification_Form__c = fir,
-                Weapon_Type__c            = 'Riffle',
-                Attempt_Date__c           = testDate
-            ));
-            weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                FIR_Qualification_Form__c = fir,
-                Weapon_Type__c            = 'Automatic Weapon',
-                Attempt_Date__c           = testDate
-            ));
-            weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                FIR_Qualification_Form__c = fir,
-                Weapon_Type__c            = 'Precision Riffle',
-                Attempt_Date__c           = testDate
-            ));
+            Id            fir = firForms[i].Id;
+            MemberPayload mp  = aligned[i];
+
+            if (mp.pistol == 'Yes') {
+                weapons.add(new FIR_Weapon_Qualification_Detail__c(
+                    FIR_Qualification_Form__c = fir,
+                    Weapon_Type__c            = 'Pistol',
+                    Attempt_Date__c           = testDate
+                ));
+            }
+            if (mp.shotgun == 'Yes') {
+                weapons.add(new FIR_Weapon_Qualification_Detail__c(
+                    FIR_Qualification_Form__c = fir,
+                    Weapon_Type__c            = 'Shot Gun',
+                    Attempt_Date__c           = testDate
+                ));
+            }
+            if (mp.rifle == 'Yes') {
+                weapons.add(new FIR_Weapon_Qualification_Detail__c(
+                    FIR_Qualification_Form__c = fir,
+                    Weapon_Type__c            = 'Riffle',
+                    Attempt_Date__c           = testDate
+                ));
+            }
+            if (mp.autoWeapon == 'Yes') {
+                weapons.add(new FIR_Weapon_Qualification_Detail__c(
+                    FIR_Qualification_Form__c = fir,
+                    Weapon_Type__c            = 'Automatic Weapon',
+                    Attempt_Date__c           = testDate
+                ));
+            }
+            if (mp.precisionRifle == 'Yes') {
+                weapons.add(new FIR_Weapon_Qualification_Detail__c(
+                    FIR_Qualification_Form__c = fir,
+                    Weapon_Type__c            = 'Precision Riffle',
+                    Attempt_Date__c           = testDate
+                ));
+            }
         }
-        insert weapons;
+        if (!weapons.isEmpty()) {
+            insert weapons;
+        }
 
         return aligned.size();
     }

@@ -220,21 +220,25 @@
                         <span class="row-count">{memberCount} members</span>
                     </div>
                     <div class="toolbar-right">
-                        <lightning-input
-                            type="search"
-                            label=""
-                            placeholder="Filter by name or TINS..."
-                            value={tableSearchKey}
-                            onchange={handleTableSearch}
-                            class="table-search">
-                        </lightning-input>
-                        <lightning-button
-                            variant="brand"
-                            label="Add To Roster"
-                            icon-name="utility:add"
-                            onclick={handleAddToRoster}
-                            disabled={isAddDisabled}>
-                        </lightning-button>
+                        <div class="toolbar-search-wrap">
+                            <lightning-input
+                                type="search"
+                                label=""
+                                placeholder="Filter by name or TINS..."
+                                value={tableSearchKey}
+                                onchange={handleTableSearch}
+                                class="table-search">
+                            </lightning-input>
+                        </div>
+                        <div class="toolbar-btn-wrap">
+                            <lightning-button
+                                variant="brand"
+                                label="Add To Roster"
+                                icon-name="utility:add"
+                                onclick={handleAddToRoster}
+                                disabled={isAddDisabled}>
+                            </lightning-button>
+                        </div>
                     </div>
                 </div>
 

@@ -127,17 +127,34 @@ export default class CreateQualRoster extends LightningElement {
     }
 
     handleLookupSelect(event) {
-        const id   = event.currentTarget.dataset.id;
-        const name = event.currentTarget.dataset.name;
-        if (!id) { this.showErrorToast('This contact has no linked Recruit Class.'); return; }
-        this.selectedRecruitClass = { Id: id, Name: name };
+        const type        = event.currentTarget.dataset.type;
+        const rcId        = event.currentTarget.dataset.id;        // always the RC Id
+        const rcName      = event.currentTarget.dataset.name;      // always the RC name
+        const displayName = event.currentTarget.dataset.displayName; // contact's own name (only for contacts)
+
+        if (!rcId) {
+            this.showErrorToast('This contact has no linked Recruit Class.');
+            return;
+        }
+
+        // If a contact was selected, show the contact name in the pill
+        // but still load members of their Recruit Class
+        const pillName = (type === 'contact' && displayName)
+            ? displayName
+            : rcName;
+
+        this.selectedRecruitClass = {
+            Id     : rcId,
+            Name   : pillName,
+            RcName : (type === 'contact') ? rcName : null  // subtitle for contact selections
+        };
         this.lookupSearchKey      = '';
         this.showLookupDropdown   = false;
         this.rcSearchResults      = [];
         this.contactSearchResults = [];
         this.rowData              = [];
         this.tableSearchKey       = '';
-        this.loadMembers(id);
+        this.loadMembers(rcId);
     }
 
     handleClearClass() {

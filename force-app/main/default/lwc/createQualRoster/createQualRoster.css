@@ -155,7 +155,14 @@
     box-sizing: border-box;
 }
 .pill-icon   { flex-shrink: 0; }
-.pill-name   { font-weight: 700; flex: 1; }
+.pill-name-wrap {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+.pill-name   { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pill-rc-sub { font-size: 11px; color: #0176d3; font-weight: 400; margin-top: 1px; }
 .pill-count  { font-size: 11.5px; color: #706e6b; white-space: nowrap; }
 .pill-clear  {
     background: none; border: none; cursor: pointer;

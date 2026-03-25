@@ -75,6 +75,7 @@
                                                     class="lookup-item"
                                                     data-id={con.recruitClassId}
                                                     data-name={con.recruitClassName}
+                                                    data-display-name={con.Name}
                                                     data-type="contact"
                                                     onmousedown={handleLookupSelect}>
                                                     <div class="lookup-item-main">{con.Name}</div>
@@ -100,7 +101,12 @@
                         <template if:true={selectedRecruitClass}>
                             <div class="lookup-selected-pill">
                                 <lightning-icon icon-name="standard:account" size="x-small" class="pill-icon"></lightning-icon>
-                                <span class="pill-name">{selectedRecruitClass.Name}</span>
+                                <div class="pill-name-wrap">
+                                    <span class="pill-name">{selectedRecruitClass.Name}</span>
+                                    <template if:true={selectedRecruitClass.RcName}>
+                                        <span class="pill-rc-sub">{selectedRecruitClass.RcName}</span>
+                                    </template>
+                                </div>
                                 <span class="pill-count">{memberCount} members</span>
                                 <button class="pill-clear" onclick={handleClearClass} title="Remove">
                                     <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>

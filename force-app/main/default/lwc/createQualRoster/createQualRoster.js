@@ -1,10 +1,15 @@
-import { LightningElement, track } from 'lwc';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import searchRecruitClassAndContacts from '@salesforce/apex/QualRosterController.searchRecruitClassAndContacts';
-import getContactMembers             from '@salesforce/apex/QualRosterController.getContactMembers';
-import addToRoster                   from '@salesforce/apex/QualRosterController.addToRoster';
+import { LightningElement, track, wire } from 'lwc';
+import { ShowToastEvent }               from 'lightning/platformShowToastEvent';
+import { getRecord, getFieldValue }     from 'lightning/uiRecordApi';
+import USER_ID                          from '@salesforce/user/Id';
+import NAME_FIELD                       from '@salesforce/schema/User.Name';
+import TITLE_FIELD                      from '@salesforce/schema/User.Title';
+import searchRecruitClassAndContacts    from '@salesforce/apex/QualRosterController.searchRecruitClassAndContacts';
+import searchUsers                      from '@salesforce/apex/QualRosterController.searchUsers';
+import getContactMembers                from '@salesforce/apex/QualRosterController.getContactMembers';
+import addToRoster                      from '@salesforce/apex/QualRosterController.addToRoster';
 
-export default class QualRosterTab extends LightningElement {
+export default class CreateQualRoster extends LightningElement {
 
     // ── Recruit Class Lookup ───────────────────────────────────────────────
     @track selectedRecruitClass = null;
@@ -19,9 +24,31 @@ export default class QualRosterTab extends LightningElement {
     get hasContactResults() { return this.contactSearchResults.length > 0; }
     get hasAnyResults()     { return this.hasRcResults || this.hasContactResults; }
 
+    // ── Instructor Lookup — auto-populated with current user ───────────────
+    @track selectedInstructor      = null;   // { Id, Name }
+    @track instructorSearchKey     = '';
+    @track showInstructorDropdown  = false;
+    @track isInstructorSearching   = false;
+    @track instructorResults       = [];
+    instructorSearchTimeout;
+
+    // Wire current user record to auto-populate instructor
+    currentUserId = USER_ID;
+
+    @wire(getRecord, { recordId: '$currentUserId', fields: [NAME_FIELD, TITLE_FIELD] })
+    wiredCurrentUser({ data, error }) {
+        if (data) {
+            this.selectedInstructor = {
+                Id   : this.currentUserId,
+                Name : getFieldValue(data, NAME_FIELD)
+            };
+        } else if (error) {
+            console.error('Failed to load current user:', error);
+        }
+    }
+
     // ── Session fields ─────────────────────────────────────────────────────
     @track testDate           = '';
-    @track firearmInstructor  = '';
     @track location           = '';
     @track lightningCondition = '';
     @track lcDaytime          = false;
@@ -57,7 +84,7 @@ export default class QualRosterTab extends LightningElement {
         );
     }
 
-    // ── Lookup handlers ────────────────────────────────────────────────────
+    // ── RC Lookup handlers ─────────────────────────────────────────────────
     handleLookupFocus() {
         if (this.lookupSearchKey && this.lookupSearchKey.trim().length >= 1) {
             this.showLookupDropdown = true;
@@ -102,16 +129,13 @@ export default class QualRosterTab extends LightningElement {
             });
     }
 
-    // onmousedown fires before blur — keeps dropdown open on item click
     handleLookupSelect(event) {
         const id   = event.currentTarget.dataset.id;
         const name = event.currentTarget.dataset.name;
-        console.log('handleLookupSelect', id, name);
         if (!id) {
             this.showErrorToast('This contact has no linked Recruit Class.');
             return;
         }
-
         this.selectedRecruitClass = { Id: id, Name: name };
         this.lookupSearchKey      = '';
         this.showLookupDropdown   = false;
@@ -134,17 +158,66 @@ export default class QualRosterTab extends LightningElement {
         this.tableSearchKey       = '';
     }
 
+    // ── Instructor Lookup handlers ─────────────────────────────────────────
+    handleInstructorFocus() {
+        if (this.instructorSearchKey && this.instructorSearchKey.trim().length >= 1) {
+            this.showInstructorDropdown = true;
+        }
+    }
+
+    handleInstructorSearch(event) {
+        this.instructorSearchKey = event.target.value;
+        clearTimeout(this.instructorSearchTimeout);
+
+        if (!this.instructorSearchKey || this.instructorSearchKey.trim().length < 1) {
+            this.showInstructorDropdown = false;
+            this.instructorResults      = [];
+            return;
+        }
+
+        this.isInstructorSearching  = true;
+        this.showInstructorDropdown = true;
+
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        this.instructorSearchTimeout = setTimeout(() => {
+            this.runInstructorSearch(this.instructorSearchKey);
+        }, 300);
+    }
+
+    runInstructorSearch(key) {
+        searchUsers({ searchKey: key })
+            .then(users => {
+                this.instructorResults     = users || [];
+                this.isInstructorSearching = false;
+            })
+            .catch(error => {
+                this.isInstructorSearching = false;
+                this.showErrorToast('User search failed: ' + this.reduceErrors(error));
+            });
+    }
+
+    handleInstructorSelect(event) {
+        const id   = event.currentTarget.dataset.id;
+        const name = event.currentTarget.dataset.name;
+        this.selectedInstructor     = { Id: id, Name: name };
+        this.instructorSearchKey    = '';
+        this.showInstructorDropdown = false;
+        this.instructorResults      = [];
+    }
+
+    handleClearInstructor() {
+        this.selectedInstructor     = null;
+        this.instructorSearchKey    = '';
+        this.showInstructorDropdown = false;
+        this.instructorResults      = [];
+    }
+
     // ── Load Members ───────────────────────────────────────────────────────
-    // FAQP_Members__c fields:
-    //   Id, Name, Contact__c, Contact__r.Name,
-    //   Contact__r.TINS_NUMBER__c, Contact__r.FAQP_Division__c,
-    //   Contact__r.FAQP_Region__c
     loadMembers(recruitClassId) {
         this.isLoadingMembers = true;
         getContactMembers({ recruitClassId })
             .then(members => {
                 this.rowData          = members.map(m => this.buildRow(m));
-                console.log('members', JSON.stringify(members));
                 this.isLoadingMembers = false;
             })
             .catch(error => {
@@ -157,10 +230,10 @@ export default class QualRosterTab extends LightningElement {
         const contact = m.Contact__r || {};
         return {
             memberId    : m.Id,
-            contactName : contact.Name   || '—',
-            contactUrl  : m.Contact__c   ? `/lightning/r/Contact/${m.Contact__c}/view` : null,
-            tins        : contact.TINS_NUMBER__c      || '',
-            division    : contact.FAQP_Division__c    || '',
+            contactName : contact.Name            || '—',
+            contactUrl  : m.Contact__c ? `/lightning/r/Contact/${m.Contact__c}/view` : null,
+            tins        : contact.TINS_NUMBER__c  || '',
+            division    : contact.FAQP_Division__c || '',
             region      : contact.FAQP_Region__c != null
                           ? String(contact.FAQP_Region__c) : '',
             pistol      : false,
@@ -173,7 +246,6 @@ export default class QualRosterTab extends LightningElement {
 
     // ── Session field handlers ─────────────────────────────────────────────
     handleTestDateChange(event)   { this.testDate          = event.target.value; }
-    handleInstructorChange(event) { this.firearmInstructor = event.target.value; }
     handleLocationChange(event)   { this.location          = event.target.value; }
 
     handleLightningConditionChange(event) {
@@ -246,7 +318,8 @@ export default class QualRosterTab extends LightningElement {
             rosterPayload    : JSON.stringify(rosterPayload),
             recruitClassId   : this.selectedRecruitClass.Id,
             testDate         : this.testDate,
-            firearmInstructor: this.firearmInstructor,
+            // Pass the User Id directly — no name-to-Id resolution needed in Apex
+            instructorId     : this.selectedInstructor ? this.selectedInstructor.Id : null,
             location         : this.location
         })
         .then(count => {
@@ -271,9 +344,9 @@ export default class QualRosterTab extends LightningElement {
         if (typeof errors === 'string') return errors;
         if (Array.isArray(errors)) {
             return errors.filter(e => !!e).map(e => {
-                if (typeof e === 'string')           return e;
-                if (e.message)                       return e.message;
-                if (e.body && e.body.message)        return e.body.message;
+                if (typeof e === 'string')    return e;
+                if (e.message)               return e.message;
+                if (e.body?.message)         return e.body.message;
                 return JSON.stringify(e);
             }).join(', ');
         }

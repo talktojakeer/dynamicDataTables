@@ -1,21 +1,24 @@
 /**
- * QualRosterController .cls
+ * QualRosterController.cls
  *
- * Object/Field API names per actual org schema:
- *  - Junction object  : FAQP_Members__c
- *  - FIR Form         : FIR_Qualification_Form__c
- *  - Weapon detail    : FIR_Weapon_Qualification_Detail__c
- *  - Weapon type      : Weapon_Type__c
- *  - Instructor field : Firearms_Instrutor__c  (typo in org — kept as-is)
- *  - Contact TINS     : TINS_NUMBER__c
- *  - Contact Division : FAQP_Division__c
- *  - Contact Region   : FAQP_Region__c
- *  - Contact RC lookup: Recruit_Class__c  → Recruit_Class__c object
- *  - RC object        : Recruit_Class__c  (custom, NOT Account)
+ * Methods:
+ *  1. searchRecruitClassAndContacts  — live lookup: RC (Account/FAQP_Account) + Contacts
+ *  2. searchUsers                    — live lookup: active Users by name
+ *  3. getContactMembers              — FAQP_Members__c for selected RC
+ *  4. addToRoster                    — creates FIR_Qualification_Form__c +
+ *                                      FIR_Weapon_Qualification_Detail__c × 3 per member
+ *
+ * Key API names:
+ *  Recruit Class  → Account (RecordType: FAQP_Account)
+ *  Junction       → FAQP_Members__c  (Contact__c MD, Recruit_Class__c MD → Account)
+ *  FIR Form       → FIR_Qualification_Form__c
+ *  Weapon detail  → FIR_Weapon_Qualification_Detail__c  (Weapon_Type__c, Attempt_Date__c)
+ *  Instructor     → FIR_Qualification_Form__c.Firearms_Instrutor__c (Lookup → User)
+ *  Contact TINS   → TINS_NUMBER__c
  */
-public with sharing class QualRosterController  {
+public with sharing class QualRosterController {
 
-    // ─── 1. Live Lookup — searches Recruit Classes AND Contacts ───────────
+    // ─── 1. RC + Contact live lookup ──────────────────────────────────────
     @AuraEnabled(cacheable=true)
     public static SearchResultWrapper searchRecruitClassAndContacts(String searchKey) {
         SearchResultWrapper result = new SearchResultWrapper();
@@ -23,19 +26,19 @@ public with sharing class QualRosterController  {
 
         String keyword = '%' + searchKey.trim() + '%';
 
-        // Recruit Classes (custom object Recruit_Class__c)
+        // Recruit Classes — Account with FAQP_Account record type
         result.recruitClasses = [
             SELECT Id, Name
             FROM Account
             WHERE Name LIKE :keyword
+            AND RecordType.DeveloperName = 'FAQP_Account'
             ORDER BY Name ASC
             LIMIT 10
         ];
 
-        // Contacts — search by Name or TINS, must have a Recruit Class linked
+        // Contacts — search by Name or TINS, must be linked to an Account (RC)
         List<Contact> contacts = [
-            SELECT Id, Name, TINS_NUMBER__c,
-                   AccountId, Account.Name
+            SELECT Id, Name, TINS_NUMBER__c, AccountId, Account.Name
             FROM Contact
             WHERE (Name LIKE :keyword OR TINS_NUMBER__c LIKE :keyword)
             AND AccountId != null
@@ -49,14 +52,41 @@ public with sharing class QualRosterController  {
             item.Name             = c.Name;
             item.TINS             = c.TINS_NUMBER__c;
             item.RecruitClassId   = c.AccountId;
-            item.RecruitClassName = c.AccountId != null
-                                    ? c.Account.Name : '';
+            item.RecruitClassName = c.Account != null ? c.Account.Name : '';
             result.contacts.add(item);
         }
         return result;
     }
 
-    // ─── 2. Contact Members for selected Recruit Class ─────────────────────
+    // ─── 2. User live lookup ───────────────────────────────────────────────
+    @AuraEnabled(cacheable=true)
+    public static List<UserResult> searchUsers(String searchKey) {
+        if (String.isBlank(searchKey) || searchKey.trim().length() < 1) {
+            return new List<UserResult>();
+        }
+        String keyword = '%' + searchKey.trim() + '%';
+
+        List<User> users = [
+            SELECT Id, Name, Title
+            FROM User
+            WHERE Name LIKE :keyword
+            AND IsActive = true
+            ORDER BY Name ASC
+            LIMIT 10
+        ];
+
+        List<UserResult> results = new List<UserResult>();
+        for (User u : users) {
+            UserResult ur = new UserResult();
+            ur.Id    = u.Id;
+            ur.Name  = u.Name;
+            ur.Title = u.Title;
+            results.add(ur);
+        }
+        return results;
+    }
+
+    // ─── 3. Contact Members ────────────────────────────────────────────────
     @AuraEnabled(cacheable=false)
     public static List<FAQP_Members__c> getContactMembers(Id recruitClassId) {
         if (recruitClassId == null) return new List<FAQP_Members__c>();
@@ -77,16 +107,13 @@ public with sharing class QualRosterController  {
         ];
     }
 
-    // ─── 3. Add To Roster ──────────────────────────────────────────────────
-    // Per selected member:
-    //   a. INSERT FIR_Qualification_Form__c
-    //   b. INSERT FIR_Weapon_Qualification_Detail__c × 3 (Pistol / Shot Gun / Riffle)
+    // ─── 4. Add To Roster ──────────────────────────────────────────────────
     @AuraEnabled
     public static Integer addToRoster(
         String rosterPayload,
         Id     recruitClassId,
         Date   testDate,
-        String firearmInstructor,
+        Id     instructorId,       // User Id passed directly from LWC
         String location
     ) {
         List<MemberPayload> payloadList =
@@ -103,18 +130,6 @@ public with sharing class QualRosterController  {
             FROM FAQP_Members__c
             WHERE Id IN :memberIds
         ]);
-
-        // Resolve instructor name → User Id
-        Id instructorId = null;
-        if (String.isNotBlank(firearmInstructor)) {
-            List<User> users = [
-                SELECT Id FROM User
-                WHERE Name LIKE :('%' + firearmInstructor.trim() + '%')
-                AND IsActive = true
-                LIMIT 1
-            ];
-            if (!users.isEmpty()) instructorId = users[0].Id;
-        }
 
         // Build aligned lists
         List<MemberPayload>             aligned  = new List<MemberPayload>();
@@ -140,26 +155,21 @@ public with sharing class QualRosterController  {
             new List<FIR_Weapon_Qualification_Detail__c>();
 
         for (Integer i = 0; i < aligned.size(); i++) {
-            MemberPayload mp  = aligned[i];
-            Id            fir = firForms[i].Id;
-
+            Id fir = firForms[i].Id;
             weapons.add(new FIR_Weapon_Qualification_Detail__c(
                 FIR_Qualification_Form__c = fir,
                 Weapon_Type__c            = 'Pistol',
                 Attempt_Date__c           = testDate
-                //Qualified__c              = true
             ));
             weapons.add(new FIR_Weapon_Qualification_Detail__c(
                 FIR_Qualification_Form__c = fir,
                 Weapon_Type__c            = 'Shot Gun',
                 Attempt_Date__c           = testDate
-               // Qualified__c              = true
             ));
             weapons.add(new FIR_Weapon_Qualification_Detail__c(
                 FIR_Qualification_Form__c = fir,
                 Weapon_Type__c            = 'Riffle',
                 Attempt_Date__c           = testDate
-               // Qualified__c              = true
             ));
         }
         insert weapons;
@@ -177,8 +187,8 @@ public with sharing class QualRosterController  {
     }
 
     public class SearchResultWrapper {
-        @AuraEnabled public List<Account> recruitClasses = new List<Account>();
-        @AuraEnabled public List<ContactSearchItem> contacts      = new List<ContactSearchItem>();
+        @AuraEnabled public List<Account>           recruitClasses = new List<Account>();
+        @AuraEnabled public List<ContactSearchItem> contacts       = new List<ContactSearchItem>();
     }
 
     public class ContactSearchItem {
@@ -187,5 +197,11 @@ public with sharing class QualRosterController  {
         @AuraEnabled public String TINS;
         @AuraEnabled public Id     RecruitClassId;
         @AuraEnabled public String RecruitClassName;
+    }
+
+    public class UserResult {
+        @AuraEnabled public Id     Id;
+        @AuraEnabled public String Name;
+        @AuraEnabled public String Title;
     }
 }

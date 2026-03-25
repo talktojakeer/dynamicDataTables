@@ -120,15 +120,66 @@
                         </lightning-input>
                     </div>
 
-                    <!-- Firearm Instructor -->
+                    <!-- Firearm Instructor — User Lookup -->
                     <div class="field-item">
-                        <lightning-input
-                            type="text"
-                            label="Firearm Instructor"
-                            placeholder="Instructor name..."
-                            value={firearmInstructor}
-                            onchange={handleInstructorChange}>
-                        </lightning-input>
+                        <label class="field-label">Firearm Instructor</label>
+
+                        <!-- Not yet selected -->
+                        <template if:false={selectedInstructor}>
+                            <div class="lookup-wrapper">
+                                <div class="lookup-input-box">
+                                    <lightning-icon icon-name="standard:user" size="x-small" class="lookup-search-icon"></lightning-icon>
+                                    <input
+                                        type="text"
+                                        class="lookup-input"
+                                        placeholder="Search user..."
+                                        value={instructorSearchKey}
+                                        oninput={handleInstructorSearch}
+                                        onfocus={handleInstructorFocus}
+                                        autocomplete="off" />
+                                    <template if:true={isInstructorSearching}>
+                                        <div class="lookup-spinner">
+                                            <lightning-spinner size="x-small" alternative-text="Searching..."></lightning-spinner>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- User dropdown -->
+                                <template if:true={showInstructorDropdown}>
+                                    <div class="lookup-dropdown">
+                                        <template if:true={instructorResults.length}>
+                                            <template for:each={instructorResults} for:item="usr">
+                                                <div key={usr.Id}
+                                                    class="lookup-item"
+                                                    data-id={usr.Id}
+                                                    data-name={usr.Name}
+                                                    onmousedown={handleInstructorSelect}>
+                                                    <div class="lookup-item-main">{usr.Name}</div>
+                                                    <span class="lookup-item-meta">{usr.Title}</span>
+                                                </div>
+                                            </template>
+                                        </template>
+                                        <template if:false={instructorResults.length}>
+                                            <div class="lookup-no-results">
+                                                <lightning-icon icon-name="utility:search" size="x-small"></lightning-icon>
+                                                No users found for "{instructorSearchKey}"
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Selected: show pill -->
+                        <template if:true={selectedInstructor}>
+                            <div class="lookup-selected-pill">
+                                <lightning-icon icon-name="standard:user" size="x-small" class="pill-icon"></lightning-icon>
+                                <span class="pill-name">{selectedInstructor.Name}</span>
+                                <button class="pill-clear" onclick={handleClearInstructor} title="Remove">
+                                    <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
+                                </button>
+                            </div>
+                        </template>
                     </div>
 
                     <!-- Location -->

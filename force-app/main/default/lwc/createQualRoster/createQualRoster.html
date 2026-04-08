@@ -3,7 +3,7 @@
 
         <div class="page-header">
             <h1 class="page-title">Qual Roster</h1>
-            <p class="page-sub">Select a Recruit Class, fill session details, then submit the roster</p>
+            <p class="page-sub">Select Recruit Classes and/or Members, fill session details, then submit the roster</p>
         </div>
 
         <div class="card">
@@ -16,85 +16,101 @@
                 <div class="fields-row">
 
                     <div class="field-item field-item-rc">
-                        <label class="field-label">{lookupFieldLabel}</label>
+                        <label class="field-label">Recruit Class / Member</label>
 
-                        <template if:false={selectedRecruitClass}>
-                            <div class="lookup-wrapper">
-                                <div class="lookup-input-box">
-                                    <lightning-icon icon-name="utility:search" size="x-small" class="lookup-search-icon"></lightning-icon>
-                                    <input
-                                        type="text"
-                                        class="lookup-input"
-                                        placeholder="Search Recruit Class or Contact..."
-                                        value={lookupSearchKey}
-                                        oninput={handleLookupSearch}
-                                        onfocus={handleLookupFocus}
-                                        autocomplete="off" />
-                                    <template if:true={isLookupSearching}>
-                                        <div class="lookup-spinner">
-                                            <lightning-spinner size="x-small" alternative-text="Searching..."></lightning-spinner>
-                                        </div>
-                                    </template>
-                                </div>
-
-                                <template if:true={showLookupDropdown}>
-                                    <div class="lookup-dropdown">
-
-                                        <template if:true={hasRcResults}>
-                                            <div class="lookup-section-label">
-                                                <lightning-icon icon-name="standard:account" size="xx-small"></lightning-icon>
-                                                Recruit Classes
-                                            </div>
-                                            <template for:each={rcSearchResults} for:item="rc">
-                                                <div key={rc.Id}
-                                                    class="lookup-item"
-                                                    data-id={rc.Id}
-                                                    data-name={rc.Name}
-                                                    data-type="rc"
-                                                    onmousedown={handleLookupSelect}>
-                                                    <div class="lookup-item-main">{rc.Name}</div>
-                                                    <span class="lookup-item-badge rc-badge-pill">Recruit Class</span>
-                                                </div>
-                                            </template>
-                                        </template>
-
-                                        <template if:true={hasContactResults}>
-                                            <div class="lookup-section-label">
-                                                <lightning-icon icon-name="standard:contact" size="xx-small"></lightning-icon>
-                                                Contacts
-                                            </div>
-                                            <template for:each={contactSearchResults} for:item="con">
-                                                <div key={con.Id}
-                                                    class="lookup-item"
-                                                    data-id={con.Id}
-                                                    data-name={con.Name}
-                                                    data-type="contact"
-                                                    onmousedown={handleLookupSelect}>
-                                                    <div class="lookup-item-main">{con.Name}</div>
-                                                    <span class="lookup-item-meta">{con.tins}</span>
-                                                </div>
-                                            </template>
-                                        </template>
-
-                                        <template if:false={hasAnyResults}>
-                                            <div class="lookup-no-results">
-                                                <lightning-icon icon-name="utility:search" size="x-small"></lightning-icon>
-                                                No results for "{lookupSearchKey}"
-                                            </div>
-                                        </template>
-
+                        <div class="lookup-wrapper">
+                            <div class="lookup-input-box">
+                                <lightning-icon icon-name="utility:search" size="x-small" class="lookup-search-icon"></lightning-icon>
+                                <input
+                                    type="text"
+                                    class="lookup-input"
+                                    placeholder="Search Recruit Class or Contact..."
+                                    value={lookupSearchKey}
+                                    oninput={handleLookupSearch}
+                                    onfocus={handleLookupFocus}
+                                    autocomplete="off" />
+                                <template if:true={isLookupSearching}>
+                                    <div class="lookup-spinner">
+                                        <lightning-spinner size="x-small" alternative-text="Searching..."></lightning-spinner>
                                     </div>
                                 </template>
                             </div>
-                        </template>
 
-                        <template if:true={selectedRecruitClass}>
-                            <div class="lookup-selected-pill">
-                                <lightning-icon icon-name="standard:account" size="x-small" class="pill-icon"></lightning-icon>
-                                <span class="pill-name">{selectedRecruitClass.Name}</span>
-                                <span class="pill-count">{memberCount} members</span>
-                                <button class="pill-clear" onclick={handleClearClass} title="Remove">
-                                    <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
+                            <template if:true={showLookupDropdown}>
+                                <div class="lookup-dropdown">
+
+                                    <template if:true={hasRcResults}>
+                                        <div class="lookup-section-label">
+                                            <lightning-icon icon-name="standard:account" size="xx-small"></lightning-icon>
+                                            Recruit Classes
+                                        </div>
+                                        <template for:each={rcSearchResults} for:item="rc">
+                                            <div key={rc.Id}
+                                                class={rc.itemClass}
+                                                data-id={rc.Id}
+                                                data-name={rc.Name}
+                                                data-type="rc"
+                                                onmousedown={handleLookupSelect}>
+                                                <div class="lookup-item-main">{rc.Name}</div>
+                                                <template if:true={rc.alreadySelected}>
+                                                    <lightning-icon icon-name="utility:check" size="xx-small" class="lookup-check-icon"></lightning-icon>
+                                                </template>
+                                                <template if:false={rc.alreadySelected}>
+                                                    <span class="lookup-item-badge rc-badge-pill">Recruit Class</span>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </template>
+
+                                    <template if:true={hasContactResults}>
+                                        <div class="lookup-section-label">
+                                            <lightning-icon icon-name="standard:contact" size="xx-small"></lightning-icon>
+                                            Contacts
+                                        </div>
+                                        <template for:each={contactSearchResults} for:item="con">
+                                            <div key={con.Id}
+                                                class={con.itemClass}
+                                                data-id={con.Id}
+                                                data-name={con.Name}
+                                                data-type="contact"
+                                                data-tins={con.tins}
+                                                onmousedown={handleLookupSelect}>
+                                                <div class="lookup-item-main">{con.Name}</div>
+                                                <template if:true={con.alreadySelected}>
+                                                    <lightning-icon icon-name="utility:check" size="xx-small" class="lookup-check-icon"></lightning-icon>
+                                                </template>
+                                                <template if:false={con.alreadySelected}>
+                                                    <span class="lookup-item-meta">{con.tins}</span>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </template>
+
+                                    <template if:false={hasAnyResults}>
+                                        <div class="lookup-no-results">
+                                            <lightning-icon icon-name="utility:search" size="x-small"></lightning-icon>
+                                            No results for "{lookupSearchKey}"
+                                        </div>
+                                    </template>
+
+                                </div>
+                            </template>
+                        </div>
+
+                        <template if:true={hasSelections}>
+                            <div class="selection-tags">
+                                <template for:each={selectedItems} for:item="item">
+                                    <span key={item.id} class={item.tagClass}>
+                                        <lightning-icon icon-name={item.icon} size="xx-small" class="tag-icon"></lightning-icon>
+                                        <span class="tag-label">{item.name}</span>
+                                        <button class="tag-remove"
+                                            data-id={item.id}
+                                            onclick={handleRemoveSelection}
+                                            title="Remove">✕</button>
+                                    </span>
+                                </template>
+                                <button class="clear-all-btn" onclick={handleClearAll} title="Clear all">
+                                    Clear all
                                 </button>
                             </div>
                         </template>
@@ -112,7 +128,6 @@
 
                     <div class="field-item">
                         <label class="field-label">Firearm Instructor</label>
-
                         <template if:false={selectedInstructor}>
                             <div class="lookup-wrapper">
                                 <div class="lookup-input-box">
@@ -131,7 +146,6 @@
                                         </div>
                                     </template>
                                 </div>
-
                                 <template if:true={showInstructorDropdown}>
                                     <div class="lookup-dropdown">
                                         <template if:true={instructorResults.length}>
@@ -156,7 +170,6 @@
                                 </template>
                             </div>
                         </template>
-
                         <template if:true={selectedInstructor}>
                             <div class="lookup-selected-pill">
                                 <lightning-icon icon-name="standard:user" size="x-small" class="pill-icon"></lightning-icon>
@@ -192,7 +205,7 @@
             </div>
         </div>
 
-        <template if:true={selectedRecruitClass}>
+        <template if:true={hasSelections}>
             <div class="table-card">
 
                 <div class="table-toolbar">
@@ -223,6 +236,7 @@
                         </div>
                     </div>
                 </div>
+
                 <template if:true={isLoadingMembers}>
                     <div class="table-loading">
                         <lightning-spinner size="medium" alternative-text="Loading..."></lightning-spinner>
@@ -235,15 +249,15 @@
                         <div class="table-scroll-wrap">
                             <table class="roster-table">
                                 <colgroup>
-                                    <col style="width:200px" />      <!-- name -->
-                                    <col style="width:100px" />      <!-- tins -->
-                                    <col style="width:90px" />       <!-- division -->
-                                    <col style="width:65px" />       <!-- region -->
-                                    <col style="width:88px" />       <!-- pistol -->
-                                    <col style="width:88px" />       <!-- shotgun -->
-                                    <col style="width:88px" />       <!-- rifle -->
-                                    <col style="width:108px" />      <!-- auto weapon -->
-                                    <col style="width:115px" />      <!-- precision rifle -->
+                                    <col style="width:200px" />
+                                    <col style="width:100px" />
+                                    <col style="width:90px" />
+                                    <col style="width:65px" />
+                                    <col style="width:88px" />
+                                    <col style="width:88px" />
+                                    <col style="width:88px" />
+                                    <col style="width:108px" />
+                                    <col style="width:115px" />
                                 </colgroup>
                                 <thead>
                                     <tr class="col-header-row">
@@ -254,56 +268,31 @@
                                         <th class="th-weapon th-pistol">
                                             <div class="weapon-header">
                                                 <span>Pistol</span>
-                                                <input type="checkbox"
-                                                    class="weapon-col-check"
-                                                    title="Select all Pistol"
-                                                    checked={allPistol}
-                                                    data-field="pistol"
-                                                    onchange={handleSelectAllWeapon} />
+                                                <input type="checkbox" class="weapon-col-check" title="Select all Pistol" checked={allPistol} data-field="pistol" onchange={handleSelectAllWeapon} />
                                             </div>
                                         </th>
                                         <th class="th-weapon th-shotgun">
                                             <div class="weapon-header">
                                                 <span>Shot Gun</span>
-                                                <input type="checkbox"
-                                                    class="weapon-col-check"
-                                                    title="Select all Shot Gun"
-                                                    checked={allShotgun}
-                                                    data-field="shotgun"
-                                                    onchange={handleSelectAllWeapon} />
+                                                <input type="checkbox" class="weapon-col-check" title="Select all Shot Gun" checked={allShotgun} data-field="shotgun" onchange={handleSelectAllWeapon} />
                                             </div>
                                         </th>
                                         <th class="th-weapon th-rifle">
                                             <div class="weapon-header">
                                                 <span>Riffle</span>
-                                                <input type="checkbox"
-                                                    class="weapon-col-check"
-                                                    title="Select all Riffle"
-                                                    checked={allRifle}
-                                                    data-field="rifle"
-                                                    onchange={handleSelectAllWeapon} />
+                                                <input type="checkbox" class="weapon-col-check" title="Select all Riffle" checked={allRifle} data-field="rifle" onchange={handleSelectAllWeapon} />
                                             </div>
                                         </th>
                                         <th class="th-weapon th-autoweapon">
                                             <div class="weapon-header">
                                                 <span>Automatic Weapon</span>
-                                                <input type="checkbox"
-                                                    class="weapon-col-check"
-                                                    title="Select all Automatic Weapon"
-                                                    checked={allAutoWeapon}
-                                                    data-field="autoWeapon"
-                                                    onchange={handleSelectAllWeapon} />
+                                                <input type="checkbox" class="weapon-col-check" title="Select all Automatic Weapon" checked={allAutoWeapon} data-field="autoWeapon" onchange={handleSelectAllWeapon} />
                                             </div>
                                         </th>
                                         <th class="th-weapon th-precisionrifle">
                                             <div class="weapon-header">
                                                 <span>Precision Riffle</span>
-                                                <input type="checkbox"
-                                                    class="weapon-col-check"
-                                                    title="Select all Precision Riffle"
-                                                    checked={allPrecisionRifle}
-                                                    data-field="precisionRifle"
-                                                    onchange={handleSelectAllWeapon} />
+                                                <input type="checkbox" class="weapon-col-check" title="Select all Precision Riffle" checked={allPrecisionRifle} data-field="precisionRifle" onchange={handleSelectAllWeapon} />
                                             </div>
                                         </th>
                                     </tr>
@@ -311,71 +300,38 @@
                                 <tbody>
                                     <template for:each={filteredRows} for:item="row">
                                         <tr key={row.memberId} class={row.rowClass}>
-
                                             <td class="td-name">
                                                 <a href={row.contactUrl} target="_blank" class="member-link">{row.contactName}</a>
                                             </td>
                                             <td class="td-tins">{row.tins}</td>
                                             <td class="td-div">{row.division}</td>
                                             <td class="td-reg">{row.region}</td>
-
                                             <td class="td-weapon td-pistol td-center">
-                                                <input type="checkbox"
-                                                    class="weapon-check"
-                                                    checked={row.pistol}
-                                                    data-member-id={row.memberId}
-                                                    data-field="pistol"
-                                                    onchange={handleWeaponCheck} />
+                                                <input type="checkbox" class="weapon-check" checked={row.pistol} data-contact-id={row.contactId} data-field="pistol" onchange={handleWeaponCheck} />
                                             </td>
-
                                             <td class="td-weapon td-shotgun td-center">
-                                                <input type="checkbox"
-                                                    class="weapon-check"
-                                                    checked={row.shotgun}
-                                                    data-member-id={row.memberId}
-                                                    data-field="shotgun"
-                                                    onchange={handleWeaponCheck} />
+                                                <input type="checkbox" class="weapon-check" checked={row.shotgun} data-contact-id={row.contactId} data-field="shotgun" onchange={handleWeaponCheck} />
                                             </td>
-
                                             <td class="td-weapon td-rifle td-center">
-                                                <input type="checkbox"
-                                                    class="weapon-check"
-                                                    checked={row.rifle}
-                                                    data-member-id={row.memberId}
-                                                    data-field="rifle"
-                                                    onchange={handleWeaponCheck} />
+                                                <input type="checkbox" class="weapon-check" checked={row.rifle} data-contact-id={row.contactId} data-field="rifle" onchange={handleWeaponCheck} />
                                             </td>
-
                                             <td class="td-weapon td-autoweapon td-center">
-                                                <input type="checkbox"
-                                                    class="weapon-check"
-                                                    checked={row.autoWeapon}
-                                                    data-member-id={row.memberId}
-                                                    data-field="autoWeapon"
-                                                    onchange={handleWeaponCheck} />
+                                                <input type="checkbox" class="weapon-check" checked={row.autoWeapon} data-contact-id={row.contactId} data-field="autoWeapon" onchange={handleWeaponCheck} />
                                             </td>
-
                                             <td class="td-weapon td-precisionrifle td-center">
-                                                <input type="checkbox"
-                                                    class="weapon-check"
-                                                    checked={row.precisionRifle}
-                                                    data-member-id={row.memberId}
-                                                    data-field="precisionRifle"
-                                                    onchange={handleWeaponCheck} />
+                                                <input type="checkbox" class="weapon-check" checked={row.precisionRifle} data-contact-id={row.contactId} data-field="precisionRifle" onchange={handleWeaponCheck} />
                                             </td>
-
                                         </tr>
                                     </template>
                                 </tbody>
                             </table>
                         </div>
                     </template>
-
                     <template if:false={filteredRows.length}>
                         <div class="empty-state">
                             <lightning-icon icon-name="utility:people" size="large"></lightning-icon>
                             <p class="empty-title">No members found</p>
-                            <p class="empty-sub">This Recruit Class has no members, or your filter returned no results.</p>
+                            <p class="empty-sub">No member records found for the selected items, or your filter returned no results.</p>
                         </div>
                     </template>
                 </template>
@@ -383,13 +339,13 @@
             </div>
         </template>
 
-        <template if:false={selectedRecruitClass}>
+        <template if:false={hasSelections}>
             <div class="initial-state">
                 <div class="initial-icon-wrap">
                     <lightning-icon icon-name="standard:account" size="large"></lightning-icon>
                 </div>
-                <p class="initial-title">Select a Recruit Class to begin</p>
-                <p class="initial-sub">Search for a class or a contact name above to load roster members</p>
+                <p class="initial-title">Select a Recruit Class or Member to begin</p>
+                <p class="initial-sub">Search and select one or more classes or contacts above to load roster members</p>
             </div>
         </template>
 

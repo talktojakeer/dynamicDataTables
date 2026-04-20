@@ -6,7 +6,7 @@ public with sharing class QualRosterController {
         if (String.isBlank(searchKey) || searchKey.trim().length() < 1) return result;
 
         String keyword = '%' + searchKey.trim() + '%';
-
+        
         result.recruitClasses = [
             SELECT Id, Name
             FROM   Account

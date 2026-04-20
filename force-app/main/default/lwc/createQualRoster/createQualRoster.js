@@ -8,6 +8,7 @@ import searchRecruitClassAndContacts    from '@salesforce/apex/QualRosterControl
 import searchUsers                      from '@salesforce/apex/QualRosterController.searchUsers';
 import getContactMembers                from '@salesforce/apex/QualRosterController.getContactMembers';
 import addToRoster                      from '@salesforce/apex/QualRosterController.addToRoster';
+import DPS_BADGE                        from '@salesforce/resourceUrl/FaqpDpsLogo';
 
 const WEAPON_FIELDS = ['pistol', 'shotgun', 'rifle', 'autoWeapon', 'precisionRifle'];
 
@@ -17,6 +18,7 @@ export default class CreateQualRoster extends LightningElement {
     _selectedData = [];   // [{ id, name, type: 'rc'|'contact' }]
     _rcRaw        = [];   // raw Account results from Apex
     _conRaw       = [];   // raw Contact results from Apex
+    dpsBadgeUrl = DPS_BADGE;
 
     // ── Lookup UI state ────────────────────────────────────────────────────
     @track lookupSearchKey    = '';
@@ -147,7 +149,6 @@ export default class CreateQualRoster extends LightningElement {
             searchRecruitClassAndContacts({ searchKey: this.lookupSearchKey })
                 .then(result => {
                     this._rcRaw  = result.recruitClasses || [];
-
                     // Client-side dedup by name as safety net
                     const seen   = new Set();
                     this._conRaw = (result.contacts || [])
@@ -177,7 +178,6 @@ export default class CreateQualRoster extends LightningElement {
         const name = event.currentTarget.dataset.name;
         const type = event.currentTarget.dataset.type;
         const tins = event.currentTarget.dataset.tins || '';
-
         if (!id) return;
 
         const existingIdx = this._selectedData.findIndex(i => i.id === id);

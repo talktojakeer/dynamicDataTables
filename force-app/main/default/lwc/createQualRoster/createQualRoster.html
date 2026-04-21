@@ -249,6 +249,7 @@
                         <div class="table-scroll-wrap">
                             <table class="roster-table">
                                 <colgroup>
+                                    <col style="width:46px" />
                                     <col style="width:200px" />
                                     <col style="width:100px" />
                                     <col style="width:90px" />
@@ -261,6 +262,7 @@
                                 </colgroup>
                                 <thead>
                                     <tr class="col-header-row">
+                                        <th class="th-remove"></th>
                                         <th class="th-name">Employee Name</th>
                                         <th class="th-tins">TINS</th>
                                         <th class="th-div">Division</th>
@@ -300,6 +302,19 @@
                                 <tbody>
                                     <template for:each={filteredRows} for:item="row">
                                         <tr key={row.memberId} class={row.rowClass}>
+                                            <td class="td-remove td-center">
+                                                <button
+                                                    class="btn-remove-row"
+                                                    title="Remove member from Roster"
+                                                    data-contact-id={row.contactId}
+                                                    onclick={handleRemoveRow}>
+                                                    <lightning-icon
+                                                        icon-name="utility:dash"
+                                                        size="xx-small"
+                                                        alternative-text="Remove member from Roster">
+                                                    </lightning-icon>
+                                                </button>
+                                            </td>
                                             <td class="td-name">
                                                 <a href={row.contactUrl} target="_blank" class="member-link">{row.contactName}</a>
                                             </td>
@@ -350,4 +365,56 @@
         </template>
 
     </div>
+
+    <template if:true={showRosterLabelModal}>
+        <div class="modal-backdrop" onclick={handleModalBackdropClick}></div>
+        <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
+
+            <div class="modal-body">
+                <h2 id="modal-heading" class="modal-title">Name Your Qual Roster</h2>
+                <p class="modal-description">Give this roster a label so it's easy to identify later.</p>
+                <div class="modal-field">
+                    <label class="modal-field-label" for="rosterLabelInput">
+                        Roster Label <span class="required-star">*</span>
+                    </label>
+                    <input
+                        id="rosterLabelInput"
+                        type="text"
+                        class={rosterLabelInputClass}
+                        placeholder="e.g. A-2026 Spring Qual"
+                        value={rosterLabel}
+                        oninput={handleRosterLabelInput}
+                        maxlength="120" />
+                    <template if:true={rosterLabelError}>
+                        <p class="modal-field-error">
+                            <lightning-icon icon-name="utility:error" size="xx-small"></lightning-icon>
+                            {rosterLabelError}
+                        </p>
+                    </template>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <lightning-button
+                    variant="neutral"
+                    label="Cancel"
+                    onclick={handleRosterLabelCancel}>
+                </lightning-button>
+                <lightning-button
+                    variant="brand"
+                    label="Save Roster"
+                    icon-name="utility:save"
+                    onclick={handleRosterLabelConfirm}
+                    disabled={isSavingRoster}>
+                </lightning-button>
+            </div>
+
+            <template if:true={isSavingRoster}>
+                <div class="modal-saving-overlay">
+                    <lightning-spinner size="medium" alternative-text="Saving..."></lightning-spinner>
+                </div>
+            </template>
+        </div>
+    </template>
+
 </template>

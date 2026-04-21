@@ -14,25 +14,24 @@ const WEAPON_FIELDS = ['pistol', 'shotgun', 'rifle', 'autoWeapon', 'precisionRif
 
 export default class CreateQualRoster extends LightningElement {
 
-    
-    _selectedData = [];   // [{ id, name, type: 'rc'|'contact' }]
-    _rcRaw        = [];   // raw Account results from Apex
-    _conRaw       = [];   // raw Contact results from Apex
-    dpsBadgeUrl = DPS_BADGE;
+    _selectedData = [];
+    _rcRaw        = [];
+    _conRaw       = [];
+    dpsBadgeUrl   = DPS_BADGE;
+
+    _manuallyRemovedIds = new Set();
 
     // ── Lookup UI state ────────────────────────────────────────────────────
     @track lookupSearchKey    = '';
     @track showLookupDropdown = false;
     @track isLookupSearching  = false;
 
-    
-    @track _rcResults  = [];   // enriched with alreadySelected + itemClass
-    @track _conResults = [];   // enriched with alreadySelected + itemClass
-    @track _tags       = [];   // enriched with tagClass + icon
+    @track _rcResults  = [];
+    @track _conResults = [];
+    @track _tags       = [];
 
     lookupSearchTimeout;
 
-    // ── Computed getters ───────────────────────────────────────────────────
     get hasSelections()     { return this._selectedData.length > 0; }
     get hasRcResults()      { return this._rcResults.length > 0; }
     get hasContactResults() { return this._conResults.length > 0; }
@@ -41,7 +40,6 @@ export default class CreateQualRoster extends LightningElement {
     get rcSearchResults()   { return this._rcResults; }
     get contactSearchResults() { return this._conResults; }
 
-    // ── Helpers to rebuild reactive tracked arrays ─────────────────────────
     _refreshDropdownState() {
         const selectedIds = new Set(this._selectedData.map(i => i.id));
         this._rcResults  = this._rcRaw.map(r => ({
@@ -122,6 +120,45 @@ export default class CreateQualRoster extends LightningElement {
     get allAutoWeapon()    { return this.rowData.length > 0 && this.rowData.every(r => r.autoWeapon); }
     get allPrecisionRifle(){ return this.rowData.length > 0 && this.rowData.every(r => r.precisionRifle); }
 
+    @track showRosterLabelModal = false;
+    @track rosterLabel          = '';
+    @track rosterLabelError     = '';
+    @track isSavingRoster       = false;
+
+    _pendingRosterPayload = null;
+    _pendingFirstRc       = null;
+
+    get rosterLabelInputClass() {
+        return this.rosterLabelError ? 'modal-input modal-input-error' : 'modal-input';
+    }
+
+    handleRosterLabelInput(event) {
+        this.rosterLabel      = event.target.value;
+        this.rosterLabelError = '';
+    }
+
+    handleModalBackdropClick() {
+        this.handleRosterLabelCancel();
+    }
+
+    handleRosterLabelCancel() {
+        this.showRosterLabelModal  = false;
+        this.rosterLabel           = '';
+        this.rosterLabelError      = '';
+        this.isSavingRoster        = false;
+        this._pendingRosterPayload = null;
+        this._pendingFirstRc       = null;
+    }
+
+    handleRosterLabelConfirm() {
+        const label = (this.rosterLabel || '').trim();
+        if (!label) {
+            this.rosterLabelError = 'Roster Label is required.';
+            return;
+        }
+        this._submitRoster(label);
+    }
+
     handleLookupFocus() {
         if (this.lookupSearchKey && this.lookupSearchKey.trim().length >= 1) {
             this.showLookupDropdown = true;
@@ -134,8 +171,8 @@ export default class CreateQualRoster extends LightningElement {
 
         if (!this.lookupSearchKey || this.lookupSearchKey.trim().length < 1) {
             this.showLookupDropdown = false;
-            this._rcRaw    = [];
-            this._conRaw   = [];
+            this._rcRaw      = [];
+            this._conRaw     = [];
             this._rcResults  = [];
             this._conResults = [];
             return;
@@ -149,7 +186,6 @@ export default class CreateQualRoster extends LightningElement {
             searchRecruitClassAndContacts({ searchKey: this.lookupSearchKey })
                 .then(result => {
                     this._rcRaw  = result.recruitClasses || [];
-                    // Client-side dedup by name as safety net
                     const seen   = new Set();
                     this._conRaw = (result.contacts || [])
                         .filter(c => {
@@ -158,11 +194,7 @@ export default class CreateQualRoster extends LightningElement {
                             seen.add(key);
                             return true;
                         })
-                        .map(c => ({
-                            Id  : c.Id,
-                            Name: c.Name,
-                            tins: c.TINS
-                        }));
+                        .map(c => ({ Id: c.Id, Name: c.Name, tins: c.TINS }));
                     this.isLookupSearching = false;
                     this._refreshDropdownState();
                 })
@@ -182,20 +214,24 @@ export default class CreateQualRoster extends LightningElement {
 
         const existingIdx = this._selectedData.findIndex(i => i.id === id);
         if (existingIdx >= 0) {
-            // Already selected → remove (toggle off)
             this._selectedData = [
                 ...this._selectedData.slice(0, existingIdx),
                 ...this._selectedData.slice(existingIdx + 1)
             ];
         } else {
-            // Add new selection — store tins so synthetic rows can display it
+            if (type === 'contact' && this._manuallyRemovedIds.has(id)) {
+                this._manuallyRemovedIds.delete(id);
+            }
+            if (type === 'rc') {
+                this._manuallyRemovedIds = new Set();
+            }
             this._selectedData = [...this._selectedData, { id, name, type, tins }];
         }
 
         this.lookupSearchKey    = '';
         this.showLookupDropdown = false;
-        this._rcRaw    = [];
-        this._conRaw   = [];
+        this._rcRaw      = [];
+        this._conRaw     = [];
         this._rcResults  = [];
         this._conResults = [];
 
@@ -211,7 +247,8 @@ export default class CreateQualRoster extends LightningElement {
     }
 
     handleClearAll() {
-        this._selectedData = [];
+        this._selectedData       = [];
+        this._manuallyRemovedIds  = new Set();
         this._refreshTags();
         this.rowData        = [];
         this.tableSearchKey = '';
@@ -222,24 +259,27 @@ export default class CreateQualRoster extends LightningElement {
             this.rowData = [];
             return;
         }
+        const weaponSnapshot = {};
+        this.rowData.forEach(r => {
+            if (r.contactId) {
+                weaponSnapshot[r.contactId] = {
+                    pistol        : r.pistol,
+                    shotgun       : r.shotgun,
+                    rifle         : r.rifle,
+                    autoWeapon    : r.autoWeapon,
+                    precisionRifle: r.precisionRifle
+                };
+            }
+        });
 
         this.isLoadingMembers = true;
-        console.log('Reloading members for:', JSON.parse(JSON.stringify(this._selectedData)));
 
         const promises = this._selectedData.map(item => {
             const recruitClassId = item.type === 'rc'      ? item.id : null;
             const contactId      = item.type === 'contact' ? item.id : null;
-            console.log(`Fetching → type:${item.type} name:${item.name}`);
             return getContactMembers({ recruitClassId, contactId })
-                .then(result => {
-                    const list = result || [];
-                    console.log(`${item.name}: ${list.length} rows`, JSON.parse(JSON.stringify(list)));
-                    return list;
-                })
-                .catch(err => {
-                    console.error(`Error for ${item.name}:`, err);
-                    return [];
-                });
+                .then(result => result || [])
+                .catch(() => []);
         });
 
         Promise.all(promises)
@@ -249,6 +289,8 @@ export default class CreateQualRoster extends LightningElement {
 
                 results.forEach(list => {
                     (list || []).forEach(row => {
+                        if (row.contactId && this._manuallyRemovedIds.has(row.contactId)) return;
+                        
                         if (row.contactId && seenContactIds.has(row.contactId)) return;
                         if (row.contactId) seenContactIds.add(row.contactId);
                         allRows.push(row);
@@ -259,13 +301,19 @@ export default class CreateQualRoster extends LightningElement {
                     (a.contactName || '').localeCompare(b.contactName || '')
                 );
 
-                console.log('Final rows after dedup:', JSON.parse(JSON.stringify(allRows)));
-                this.rowData          = allRows.map(row => this.buildRow(row));
+                this.rowData = allRows.map(row => {
+                    const built   = this.buildRow(row);
+                    const savedWp = weaponSnapshot[built.contactId];
+                    if (savedWp) {
+                        WEAPON_FIELDS.forEach(f => { built[f] = savedWp[f]; });
+                    }
+                    return built;
+                });
+
                 this.isLoadingMembers = false;
             })
             .catch(error => {
                 this.isLoadingMembers = false;
-                console.error('Promise.all error:', error);
                 this.showErrorToast('Failed to load members: ' + this.reduceErrors(error));
             });
     }
@@ -290,12 +338,12 @@ export default class CreateQualRoster extends LightningElement {
 
     _buildSyntheticMember(item) {
         return {
-            memberId    : '',
-            contactId   : item.id,
-            contactName : item.name,
-            tins        : item.tins     || '',
-            division    : item.division || '',
-            region      : item.region   || '',
+            memberId      : '',
+            contactId     : item.id,
+            contactName   : item.name,
+            tins          : item.tins     || '',
+            division      : item.division || '',
+            region        : item.region   || '',
             recruitClassId: null
         };
     }
@@ -372,6 +420,13 @@ export default class CreateQualRoster extends LightningElement {
         this.rowData = this.rowData.map(r => ({ ...r, [field]: checked }));
     }
 
+    handleRemoveRow(event) {
+        const contactId = event.currentTarget.dataset.contactId;
+        if (contactId) {
+            this._manuallyRemovedIds.add(contactId);
+        }
+        this.rowData = this.rowData.filter(r => r.contactId !== contactId);
+    }
     handleAddToRoster() {
         if (!this.testDate) {
             this.showErrorToast('Please select a Test Date before adding to roster.');
@@ -389,7 +444,7 @@ export default class CreateQualRoster extends LightningElement {
             return;
         }
 
-        const rosterPayload = this.rowData.map(r => ({
+        this._pendingRosterPayload = this.rowData.map(r => ({
             memberId          : r.memberId   || null,
             contactId         : r.contactId  || null,
             contactName       : r.contactName,
@@ -400,35 +455,55 @@ export default class CreateQualRoster extends LightningElement {
             precisionRifle    : r.precisionRifle ? 'Yes' : 'No',
             lightningCondition: this.lightningCondition
         }));
+        this._pendingFirstRc = this._selectedData.find(i => i.type === 'rc') || null;
 
-        const firstRc = this._selectedData.find(i => i.type === 'rc');
+        if (!this.rosterLabel && this._pendingFirstRc) {
+            this.rosterLabel = this._pendingFirstRc.name;
+        }
+
+        this.rosterLabelError    = '';
+        this.isSavingRoster      = false;
+        this.showRosterLabelModal = true;
+    }
+
+    _submitRoster(rosterLabel) {
+        this.isSavingRoster = true;
 
         addToRoster({
-            rosterPayload : JSON.stringify(rosterPayload),
-            recruitClassId: firstRc ? firstRc.id : null,
+            rosterPayload : JSON.stringify(this._pendingRosterPayload),
+            recruitClassId: this._pendingFirstRc ? this._pendingFirstRc.id : null,
             testDate      : this.testDate,
             instructorId  : this.selectedInstructor ? this.selectedInstructor.Id : null,
-            location      : this.location
+            location      : this.location,
+            rosterLabel   : rosterLabel
         })
         .then(count => {
+            this.showRosterLabelModal  = false;
+            this.rosterLabel           = '';
+            this.rosterLabelError      = '';
+            this.isSavingRoster        = false;
+            this._pendingRosterPayload = null;
+            this._pendingFirstRc       = null;
             this.showSuccessToast(`${count} FIR Form(s) created successfully!`);
             this._resetForm();
         })
         .catch(error => {
+            this.isSavingRoster = false;
             this.showErrorToast('Add to Roster failed: ' + this.reduceErrors(error));
         });
     }
 
     _resetForm() {
-        this._selectedData      = [];
-        this._rcRaw             = [];
-        this._conRaw            = [];
-        this._rcResults         = [];
-        this._conResults        = [];
-        this._tags              = [];
-        this.lookupSearchKey    = '';
-        this.showLookupDropdown = false;
-        this.isLookupSearching  = false;
+        this._selectedData       = [];
+        this._manuallyRemovedIds  = new Set();
+        this._rcRaw              = [];
+        this._conRaw             = [];
+        this._rcResults          = [];
+        this._conResults         = [];
+        this._tags               = [];
+        this.lookupSearchKey     = '';
+        this.showLookupDropdown  = false;
+        this.isLookupSearching   = false;
         clearTimeout(this.lookupSearchTimeout);
 
         this.testDate           = '';

@@ -6,7 +6,7 @@ public with sharing class QualRosterController {
         if (String.isBlank(searchKey) || searchKey.trim().length() < 1) return result;
 
         String keyword = '%' + searchKey.trim() + '%';
-        
+
         result.recruitClasses = [
             SELECT Id, Name
             FROM   Account
@@ -144,7 +144,8 @@ public with sharing class QualRosterController {
         Id     recruitClassId,
         Date   testDate,
         Id     instructorId,
-        String location
+        String location,
+        String rosterLabel     
     ) {
         List<MemberPayload> payloadList =
             (List<MemberPayload>) JSON.deserialize(rosterPayload, List<MemberPayload>.class);
@@ -200,10 +201,11 @@ public with sharing class QualRosterController {
             aligned.add(mp);
 
             FIR_Qualification_Form__c fir = new FIR_Qualification_Form__c(
-                Name           = displayName + ' - FIR',
-                Test_Date__c   = testDate,
-                Location__c    = location,
-                ContactName__c = resolvedContact
+                Name                  = displayName + ' - FIR',
+                Test_Date__c          = testDate,
+                Location__c           = location,
+                ContactName__c        = resolvedContact,
+                Qual_Roster_Label__c  = String.isNotBlank(rosterLabel) ? rosterLabel.trim() : null  // ← store label
             );
             if (instructorId != null) fir.Firearms_Instrutor__c = instructorId;
             firForms.add(fir);

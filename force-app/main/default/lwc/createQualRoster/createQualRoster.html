@@ -21,8 +21,8 @@
                         <div class="lookup-wrapper">
                             <div class="lookup-input-box">
                                 <lightning-icon icon-name="utility:search" size="x-small" class="lookup-search-icon"></lightning-icon>
-                                <input
-                                    type="text"
+                                <input 
+                                    type="text" 
                                     class="lookup-input"
                                     placeholder="Search Recruit Class or Contact..."
                                     value={lookupSearchKey}
@@ -38,7 +38,7 @@
 
                             <template if:true={showLookupDropdown}>
                                 <div class="lookup-dropdown">
-
+                                    
                                     <template if:true={hasRcResults}>
                                         <div class="lookup-section-label">
                                             <lightning-icon icon-name="standard:account" size="xx-small"></lightning-icon>
@@ -61,7 +61,7 @@
                                             </div>
                                         </template>
                                     </template>
-
+                                    
                                     <template if:true={hasContactResults}>
                                         <div class="lookup-section-label">
                                             <lightning-icon icon-name="standard:contact" size="xx-small"></lightning-icon>
@@ -96,7 +96,7 @@
                                 </div>
                             </template>
                         </div>
-
+                        
                         <template if:true={hasSelections}>
                             <div class="selection-tags">
                                 <template for:each={selectedItems} for:item="item">
@@ -225,15 +225,33 @@
                                 class="table-search">
                             </lightning-input>
                         </div>
-                        <div class="toolbar-btn-wrap">
-                            <lightning-button
-                                variant="brand"
-                                label="Add To Roster"
-                                icon-name="utility:add"
-                                onclick={handleAddToRoster}
-                                disabled={isAddDisabled}>
-                            </lightning-button>
-                        </div>
+
+                        <template if:true={hasCheckedRows}>
+                            <div class="toolbar-btn-tooltip-wrap">
+                                <div class="toolbar-btn-wrap">
+                                    <lightning-button
+                                        variant="neutral"
+                                        label="Remove"
+                                        icon-name="utility:delete"
+                                        onclick={handleRemoveSelected}>
+                                    </lightning-button>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template if:false={hasCheckedRows}>
+                            <div class="toolbar-btn-tooltip-wrap">
+                                <div class="toolbar-btn-wrap">
+                                    <lightning-button
+                                        variant="brand"
+                                        label="Add To Roster"
+                                        icon-name="utility:add"
+                                        onclick={handleAddToRoster}
+                                        disabled={isAddDisabled}>
+                                    </lightning-button>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
@@ -249,7 +267,7 @@
                         <div class="table-scroll-wrap">
                             <table class="roster-table">
                                 <colgroup>
-                                    <col style="width:46px" />
+                                    <col style="width:44px" />
                                     <col style="width:200px" />
                                     <col style="width:100px" />
                                     <col style="width:90px" />
@@ -262,7 +280,14 @@
                                 </colgroup>
                                 <thead>
                                     <tr class="col-header-row">
-                                        <th class="th-remove"></th>
+                                        <th class="th-select td-center">
+                                            <input
+                                                type="checkbox"
+                                                class="row-select-check"
+                                                title="Select / deselect all rows"
+                                                checked={allRowsChecked}
+                                                onchange={handleSelectAllRows} />
+                                        </th>
                                         <th class="th-name">Employee Name</th>
                                         <th class="th-tins">TINS</th>
                                         <th class="th-div">Division</th>
@@ -301,19 +326,15 @@
                                 </thead>
                                 <tbody>
                                     <template for:each={filteredRows} for:item="row">
-                                        <tr key={row.memberId} class={row.rowClass}>
-                                            <td class="td-remove td-center">
-                                                <button
-                                                    class="btn-remove-row"
-                                                    title="Remove member from Roster"
+                                        <tr key={row.contactId} class={row.rowClass}>
+                                            <td class="td-select td-center">
+                                                <input
+                                                    type="checkbox"
+                                                    class="row-select-check"
+                                                    checked={row.selected}
                                                     data-contact-id={row.contactId}
-                                                    onclick={handleRemoveRow}>
-                                                    <lightning-icon
-                                                        icon-name="utility:dash"
-                                                        size="xx-small"
-                                                        alternative-text="Remove member from Roster">
-                                                    </lightning-icon>
-                                                </button>
+                                                    title="Select to remove"
+                                                    onchange={handleRowCheck} />
                                             </td>
                                             <td class="td-name">
                                                 <a href={row.contactUrl} target="_blank" class="member-link">{row.contactName}</a>
@@ -369,7 +390,7 @@
     <template if:true={showRosterLabelModal}>
         <div class="modal-backdrop" onclick={handleModalBackdropClick}></div>
         <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
-
+            
             <div class="modal-body">
                 <h2 id="modal-heading" class="modal-title">Name Your Qual Roster</h2>
                 <p class="modal-description">Give this roster a label so it's easy to identify later.</p>
@@ -408,7 +429,7 @@
                     disabled={isSavingRoster}>
                 </lightning-button>
             </div>
-
+            
             <template if:true={isSavingRoster}>
                 <div class="modal-saving-overlay">
                     <lightning-spinner size="medium" alternative-text="Saving..."></lightning-spinner>

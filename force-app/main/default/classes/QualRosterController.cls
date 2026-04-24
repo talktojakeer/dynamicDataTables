@@ -138,6 +138,27 @@ public with sharing class QualRosterController {
         return rows;
     }
 
+    @AuraEnabled(cacheable=false)
+    public static Boolean checkRosterLabelExists(String rosterLabel) {
+        if (String.isBlank(rosterLabel)) return false;
+        String trimmed = rosterLabel.trim();
+        // Use LOWER() on both sides for case-insensitive duplicate detection
+        String lowerLabel = trimmed.toLowerCase();
+        List<FIR_Qualification_Form__c> existing = [
+            SELECT Id, Qual_Roster_Label__c
+            FROM   FIR_Qualification_Form__c
+            WHERE  Qual_Roster_Label__c != null
+            LIMIT  2000
+        ];
+        for (FIR_Qualification_Form__c f : existing) {
+            if (f.Qual_Roster_Label__c != null &&
+                f.Qual_Roster_Label__c.trim().toLowerCase() == lowerLabel) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @AuraEnabled
     public static Integer addToRoster(
         String rosterPayload,
@@ -145,7 +166,7 @@ public with sharing class QualRosterController {
         Date   testDate,
         Id     instructorId,
         String location,
-        String rosterLabel     
+        String rosterLabel
     ) {
         List<MemberPayload> payloadList =
             (List<MemberPayload>) JSON.deserialize(rosterPayload, List<MemberPayload>.class);

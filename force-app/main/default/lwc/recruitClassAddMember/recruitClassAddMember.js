@@ -8,9 +8,9 @@ export default class RecruitClassAddMember extends LightningElement {
     isShowModal = true;
     @api recordId;
     columns = [
-        { label: 'lastName', fieldName: 'lastName' },
+        { label: 'lastName', fieldName: 'LastName' },
         { label: 'FirstName', fieldName: 'FirstName' },        
-        { label: 'Employee TINS', fieldName: 'TINS_NUMBER__C' }
+        { label: 'Employee TINS', fieldName: 'TINS_NUMBER__c' }
     ];
 
     @track contacts =[];
@@ -25,7 +25,7 @@ export default class RecruitClassAddMember extends LightningElement {
             return contacts.filter(contact =>
                 contact.FirstName?.toLowerCase().includes(searchLower) ||
                 contact.LastName?.toLowerCase().includes(searchLower) ||
-                contact.Employee_TINS__c?.toLowerCase().includes(searchLower)
+                contact.TINS_NUMBER__c?.toLowerCase().includes(searchLower)
             );
         }
 

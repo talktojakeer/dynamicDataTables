@@ -1,16 +1,16 @@
 public class recruitClassController {
     @AuraEnabled(cacheable=true)
-    public static List<Contact> searchContacts(String searchKey, Boolean selectedModel) {
-        list<contact> searchcontacts = new list<contact>();
-        system.debug('Search Contacts '+searchKey+' >> '+selectedModel);
+    public static List<Account> searchContacts(String searchKey, Boolean selectedModel) {
+        list<Account> searchcontacts = new list<Account>();
+        system.debug('Search Accounts '+searchKey+' >> '+selectedModel);
         try{
             if(selectedModel){
                 String key = searchKey + '%';        
-                searchcontacts = [SELECT Id, firstName, LastName FROM Contact 
-                                  WHERE  firstName LIKE :key
+                searchcontacts = [SELECT Id, firstName, LastName,TINS_NUMBER__c FROM Account 
+                                  WHERE ispersonAccount = true and  firstName LIKE :key
                                   ORDER BY Name LIMIT 50];
             }else{        
-                searchcontacts = [SELECT Id, firstName, LastName FROM Contact ORDER BY Name LIMIT 50];
+                searchcontacts = [SELECT Id, firstName, LastName,TINS_NUMBER__c FROM Account where  ispersonAccount = true ORDER BY Name LIMIT 50];
             }
             system.debug('searchcontacts '+searchcontacts);
         }catch(exception ex){
@@ -22,13 +22,12 @@ public class recruitClassController {
     @AuraEnabled
     public static void updateContactsWithRecruitClass(Id recruitClassId, List<Id> contactIds){
         try {
-            List<Contact> searchcontacts = [SELECT Id,LastName,firstName, AccountId FROM Contact WHERE Id IN :contactIds];
-            List<FAQP_Members__c> insertContactMembers = new List<FAQP_Members__c>();
-            for(Contact c : searchcontacts){
-                FAQP_Members__c cm = new FAQP_Members__c();
-                cm.Contact__c = c.Id;
-                cm.Recruit_Class__c = recruitClassId;
-                cm.Name = c.LastName+' '+c.firstName;
+            List<Account> searchcontacts = [SELECT Id,LastName,firstName,PersonContactId FROM Account WHERE ispersonAccount = true and Id IN :contactIds];
+            List<AccountContactRelation> insertContactMembers = new List<AccountContactRelation>();
+            for(Account c : searchcontacts){
+                AccountContactRelation cm = new AccountContactRelation();
+                cm.contactId = c.PersonContactId;
+                cm.AccountId = recruitClassId;
                 insertContactMembers.add(cm);
             }
             insert insertContactMembers;
@@ -39,12 +38,12 @@ public class recruitClassController {
     }
     
     @AuraEnabled
-    public static List<contact> findContacts( List<Map<String, String>> contactsData ) {
+    public static List<Account> findContacts( List<Map<String, String>> contactsData ) {
         if (contactsData == null || contactsData.isEmpty()) {
             throw new AuraHandledException('No data received');
         }
         
-        List<contact> contactsList = new List<contact>();
+        List<Account> contactsList = new List<Account>();
         set<string> tins = new Set<string>();
         for (Map<String, String> row : contactsData) {
             string tinsNumber = row.get('tins');
@@ -52,7 +51,7 @@ public class recruitClassController {
         }
         system.debug('tinsnumber '+tins);
         if(!tins.isempty()){
-            for(contact con: [select Id, firstName, LastName,TINS_NUMBER__c from contact where TINS_NUMBER__c IN: tins]){
+            for(Account con: [select Id, firstName, LastName,TINS_NUMBER__c from Account where ispersonAccount = true and TINS_NUMBER__c IN: tins]){
                 contactsList.add(con);
             }
         }

@@ -1,97 +1,96 @@
 import { LightningElement, track, api } from 'lwc';
-import searchContacts from '@salesforce/apex/recruitClassController.searchContacts';
-import updateContactsWithRecruitClass from '@salesforce/apex/recruitClassController.updateContactsWithRecruitClass';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { CloseActionScreenEvent } from "lightning/actions";
+import searchEmployees             from '@salesforce/apex/recruitClassController.searchEmployees';
+import linkEmployeesToRecruitClass from '@salesforce/apex/recruitClassController.linkEmployeesToRecruitClass';
+import { ShowToastEvent }          from 'lightning/platformShowToastEvent';
+import { CloseActionScreenEvent }  from 'lightning/actions';
 
 export default class RecruitClassAddMember extends LightningElement {
-    isShowModal = true;
+
     @api recordId;
+    @track employees         = [];
+    @track selectedEmployeeIds = [];
+    @track showDataTable     = false;
+
+    isShowModal   = true;
+    selectedIdSet = new Set();
+    searchKey     = '';
+
     columns = [
-        { label: 'lastName', fieldName: 'LastName' },
-        { label: 'FirstName', fieldName: 'FirstName' },        
+        { label: 'Last name',     fieldName: 'LastName' },
+        { label: 'First name',    fieldName: 'FirstName' },
         { label: 'Employee TINS', fieldName: 'TINS_NUMBER__c' }
     ];
 
-    @track contacts =[];
-    selectedContactIds = [];
-    selectedIdSet = new Set();
-    showDataTable = false;
-
-    get getContacts(){
-        const contacts = this.contacts || [];      
-        if (this.searchKey && this.searchKey.trim() !== '') {
-            const searchLower = this.searchKey.toLowerCase();
-            return contacts.filter(contact =>
-                contact.FirstName?.toLowerCase().includes(searchLower) ||
-                contact.LastName?.toLowerCase().includes(searchLower) ||
-                contact.TINS_NUMBER__c?.toLowerCase().includes(searchLower)
+    // --- Computed: returns filtered employees for the datatable --------------
+    get visibleEmployees() {
+        const list = this.employees || [];
+        if (this.searchKey && this.searchKey.trim()) {
+            const key = this.searchKey.toLowerCase();
+            return list.filter(emp =>
+                emp.FirstName?.toLowerCase().includes(key) ||
+                emp.LastName?.toLowerCase().includes(key)  ||
+                emp.TINS_NUMBER__c?.toLowerCase().includes(key)
             );
         }
-
-        if (this.selectedModel === 'File Upload') {
-            const selectedSet = new Set(this.selectedContactIds);
-            return contacts.filter( contact => selectedSet.has(contact.Id));
-        }  
-        return contacts;
+        return list;
     }
 
-    handleContactSearch(event){
-        const searchKey = event.target.value;
-        searchContacts({ searchKey: searchKey, selectedModel: true  })
-        .then(result => {
-            this.contacts = [...result];
-            this.showDataTable = true;
-            this.selectedContactIds = Array.from(this.selectedIdSet);       
-        })
-        .catch(error => {
-            this.showToast('Error', error.body.message, 'error');
-        });
+    // --- Search employees as user types --------------------------------------
+    handleContactSearch(event) {
+        const key = event.target.value;
+        this.searchKey = key;
+        searchEmployees({ searchKey: key, filterByKey: Boolean(key) })
+            .then(result => {
+                this.employees           = [...result];
+                this.showDataTable       = true;
+                this.selectedEmployeeIds = Array.from(this.selectedIdSet);
+            })
+            .catch(error => {
+                this.showToast('Error', this.reduceError(error), 'error');
+            });
     }
 
+    // --- Row selection - preserves selection across search queries -----------
     handleRowSelection(event) {
         const selectedRows = event.detail.selectedRows;
-        const visibleIds = new Set(this.getContacts.map(r => r.Id));
-        visibleIds.forEach(id => {
-            this.selectedIdSet.delete(id);
-        });
-
-        selectedRows.forEach(row => {
-            this.selectedIdSet.add(row.Id);
-        });
-        console.log('selectedRows '+this.selectedContactIds)
-        this.selectedContactIds = Array.from(this.selectedIdSet); 
+        const visibleIds   = new Set(this.visibleEmployees.map(r => r.Id));
+        visibleIds.forEach(id => this.selectedIdSet.delete(id));
+        selectedRows.forEach(row => this.selectedIdSet.add(row.Id));
+        this.selectedEmployeeIds = Array.from(this.selectedIdSet);
     }
 
-    handleSubmit(event){
-        console.log('recordId '+this.recordId);
-        if(this.selectedContactIds.length === 0){
-            this.showToast('Error', 'Please select at least one contact', 'error');
-            return false;
+    // --- Submit: link selected employees to the Recruit Class ----------------
+    handleSubmit() {
+        if (this.selectedEmployeeIds.length === 0) {
+            this.showToast('Error', 'Please select at least one employee.', 'error');
+            return;
         }
-        updateContactsWithRecruitClass({
+        linkEmployeesToRecruitClass({
             recruitClassId: this.recordId,
-            contactIds: this.selectedContactIds
+            employeeIds   : this.selectedEmployeeIds
         })
-        .then(() => {
-            this.showToast('Success', 'Recruit Class Updated Successfully', 'success');
-            this.handleClose();
-            /*setTimeout(() => {
-                window.location.reload();
-            }, 300);*/
-        })
-        .catch(error => {
-            this.showToast('Error', error.body.message, 'error');
-        });
+            .then(() => {
+                this.showToast('Success', 'Recruit Class members updated successfully.', 'success');
+                this.handleClose();
+            })
+            .catch(error => {
+                this.showToast('Error', this.reduceError(error), 'error');
+            });
     }
 
+    // --- Utility -------------------------------------------------------------
     showToast(title, message, variant) {
-        this.dispatchEvent(
-            new ShowToastEvent({ title, message, variant })
-        );
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    }
+
+    reduceError(error) {
+        if (typeof error === 'string') return error;
+        if (error?.body?.message) return error.body.message;
+        if (error?.message)       return error.message;
+        return 'An unexpected error occurred.';
     }
 
     handleClose() {
-       this.dispatchEvent(new CloseActionScreenEvent());
+        this.dispatchEvent(new CloseActionScreenEvent());
     }
 }

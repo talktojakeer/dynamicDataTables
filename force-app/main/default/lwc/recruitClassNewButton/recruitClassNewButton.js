@@ -1,383 +1,327 @@
 import { LightningElement, track, wire } from 'lwc';
-import searchContacts from '@salesforce/apex/recruitClassController.searchContacts';
-import findContacts from '@salesforce/apex/recruitClassController.findContacts';
-import updateContactsWithRecruitClass from '@salesforce/apex/recruitClassController.updateContactsWithRecruitClass';
-import recruitClassDupblicateCheck from '@salesforce/apex/recruitClassController.recruitClassDupblicateCheck';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { createRecord } from 'lightning/uiRecordApi';
-import RECRUIT_CLASS from '@salesforce/schema/Account';
-import CLASS_NAME from '@salesforce/schema/Account.Name';
-import RECORDTYPEID from '@salesforce/schema/Account.RecordTypeId';
-import { getObjectInfo } from 'lightning/uiObjectInfoApi';
+import searchEmployees             from '@salesforce/apex/recruitClassController.searchEmployees';
+import findEmployeesByTins         from '@salesforce/apex/recruitClassController.findEmployeesByTins';
+import linkEmployeesToRecruitClass from '@salesforce/apex/recruitClassController.linkEmployeesToRecruitClass';
+import checkRecruitClassDuplicate  from '@salesforce/apex/recruitClassController.checkRecruitClassDuplicate';
+import { ShowToastEvent }          from 'lightning/platformShowToastEvent';
+import { createRecord }            from 'lightning/uiRecordApi';
+import RECRUIT_CLASS               from '@salesforce/schema/Account';
+import CLASS_NAME                  from '@salesforce/schema/Account.Name';
+import RECORD_TYPE_ID              from '@salesforce/schema/Account.RecordTypeId';
+import { getObjectInfo }           from 'lightning/uiObjectInfoApi';
+
+const FAQP_ACCOUNT_RT = 'FAQP_Account';
+const NAME_PATTERN    = /^[A-Z]20[0-9]{2}$/;
 
 export default class RecruitClassNewButton extends LightningElement {
 
-    recruitClassName = '';
-    selectedModel ='';
-    showFileUpload = false;
+    // --- State ---------------------------------------------------------------
+    recruitClassName    = '';
+    selectedModel       = '';
+    showFileUpload      = false;
     showManualSelection = false;
-    showScreenOne = true;
-    showDataTable = false;
-    accountId;
-    @track fileName;
-    @track fileIcon = 'doctype:attachment';
+    showScreenOne       = true;
+    showDataTable       = false;
+    newAccountId        = null;
+    searchKey           = '';
 
-    @track isOpen = true;
-    @track contacts = [];
-    @track selectedContactIds = [];
-    selectedIdSet = new Set();
+    @track fileName          = '';
+    @track fileIcon          = 'doctype:attachment';
+    @track isOpen            = true;
+    @track employees         = [];
+    @track selectedEmployeeIds = [];
+    @track isTooltipVisible  = false;
 
+    selectedIdSet          = new Set();
+    isDuplicateClassName   = true;
+    recordTypeId           = null;
+
+    // --- Datatable columns ---------------------------------------------------
     columns = [
-        { label: 'lastName', fieldName: 'lastName' },
-        { label: 'FirstName', fieldName: 'FirstName' },        
-        { label: 'Employee TINS', fieldName: 'TINS_NUMBER__C' }
+        { label: 'Last name',      fieldName: 'LastName' },
+        { label: 'First name',     fieldName: 'FirstName' },
+        { label: 'Employee TINS',  fieldName: 'TINS_NUMBER__c' }
     ];
 
-    recordTypeId;
-
+    // --- Wire: resolve FAQP_Account record type Id --------------------------
     @wire(getObjectInfo, { objectApiName: RECRUIT_CLASS })
-    objectInfo({ data, error }) {
+    handleObjectInfo({ data, error }) {
         if (data) {
-            const rtis = data.recordTypeInfos;
-
-            this.recordTypeId = Object.keys(rtis).find(rti =>
-                rtis[rti].name === 'FAQP_Account'
+            const rtMap = data.recordTypeInfos;
+            this.recordTypeId = Object.keys(rtMap).find(
+                id => rtMap[id].name === FAQP_ACCOUNT_RT
             );
+        } else if (error) {
+            this.showToast('Error', 'Failed to load record type info.', 'error');
         }
     }
 
+    // --- Computed getters ----------------------------------------------------
     get selectedCount() {
         return this.selectedIdSet.size;
     }
 
-    @track isTooltipVisible = false;
-    showTooltip() { this.isTooltipVisible = true;  }
+    get visibleEmployees() {
+        const list = this.employees || [];
+        if (this.searchKey && this.searchKey.trim()) {
+            const key = this.searchKey.toLowerCase();
+            return list.filter(emp =>
+                emp.FirstName?.toLowerCase().includes(key) ||
+                emp.LastName?.toLowerCase().includes(key)  ||
+                emp.TINS_NUMBER__c?.toLowerCase().includes(key)
+            );
+        }
+        if (this.selectedModel === 'File Upload') {
+            const selected = new Set(this.selectedEmployeeIds);
+            return list.filter(emp => selected.has(emp.Id));
+        }
+        return list;
+    }
+
+    // --- Tooltip -------------------------------------------------------------
+    showTooltip() { this.isTooltipVisible = true; }
     hideTooltip() { this.isTooltipVisible = false; }
 
-    isDuplicateRecruitClass= true;
-    async handleNameChange(event){        
+    // --- Duplicate check on name change --------------------------------------
+    async handleNameChange(event) {
         this.recruitClassName = event.target.value.toUpperCase();
-        let formattedName = this.formatRecruitClass(this.recruitClassName);
-        console.log('formattedName', formattedName)
+        const formatted = this.formatClassName(this.recruitClassName);
         try {
-            const isDuplicate = await recruitClassDupblicateCheck({ accName: formattedName });
-            this.isDuplicateRecruitClass  = isDuplicate ? false : true;
+            const isDuplicate = await checkRecruitClassDuplicate({ recruitClassName: formatted });
+            this.isDuplicateClassName = !isDuplicate;
         } catch (error) {
-            let message = 'Unexpected error';
-            if (error?.body?.message) {
-                message = error.body.message;
-                this.showToast('Error', message, 'error');
-            }
+            this.showToast('Error', this.reduceError(error), 'error');
         }
-                
     }
-    
-    handlerecruitmodel(event){
-        let clickedButton = event.currentTarget;
-        let allButtonsInGrp = this.refs.dataViewBtnGrp.children;
-        for (let btn of allButtonsInGrp) {
+
+    // --- Recruit model toggle ------------------------------------------------
+    handleRecruitModelSelect(event) {
+        const clicked = event.currentTarget;
+        const buttons = this.refs.modelBtnGroup.children;
+        for (const btn of buttons) {
             btn.variant = 'neutral';
         }
-        clickedButton.variant = 'brand';
+        clicked.variant = 'brand';
         this.selectedModel = event.target.label;
     }
 
-    get getContacts(){
-        const contacts = this.contacts || [];
-
-        if (this.searchKey && this.searchKey.trim() !== '') {
-            const searchLower = this.searchKey.toLowerCase();
-            return contacts.filter(contact =>
-                contact.FirstName?.toLowerCase().includes(searchLower) ||
-                contact.LastName?.toLowerCase().includes(searchLower) ||
-                contact.Employee_TINS__c?.toLowerCase().includes(searchLower)
-            );
+    // --- Navigation ----------------------------------------------------------
+    handleNext() {
+        if (!this.validateScreenOne()) return;
+        if (this.selectedModel === 'Manual') {
+            this.showFileUpload      = false;
+            this.showManualSelection = true;
+            this.showScreenOne       = false;
+            this.showDataTable       = true;
+            this.loadEmployees('', false);
+        } else if (this.selectedModel === 'File Upload') {
+            this.showFileUpload      = true;
+            this.showManualSelection = false;
+            this.showScreenOne       = false;
+            this.loadEmployees('', false);
         }
-
-        if (this.selectedModel === 'File Upload') {
-            const selectedSet = new Set(this.selectedContactIds);
-            return contacts.filter( contact => selectedSet.has(contact.Id));
-        }
-        return contacts;
     }
 
-    handleNext(){
-        if(this.validationScreenOne()){
-            if(this.selectedModel === 'Manual'){
-                this.showFileUpload = false;
-                this.showManualSelection = true;
-                this.showScreenOne = false;
-                this.showDataTable = true;
-                this.handleSearchContacts('',false);
-            }else if(this.selectedModel === 'File Upload'){
-                this.showFileUpload = true;
-                this.showManualSelection = false;
-                this.showScreenOne = false;
-                this.handleSearchContacts('',true);
-            }            
-        }
-        
+    handleBack() {
+        this.showScreenOne       = true;
+        this.showDataTable       = false;
+        this.selectedEmployeeIds = [];
+        this.employees           = [];
+        this.selectedIdSet.clear();
+        this.fileName            = '';
     }
 
-    handleInsertRecruitClass() {
-        const fields = {};
-        let formattedName = this.formatRecruitClass(this.recruitClassName);
-        fields[CLASS_NAME.fieldApiName] = formattedName;
-        fields[RECORDTYPEID.fieldApiName] = this.recordTypeId;
-
-        const recordInput = {
-            apiName: RECRUIT_CLASS.objectApiName,
-            fields
+    // --- Create Recruit Class Account ----------------------------------------
+    handleCreateRecruitClass() {
+        const fields = {
+            [CLASS_NAME.fieldApiName]    : this.formatClassName(this.recruitClassName),
+            [RECORD_TYPE_ID.fieldApiName]: this.recordTypeId
         };
-        return createRecord(recordInput)
-            .then(record => {
-                this.accountId = record.id; 
-                console.log('Created accountId:', this.accountId);
+        return createRecord({ apiName: RECRUIT_CLASS.objectApiName, fields })
+            .then(record => { this.newAccountId = record.id; })
+            .catch(error => { throw error; });
+    }
+
+    formatClassName(value) {
+        if (!value) return value;
+        const clean = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+        if (clean.length >= 5) {
+            return clean.substring(0, 1) + '-' + clean.substring(1, 5);
+        }
+        return clean;
+    }
+
+    // --- Submit --------------------------------------------------------------
+    async handleSubmit() {
+        if (!this.validateScreenTwo()) return;
+        try {
+            await this.handleCreateRecruitClass();
+            if (this.newAccountId) {
+                await linkEmployeesToRecruitClass({
+                    recruitClassId: this.newAccountId,
+                    employeeIds   : this.selectedEmployeeIds
+                });
+                this.showToast('Success', 'Recruit Class created successfully.', 'success');
+                this.dispatchEvent(new CustomEvent('refresh'));
+                this.handleClose();
+            }
+        } catch (error) {
+            this.showToast('Error', this.reduceError(error), 'error');
+        }
+    }
+
+    // --- Validation ----------------------------------------------------------
+    validateScreenOne() {
+        if (!this.recruitClassName) {
+            this.showToast('Error', 'Please enter a Recruit Class name.', 'error');
+            return false;
+        }
+        if (!this.selectedModel) {
+            this.showToast('Error', 'Please select a Recruit model.', 'error');
+            return false;
+        }
+        if (!this.isDuplicateClassName) {
+            this.showToast('Error', 'This Recruit Class name already exists.', 'error');
+            return false;
+        }
+        if (!NAME_PATTERN.test(this.recruitClassName)) {
+            this.showToast('Error', 'Name must be in format A2026 (letter + 4-digit year).', 'error');
+            return false;
+        }
+        return true;
+    }
+
+    validateScreenTwo() {
+        if (this.selectedModel === 'Manual' && this.selectedEmployeeIds.length === 0) {
+            this.showToast('Error', 'Please select at least one employee.', 'error');
+            return false;
+        }
+        if (this.selectedModel === 'File Upload' && !this.fileName) {
+            this.showToast('Error', 'Please upload a CSV file before submitting.', 'error');
+            return false;
+        }
+        return true;
+    }
+
+    // --- Employee search -----------------------------------------------------
+    loadEmployees(key, filterByKey) {
+        searchEmployees({ searchKey: key, filterByKey: filterByKey })
+            .then(result => {
+                this.employees           = [...result];
+                this.selectedEmployeeIds = Array.from(this.selectedIdSet);
             })
             .catch(error => {
-                console.error('Error creating record', error);
-                this.handleError(error);
+                this.showToast('Error', this.reduceError(error), 'error');
             });
     }
 
-    formatRecruitClass(value) {
-        if (!value) return value;
-        value = value.replace(/[^a-zA-Z0-9]/g, '');
-
-        value = value.toUpperCase();
-        if (value.length >= 5) {
-            value = value.substring(0, 1) + '-' + value.substring(1, 5);
-        }
-        return value;
-    }
-
-    handleError(error) {
-        let message = 'Something went wrong';
-        if(error?.body?.output?.errors && error?.body?.output?.errors?.length > 0){
-            message = error?.body?.output?.errors[0].message;
-        }else if(error?.body?.message){
-            message = error?.body?.message;
-        }else if(error?.message){
-            message = error?.message;
-        }
-        this.showToast('Error', message, 'error');
-    }
-
-    async handleSubmit(){
-        try{
-            if(!this.validationScreenTwo()){
-                return;
-            }
-            await this.handleInsertRecruitClass();
-            if(this.accountId){
-                await updateContactsWithRecruitClass({
-                    recruitClassId: this.accountId,
-                    contactIds: this.selectedContactIds
-                })
-                this.showToast('Success', 'Recruit Class Created Successfully', 'success');
-                 this.dispatchEvent(new CustomEvent('refresh'));
-                this.handleClose();
-            }
-            
-        }catch(error){
-            this.showToast('Error', error.body.message, 'error');
-        }
-    }
-
-    validationScreenOne(){
-        if(this.recruitClassName === ''){
-            this.showToast('Error', 'Please enter Recruit Class Name', 'error');
-            return false;
-        }else if(this.selectedModel === ''){
-            this.showToast('Error', 'Please select Recruit model', 'error');
-            return false;
-        }else if(!this.isDuplicateRecruitClass){
-            this.showToast('Error', 'The following name already exists and cannot be used again', 'error');
-            return false;           
-        }else{
-            const pattern = /^[A-Z]20[0-9]{2}$/;
-            if(!pattern.test(this.recruitClassName)){
-                this.showToast('Error', 'Please enter Recruit Class Name in format A 2026', 'error');
-                return false;
-            }
-        }
-        return true;
-    }
-
-    validationScreenTwo(){
-        if(this.selectedModel === 'Manual' && this.selectedContactIds.length === 0){
-            this.showToast('Error', 'Please select at least one contact', 'error');
-            return false;
-        }else if(this.selectedModel === 'File Upload' && !this.fileName){
-            this.showToast('Error', 'Please provide excel file and Proceed', 'error');
-            return false;
-        }
-        return true;
-    }
-
-    handleback(){
-        this.showScreenOne = true;
-        this.showDataTable = false;
-        this.selectedContactIds = [];
-        this.contacts = [];
-        this.selectedIdSet.clear();
-        this.fileName = '';
-    }
-
-    handleSearchContacts(searchKey, selectedModel){
-        searchContacts({ searchKey: searchKey, selectedModel: selectedModel })
-        .then(result => {
-            console.log('result ',JSON.stringify(result));
-            console.log('this.contacts ',JSON.stringify(this.contacts));
-            this.contacts = [...result];
-            this.selectedContactIds = Array.from(this.selectedIdSet);       
-        })
-        .catch(error => {
-            this.showToast('Error', error.body.message, 'error');
-        });
-    }
-    searchKey = '';
     handleContactSearch(event) {
-        console.log(' handleContactSearch ')
-        const searchKey = event.target.value;
-        this.searchKey = searchKey;
-        if (!searchKey || searchKey.length < 2) {
-            this.contacts =[];
-            this.handleSearchContacts('',false);            
+        const key = event.target.value;
+        this.searchKey = key;
+        if (!key || key.length < 2) {
+            this.employees = [];
+            this.loadEmployees('', false);
             return;
-        }            
-        this.handleSearchContacts(searchKey,true);           
+        }
+        this.loadEmployees(key, true);
     }
 
-
+    // --- Row selection -------------------------------------------------------
     handleRowSelection(event) {
         const selectedRows = event.detail.selectedRows;
-        const visibleIds = new Set(this.getContacts.map(r => r.Id));
-        visibleIds.forEach(id => {
-            this.selectedIdSet.delete(id);
-        });
-
-        selectedRows.forEach(row => {
-            this.selectedIdSet.add(row.Id);
-        });
-        
-        this.selectedContactIds = Array.from(this.selectedIdSet); 
-        console.log('selectedRows '+this.selectedContactIds)
+        const visibleIds   = new Set(this.visibleEmployees.map(r => r.Id));
+        visibleIds.forEach(id => this.selectedIdSet.delete(id));
+        selectedRows.forEach(row => this.selectedIdSet.add(row.Id));
+        this.selectedEmployeeIds = Array.from(this.selectedIdSet);
     }
 
-    handleUpload(event){
-        console.log('File uploaded');
+    // --- CSV file upload -----------------------------------------------------
+    handleUpload(event) {
         const file = event.target.files[0];
-        if (!file) return;        
-        
+        if (!file) return;
         this.fileName = file.name;
 
         if (!file.name.toLowerCase().endsWith('.csv')) {
-            this.showToast('Error', 'The File you have entered could not be accepted. Please try another file.', 'error');
+            this.showToast('Error', 'Only CSV files are accepted.', 'error');
             this.fileName = '';
             return;
         }
-        
+
         const reader = new FileReader();
         reader.onload = () => {
-            const csvText = reader.result;
-            const contacts = this.parseCSV(csvText);
-
-            if (!contacts.length) {
-                this.showToast('Error', 'The file does not have contain required data', 'error');
+            const parsed = this.parseCsvFile(reader.result);
+            if (!parsed.length) {
                 this.fileName = '';
                 return;
             }
-
-            findContacts({
-                contactsData: contacts
-            })
-            .then(result => {
-                this.contacts = [...result];
-                this.contacts.forEach(row => {
-                    this.selectedIdSet.add(row.Id);
+            findEmployeesByTins({ employeesData: parsed })
+                .then(result => {
+                    this.employees = [...result];
+                    this.employees.forEach(row => this.selectedIdSet.add(row.Id));
+                    this.selectedEmployeeIds = Array.from(this.selectedIdSet);
+                    this.showDataTable       = true;
+                    this.showManualSelection = true;
+                    this.showToast('Success', 'CSV uploaded successfully.', 'success');
+                })
+                .catch(error => {
+                    this.showToast('Error', this.reduceError(error), 'error');
                 });
-        
-                this.selectedContactIds = Array.from(this.selectedIdSet);
-                this.showDataTable = true;
-                this.showManualSelection = true;
-                this.showToast('Success', 'Excel File uploaded Successfully', 'success');
-            })
-            .catch(error => {
-                this.showToast('Error', error.body.message, 'error');
-            });
-            
         };
-        
         reader.readAsText(file);
     }
 
-    parseCSV(csvText) {
-        const rows = csvText.split(/\r?\n/).filter(r => r.trim());
-    
+    parseCsvFile(csvText) {
+        const rows    = csvText.split(/\r?\n/).filter(r => r.trim());
         const headers = this.parseCsvRow(rows[0]);
-        console.log('headers', headers);
-    
+
         const nameIdx   = headers.indexOf('Cadet Name');
         const tinsIdx   = headers.indexOf('TINS');
         const regionIdx = headers.indexOf('Region');
-    
+
         if (nameIdx === -1 || tinsIdx === -1 || regionIdx === -1) {
-            this.showToast(
-                'Error',
-                'CSV must contain Cadet Name, TINS, and Region columns',
-                'error'
-            );
+            this.showToast('Error', 'CSV must have columns: Cadet Name, TINS, Region.', 'error');
             return [];
         }
-    
-        const contacts = [];
-    
+
+        const result = [];
         for (let i = 1; i < rows.length; i++) {
             const cols = this.parseCsvRow(rows[i]);
-    
             if (!cols[tinsIdx]) continue;
-    
-            contacts.push({
-                name: cols[nameIdx]?.replace(/^"|"$/g, '').trim(),
-                tins: cols[tinsIdx]?.replace(/^"|"$/g, '').trim(),
-                region: cols[regionIdx]?.replace(/^"|"$/g, '').trim(),
+            result.push({
+                name  : cols[nameIdx]?.replace(/^"|"$/g, '').trim(),
+                tins  : cols[tinsIdx]?.replace(/^"|"$/g, '').trim(),
+                region: cols[regionIdx]?.replace(/^"|"$/g, '').trim()
             });
         }
-    
-        console.log('parsed contacts', JSON.stringify(contacts));
-        return contacts;
+        return result;
     }
 
     parseCsvRow(row) {
         const cols = [];
-        let current = '';
+        let current  = '';
         let inQuotes = false;
-    
         for (let i = 0; i < row.length; i++) {
-            const char = row[i];
-    
-            if (char === '"' && row[i + 1] === '"') {
-                current += '"';
-                i++;
-            } else if (char === '"') {
-                inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-                cols.push(current.trim());
-                current = '';
-            } else {
-                current += char;
-            }
+            const ch = row[i];
+            if (ch === '"' && row[i + 1] === '"') { current += '"'; i++; }
+            else if (ch === '"')                   { inQuotes = !inQuotes; }
+            else if (ch === ',' && !inQuotes)      { cols.push(current.trim()); current = ''; }
+            else                                   { current += ch; }
         }
-    
         cols.push(current.trim());
         return cols;
     }
 
+    // --- Utility -------------------------------------------------------------
     showToast(title, message, variant) {
-        this.dispatchEvent(
-            new ShowToastEvent({ title, message, variant })
-        );
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    }
+
+    reduceError(error) {
+        if (typeof error === 'string') return error;
+        if (error?.body?.output?.errors?.length) return error.body.output.errors[0].message;
+        if (error?.body?.message) return error.body.message;
+        if (error?.message)       return error.message;
+        return 'An unexpected error occurred.';
     }
 
     handleClose() {
@@ -385,8 +329,7 @@ export default class RecruitClassNewButton extends LightningElement {
         this.dispatchEvent(new CustomEvent('close'));
     }
 
-    handleCancel(){
+    handleCancel() {
         this.handleClose();
     }
-    
 }

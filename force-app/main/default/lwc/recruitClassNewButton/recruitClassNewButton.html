@@ -10,17 +10,13 @@
                     <button
                         class="slds-button slds-button_icon slds-modal__close"
                         onclick={handleClose}>
-                        <lightning-icon
-                            icon-name="utility:close"
-                            size="small">
-                        </lightning-icon>
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
                     </button>
-                    <h2 class="slds-text-heading_medium">
-                        Create Recruit Class
-                    </h2>
+                    <h2 class="slds-text-heading_medium">Create Recruit Class</h2>
                 </header>
 
                 <lightning-card title="">
+
                     <template if:true={showScreenOne}>
                         <lightning-input
                             label="Recruit Class Name"
@@ -28,33 +24,37 @@
                             value={recruitClassName}
                             maxlength="5"
                             onchange={handleNameChange}
-                            style="width: 50%;padding-left: 25px;"
+                            style="width: 50%; padding-left: 25px;"
                             required>
                         </lightning-input>
-                            
+
                         <fieldset class="slds-form-element">
-                            <legend class="slds-form-element__legend slds-form-element__label" style="padding-left: 25px;">Select Recruit model: {selectedModel}</legend>
+                            <legend class="slds-form-element__legend slds-form-element__label"
+                                    style="padding-left: 25px;">
+                                Select Recruit model: {selectedModel}
+                            </legend>
                             <div class="slds-form-element__control" style="padding-left: 25px;">
-                                <lightning-button-group lwc:ref="dataViewBtnGrp">
-                                    <lightning-button label="Manual" data-value="Manual" variant="neutral"
-                                                    onclick={handlerecruitmodel}>
+                                <lightning-button-group lwc:ref="modelBtnGroup">
+                                    <lightning-button
+                                        label="Manual"
+                                        data-value="Manual"
+                                        variant="neutral"
+                                        onclick={handleRecruitModelSelect}>
                                     </lightning-button>
-                                    <lightning-button label="File Upload" data-value="FileUpload" 
-                                                    onclick={handlerecruitmodel}>
+                                    <lightning-button
+                                        label="File Upload"
+                                        data-value="FileUpload"
+                                        onclick={handleRecruitModelSelect}>
                                     </lightning-button>
                                 </lightning-button-group>
                             </div>
                         </fieldset>
-                    
                     </template>
-                    
-                    
+
                     <template if:false={showScreenOne}>
 
                         <template if:true={showFileUpload}>
-                            <span class="error-text">
-                                File must be saved in CSV before uploading
-                            </span>
+                            <span class="error-text">File must be saved in CSV format before uploading.</span>
                             <div class="slds-grid slds-grid_align-spread slds-p-around_small">
                                 <div class="file-upload">
                                     <lightning-input
@@ -72,76 +72,95 @@
                                             </lightning-icon>
                                             {fileName}
                                         </div>
-                                    </template>                                                            
-                                </div> 
-                                
-                                <div class="tooltip-wrapper">
-                                    <span class="tooltip-icon" onmouseenter={showTooltip} onmouseleave={hideTooltip}>ℹ</span>
-                                    <template if:true={isTooltipVisible}>
-                                        <div class="tooltip-box">File must contain the following data before import: Cadet Name, TINS, Division, Region.</div>
                                     </template>
-                                </div>                                
+                                </div>
+
+                                <div class="tooltip-wrapper">
+                                    <span
+                                        class="tooltip-icon"
+                                        onmouseenter={showTooltip}
+                                        onmouseleave={hideTooltip}>i</span>
+                                    <template if:true={isTooltipVisible}>
+                                        <div class="tooltip-box">
+                                            File must contain the following columns: Cadet Name, TINS, Region.
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
-                                                     
-                        </template>                                           
-                    
+                        </template>
+
                         <template if:true={showManualSelection}>
                             <div class="slds-p-around_medium">
                                 <lightning-input
                                     type="search"
-                                    label="Search Contact"
-                                    placeholder="Search by Name"
+                                    label="Search Employee"
+                                    placeholder="Search by name or TINS"
                                     onchange={handleContactSearch}>
                                 </lightning-input>
                             </div>
                         </template>
+
                         <template if:true={showDataTable}>
-                            <template if:true={contacts.length}>
+                            <template if:true={employees.length}>
                                 <div class="modal-body">
                                     <lightning-datatable
                                         key-field="Id"
-                                        data={getContacts}
+                                        data={visibleEmployees}
                                         columns={columns}
                                         onrowselection={handleRowSelection}
-                                        selected-rows={selectedContactIds}>
+                                        selected-rows={selectedEmployeeIds}>
                                     </lightning-datatable>
-                                </div>                            
+                                </div>
                             </template>
                         </template>
+
                     </template>
-            
+
                     <div slot="footer">
-                        <!-- Wrapper div with slds-clearfix and slds-float_right -->
                         <div class="slds-clearfix">
                             <template if:false={showScreenOne}>
                                 <div class="slds-float_left">
                                     <div class="slds-text-body_small slds-m-bottom_x-small">
-                                        Selected Contacts:
+                                        Selected employees:
                                         <span class="slds-text-title_bold">{selectedCount}</span>
                                     </div>
                                 </div>
                             </template>
-                            
+
                             <div class="slds-float_right">
                                 <template if:true={showScreenOne}>
-                                    <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-left_x-small"></lightning-button>
-                                    <lightning-button variant="brand" label="Next" onclick={handleNext} class="slds-m-left_x-small"></lightning-button>
+                                    <lightning-button
+                                        label="Cancel"
+                                        onclick={handleCancel}
+                                        class="slds-m-left_x-small">
+                                    </lightning-button>
+                                    <lightning-button
+                                        variant="brand"
+                                        label="Next"
+                                        onclick={handleNext}
+                                        class="slds-m-left_x-small">
+                                    </lightning-button>
                                 </template>
                                 <template if:false={showScreenOne}>
-                                    <lightning-button label="back" onclick={handleback} class="slds-m-left_x-small"></lightning-button>
-                                    <lightning-button variant="brand" label="Submit Recruit Class" onclick={handleSubmit} class="slds-m-left_x-small"></lightning-button>
+                                    <lightning-button
+                                        label="Back"
+                                        onclick={handleBack}
+                                        class="slds-m-left_x-small">
+                                    </lightning-button>
+                                    <lightning-button
+                                        variant="brand"
+                                        label="Submit Recruit Class"
+                                        onclick={handleSubmit}
+                                        class="slds-m-left_x-small">
+                                    </lightning-button>
                                 </template>
-                                
-                                
                             </div>
                         </div>
                     </div>
-                    
-                    
+
                 </lightning-card>
             </div>
         </section>
         <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
-    
 </template>

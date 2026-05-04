@@ -22,7 +22,6 @@ export default class CreateQualRoster extends LightningElement {
 
     _manuallyRemovedIds = new Set();
 
-    // ── Lookup UI state ────────────────────────────────────────────────────
     @track lookupSearchKey    = '';
     @track showLookupDropdown = false;
     @track isLookupSearching  = false;
@@ -33,18 +32,18 @@ export default class CreateQualRoster extends LightningElement {
 
     lookupSearchTimeout;
 
-    get hasSelections()     { return this._selectedData.length > 0; }
-    get hasRcResults()      { return this._rcResults.length > 0; }
-    get hasContactResults() { return this._conResults.length > 0; }
-    get hasAnyResults()     { return this.hasRcResults || this.hasContactResults; }
-    get selectedItems()     { return this._tags; }
-    get rcSearchResults()   { return this._rcResults; }
+    get hasSelections()        { return this._selectedData.length > 0; }
+    get hasRcResults()         { return this._rcResults.length > 0; }
+    get hasContactResults()    { return this._conResults.length > 0; }
+    get hasAnyResults()        { return this.hasRcResults || this.hasContactResults; }
+    get selectedItems()        { return this._tags; }
+    get rcSearchResults()      { return this._rcResults; }
     get contactSearchResults() { return this._conResults; }
 
     get hasCheckedRows() {
         return this.rowData.some(r => r.selected);
     }
-    
+
     get allRowsChecked() {
         return this.rowData.length > 0 && this.rowData.every(r => r.selected);
     }
@@ -76,7 +75,6 @@ export default class CreateQualRoster extends LightningElement {
         }));
     }
 
-    // ── Instructor Lookup ─────────────────────────────────────────────────
     @track selectedInstructor     = null;
     @track instructorSearchKey    = '';
     @track showInstructorDropdown = false;
@@ -94,24 +92,22 @@ export default class CreateQualRoster extends LightningElement {
                 Name: getFieldValue(data, NAME_FIELD)
             };
         } else if (error) {
-            console.error('Failed to load current user:', error);
+            this.showErrorToast('Failed to load current user.');
         }
     }
 
-    // ── Session fields ─────────────────────────────────────────────────────
     @track testDate           = '';
     @track location           = '';
     @track lightningCondition = '';
     @track lcDaytime          = false;
     @track lcNighttime        = false;
 
-    // ── Table ─────────────────────────────────────────────────────────────
     @track isLoadingMembers = false;
     @track tableSearchKey   = '';
     @track rowData          = [];
 
-    get memberCount()  { return this.rowData.length; }
-    get isAddDisabled(){ return !this.testDate; }
+    get memberCount()   { return this.rowData.length; }
+    get isAddDisabled() { return !this.testDate; }
 
     get filteredRows() {
         if (!this.tableSearchKey || !this.tableSearchKey.trim()) return this.rowData;
@@ -146,8 +142,8 @@ export default class CreateQualRoster extends LightningElement {
         this.rosterLabelError = '';
     }
 
-    handleModalBackdropClick() {
-        this.handleRosterLabelCancel();
+    handleModalBackdropClick() { 
+        this.handleRosterLabelCancel(); 
     }
 
     handleRosterLabelCancel() {
@@ -219,7 +215,12 @@ export default class CreateQualRoster extends LightningElement {
                             seen.add(key);
                             return true;
                         })
-                        .map(c => ({ Id: c.Id, Name: c.Name, tins: c.TINS }));
+                        .map(c => ({
+                            Id             : c.Id,               // Person Account Id
+                            Name           : c.Name,
+                            tins           : c.TINS,
+                            personContactId: c.PersonContactId   // shadow Contact Id
+                        }));
                     this.isLookupSearching = false;
                     this._refreshDropdownState();
                 })
@@ -244,8 +245,15 @@ export default class CreateQualRoster extends LightningElement {
                 ...this._selectedData.slice(existingIdx + 1)
             ];
         } else {
-            if (type === 'contact' && this._manuallyRemovedIds.has(id)) {
-                this._manuallyRemovedIds.delete(id);
+            if (type === 'contact') {
+                const raw = this._conRaw.find(c => c.Id === id);
+                const shadowContactId = raw ? raw.personContactId : null;
+                if (shadowContactId && this._manuallyRemovedIds.has(shadowContactId)) {
+                    this._manuallyRemovedIds.delete(shadowContactId);
+                }
+                if (this._manuallyRemovedIds.has(id)) {
+                    this._manuallyRemovedIds.delete(id);
+                }
             }
             if (type === 'rc') {
                 this._manuallyRemovedIds = new Set();
@@ -280,10 +288,10 @@ export default class CreateQualRoster extends LightningElement {
     }
 
     _reloadAllMembers() {
-        if (this._selectedData.length === 0) { 
-            this.rowData = []; 
-            return; 
-        }    
+        if (this._selectedData.length === 0) {
+            this.rowData = [];
+            return;
+        }
         const snapshot = {};
         this.rowData.forEach(r => {
             if (r.contactId) {
@@ -314,7 +322,9 @@ export default class CreateQualRoster extends LightningElement {
                 const allRows = [];
                 results.forEach(list => {
                     (list || []).forEach(row => {
-                        if (row.contactId && this._manuallyRemovedIds.has(row.contactId)) return;
+                        const blockedByContact = row.contactId       && this._manuallyRemovedIds.has(row.contactId);
+                        const blockedByAccount = row.personAccountId && this._manuallyRemovedIds.has(row.personAccountId);
+                        if (blockedByContact || blockedByAccount) return;
                         if (row.contactId && seenIds.has(row.contactId)) return;
                         if (row.contactId) seenIds.add(row.contactId);
                         allRows.push(row);
@@ -341,21 +351,26 @@ export default class CreateQualRoster extends LightningElement {
     }
 
     buildRow(row) {
+        const recordLink = row.personAccountId
+            ? `/lightning/r/Account/${row.personAccountId}/view`
+            : null;
+
         return {
-            memberId      : row.memberId    || '',
-            contactId     : row.contactId   || '',
-            contactName   : row.contactName || '—',
-            contactUrl    : row.contactId   ? `/lightning/r/Contact/${row.contactId}/view` : null,
-            tins          : row.tins        || '',
-            division      : row.division    || '',
-            region        : row.region      || '',
-            pistol        : false,
-            shotgun       : false,
-            rifle         : false,
-            autoWeapon    : false,
-            precisionRifle: false,
-            selected      : false,    
-            rowClass      : 'member-row'
+            memberId        : row.memberId       || '',
+            contactId       : row.contactId      || '',   // shadow Contact Id
+            personAccountId : row.personAccountId || '',  // Person Account Id
+            contactName     : row.contactName    || '',
+            contactUrl      : recordLink,                 // links to Person Account record
+            tins            : row.tins           || '',
+            division        : row.division       || '',
+            region          : row.region         || '',
+            pistol          : false,
+            shotgun         : false,
+            rifle           : false,
+            autoWeapon      : false,
+            precisionRifle  : false,
+            selected        : false,
+            rowClass        : 'member-row'
         };
     }
 
@@ -374,31 +389,28 @@ export default class CreateQualRoster extends LightningElement {
         this.rowData = this.rowData.map(r => ({
             ...r,
             selected: checked,
-            rowClass : checked ? 'member-row row-selected' : 'member-row'
+            rowClass: checked ? 'member-row row-selected' : 'member-row'
         }));
     }
 
-    // ── Remove Selected rows ───────────────────────────────────────────────
     handleRemoveSelected() {
-        const toRemove = this.rowData.filter(r => r.selected).map(r => r.contactId);
+        const toRemove = this.rowData.filter(r => r.selected);
+        toRemove.forEach(r => {
+            if (r.contactId)       this._manuallyRemovedIds.add(r.contactId);
+            if (r.personAccountId) this._manuallyRemovedIds.add(r.personAccountId);
+        });
 
-        // Add to exclusion set so they don't reappear on reload
-        toRemove.forEach(id => { if (id) this._manuallyRemovedIds.add(id); });
-
-        // Also remove any matching contact tags from the lookup pills
-        // so the tag doesn't linger after the row is deleted
-        const removedSet = new Set(toRemove);
-        const hadContactTags = this._selectedData.some(
-            i => i.type === 'contact' && removedSet.has(i.id)
+        const removedContactIds  = new Set(toRemove.map(r => r.contactId).filter(Boolean));
+        const removedAccountIds  = new Set(toRemove.map(r => r.personAccountId).filter(Boolean));
+        const hadContactTags     = this._selectedData.some(
+            i => i.type === 'contact' && (removedAccountIds.has(i.id) || removedContactIds.has(i.id))
         );
         if (hadContactTags) {
             this._selectedData = this._selectedData.filter(
-                i => !(i.type === 'contact' && removedSet.has(i.id))
+                i => !(i.type === 'contact' && (removedAccountIds.has(i.id) || removedContactIds.has(i.id)))
             );
             this._refreshTags();
         }
-
-        // Filter the rows out of the table
         this.rowData = this.rowData.filter(r => !r.selected);
     }
 
@@ -448,16 +460,15 @@ export default class CreateQualRoster extends LightningElement {
         this.instructorResults      = [];
     }
 
-    handleTestDateChange(event) { this.testDate = event.target.value; }
-    handleLocationChange(event) { this.location = event.target.value; }
+    handleTestDateChange(event)          { this.testDate = event.target.value; }
+    handleLocationChange(event)          { this.location = event.target.value; }
+    handleTableSearch(event)             { this.tableSearchKey = event.target.value; }
 
     handleLightningConditionChange(event) {
         this.lightningCondition = event.target.value;
         this.lcDaytime          = this.lightningCondition === 'DayTime/Norrmal Lighting';
         this.lcNighttime        = this.lightningCondition === 'NightTime/Reduced Lighting';
     }
-
-    handleTableSearch(event) { this.tableSearchKey = event.target.value; }
 
     handleWeaponCheck(event) {
         const contactId = event.target.dataset.contactId;
@@ -471,26 +482,25 @@ export default class CreateQualRoster extends LightningElement {
     handleSelectAllWeapon(event) {
         const field   = event.target.dataset.field;
         const checked = event.target.checked;
-        this.rowData = this.rowData.map(r => ({ ...r, [field]: checked }));
+        this.rowData  = this.rowData.map(r => ({ ...r, [field]: checked }));
     }
 
-    // ── Add To Roster ──────────────────────────────────────────────────────
     handleAddToRoster() {
         if (!this.testDate) {
             this.showErrorToast('Please select a Test Date before adding to roster.');
             return;
         }
-        const membersWithNoWeapon = this.rowData.filter(r => !WEAPON_FIELDS.some(f => r[f]));
-        if (membersWithNoWeapon.length > 0) {
-            const names = membersWithNoWeapon.slice(0, 3).map(r => r.contactName).join(', ');
-            const extra = membersWithNoWeapon.length > 3 ? ` and ${membersWithNoWeapon.length - 3} more` : '';
+        const noWeapon = this.rowData.filter(r => !WEAPON_FIELDS.some(f => r[f]));
+        if (noWeapon.length > 0) {
+            const names = noWeapon.slice(0, 3).map(r => r.contactName).join(', ');
+            const extra = noWeapon.length > 3 ? ` and ${noWeapon.length - 3} more` : '';
             this.showErrorToast(`Please select at least one weapon for: ${names}${extra}`);
             return;
         }
 
         this._pendingRosterPayload = this.rowData.map(r => ({
             memberId          : r.memberId   || null,
-            contactId         : r.contactId  || null,
+            contactId         : r.contactId  || null,  // shadow Contact Id
             contactName       : r.contactName,
             pistol            : r.pistol         ? 'Yes' : 'No',
             shotgun           : r.shotgun        ? 'Yes' : 'No',
@@ -504,7 +514,6 @@ export default class CreateQualRoster extends LightningElement {
         if (!this.rosterLabel && this._pendingFirstRc) {
             this.rosterLabel = this._pendingFirstRc.name;
         }
-
         this.rosterLabelError    = '';
         this.isSavingRoster      = false;
         this.showRosterLabelModal = true;
@@ -512,7 +521,6 @@ export default class CreateQualRoster extends LightningElement {
 
     _submitRoster(rosterLabel) {
         this.isSavingRoster = true;
-        
         addToRoster({
             rosterPayload : JSON.stringify(this._pendingRosterPayload),
             recruitClassId: this._pendingFirstRc ? this._pendingFirstRc.id : null,
@@ -539,7 +547,7 @@ export default class CreateQualRoster extends LightningElement {
 
     _resetForm() {
         this._selectedData       = [];
-        this._manuallyRemovedIds  = new Set();
+        this._manuallyRemovedIds = new Set();
         this._rcRaw              = [];
         this._conRaw             = [];
         this._rcResults          = [];
@@ -549,17 +557,14 @@ export default class CreateQualRoster extends LightningElement {
         this.showLookupDropdown  = false;
         this.isLookupSearching   = false;
         clearTimeout(this.lookupSearchTimeout);
-
         this.testDate           = '';
         this.location           = '';
         this.lightningCondition = '';
         this.lcDaytime          = false;
         this.lcNighttime        = false;
-        
-        this.rowData          = [];
-        this.tableSearchKey   = '';
-        this.isLoadingMembers = false;
-
+        this.rowData            = [];
+        this.tableSearchKey     = '';
+        this.isLoadingMembers   = false;
         this.instructorSearchKey    = '';
         this.showInstructorDropdown = false;
         this.isInstructorSearching  = false;

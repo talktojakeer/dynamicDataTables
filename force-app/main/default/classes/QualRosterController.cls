@@ -1,5 +1,8 @@
 public with sharing class QualRosterController {
 
+    private static final String FAQP_ACCOUNT_RT  = 'FAQP_Account';
+    private static final String PERSON_ACCOUNT_RT = 'PersonAccount';
+
     @AuraEnabled(cacheable=true)
     public static SearchResultWrapper searchRecruitClassAndContacts(String searchKey) {
         SearchResultWrapper result = new SearchResultWrapper();
@@ -11,41 +14,47 @@ public with sharing class QualRosterController {
             SELECT Id, Name
             FROM   Account
             WHERE  Name LIKE :keyword
-            AND    RecordType.DeveloperName = 'FAQP_Account'
+            AND    RecordType.DeveloperName = :FAQP_ACCOUNT_RT
+            AND    IsPersonAccount = false
             ORDER BY Name ASC
-            LIMIT 10
+            LIMIT  10
         ];
 
-        List<Contact> rawContacts = [
-            SELECT Id, Name, TINS_NUMBER__c
-            FROM   Contact
-            WHERE  (Name LIKE :keyword OR TINS_NUMBER__c LIKE :keyword)
+        List<Account> rawEmployees = [
+            SELECT Id, Name, TINS_NUMBER__c, PersonContactId
+            FROM   Account
+            WHERE  IsPersonAccount = true
+            AND    RecordType.DeveloperName = :PERSON_ACCOUNT_RT
+            AND    (Name LIKE :keyword OR TINS_NUMBER__c LIKE :keyword)
             AND    TINS_NUMBER__c != null
             ORDER BY Name ASC
-            LIMIT 10
+            LIMIT  10
         ];
 
-        if (rawContacts.isEmpty()) {
-            rawContacts = [
-                SELECT Id, Name, TINS_NUMBER__c
-                FROM   Contact
-                WHERE  (Name LIKE :keyword OR TINS_NUMBER__c LIKE :keyword)
+        if (rawEmployees.isEmpty()) {
+            rawEmployees = [
+                SELECT Id, Name, TINS_NUMBER__c, PersonContactId
+                FROM   Account
+                WHERE  IsPersonAccount = true
+                AND    RecordType.DeveloperName = :PERSON_ACCOUNT_RT
+                AND    (Name LIKE :keyword OR TINS_NUMBER__c LIKE :keyword)
                 ORDER BY TINS_NUMBER__c NULLS LAST, Name ASC
-                LIMIT 10
+                LIMIT  10
             ];
         }
 
-        Map<String, Contact> uniqueByName = new Map<String, Contact>();
-        for (Contact c : rawContacts) {
-            String key = c.Name.toLowerCase().trim();
-            if (!uniqueByName.containsKey(key)) uniqueByName.put(key, c);
+        Map<String, Account> uniqueByName = new Map<String, Account>();
+        for (Account a : rawEmployees) {
+            String key = a.Name.toLowerCase().trim();
+            if (!uniqueByName.containsKey(key)) uniqueByName.put(key, a);
         }
 
-        for (Contact c : uniqueByName.values()) {
-            ContactSearchItem item = new ContactSearchItem();
-            item.Id   = c.Id;
-            item.Name = c.Name;
-            item.TINS = c.TINS_NUMBER__c;
+        for (Account a : uniqueByName.values()) {
+            ContactSearchItem item  = new ContactSearchItem();
+            item.Id              = a.Id;
+            item.Name            = a.Name;
+            item.TINS            = a.TINS_NUMBER__c;
+            item.PersonContactId = a.PersonContactId;
             result.contacts.add(item);
         }
         return result;
@@ -77,73 +86,72 @@ public with sharing class QualRosterController {
 
     @AuraEnabled(cacheable=false)
     public static List<MemberRow> getContactMembers(Id recruitClassId, Id contactId) {
-        System.debug('getContactMembers → recruitClassId=' + recruitClassId + ' | contactId=' + contactId);
         List<MemberRow> rows = new List<MemberRow>();
 
         if (recruitClassId != null) {
-            for (FAQP_Members__c m : [
+            for (AccountContactRelation acr : [
                 SELECT  Id,
-                        Contact__c,
-                        Contact__r.Name,
-                        Contact__r.TINS_NUMBER__c,
-                        Contact__r.FAQP_Division__c,
-                        Contact__r.FAQP_Region__c,
-                        Recruit_Class__c
-                FROM    FAQP_Members__c
-                WHERE   Recruit_Class__c = :recruitClassId
-                ORDER BY Contact__r.Name ASC
+                        ContactId,
+                        Contact.Name,
+                        Contact.Account.Id,
+                        Contact.Account.TINS_NUMBER__c,
+                        Contact.FAQP_Division__c,
+                        Contact.FAQP_Region__c
+                FROM    AccountContactRelation
+                WHERE   AccountId = :recruitClassId
+                AND     IsActive  = true
+                ORDER BY Contact.Name ASC
                 LIMIT   500
             ]) {
-                MemberRow row      = new MemberRow();
-                row.memberId       = m.Id;
-                row.contactId      = m.Contact__c;
-                row.contactName    = m.Contact__r.Name;
-                row.tins           = m.Contact__r.TINS_NUMBER__c;
-                row.division       = m.Contact__r.FAQP_Division__c;
-                row.region         = m.Contact__r.FAQP_Region__c != null
-                                     ? String.valueOf(m.Contact__r.FAQP_Region__c) : null;
-                row.recruitClassId = m.Recruit_Class__c;
+                MemberRow row       = new MemberRow();
+                row.memberId        = acr.Id;                         
+                row.contactId       = acr.ContactId;                  
+                row.personAccountId = acr.Contact?.Account?.Id;       
+                row.contactName     = acr.Contact?.Name;
+                row.tins            = acr.Contact?.Account?.TINS_NUMBER__c;
+                row.division        = acr.Contact?.FAQP_Division__c;
+                row.region          = acr.Contact?.FAQP_Region__c != null
+                                      ? String.valueOf(acr.Contact.FAQP_Region__c) : null;
+                row.recruitClassId  = recruitClassId;
                 rows.add(row);
             }
-            System.debug('Mode A rows: ' + rows.size());
             return rows;
         }
 
         if (contactId != null) {
-            for (Contact c : [
-                SELECT  Id, Name,
-                        TINS_NUMBER__c,
-                        FAQP_Division__c,
-                        FAQP_Region__c
-                FROM    Contact
-                WHERE   Id = :contactId
-                LIMIT   1
-            ]) {
-                MemberRow row      = new MemberRow();
-                row.memberId       = null;
-                row.contactId      = c.Id;
-                row.contactName    = c.Name;
-                row.tins           = c.TINS_NUMBER__c;
-                row.division       = c.FAQP_Division__c;
-                row.region         = c.FAQP_Region__c != null
-                                     ? String.valueOf(c.FAQP_Region__c) : null;
-                row.recruitClassId = null;
-                rows.add(row);
+            List<Account> employees = [
+                SELECT Id, Name, TINS_NUMBER__c, PersonContactId
+                FROM   Account
+                WHERE  Id = :contactId
+                AND    IsPersonAccount = true
+                LIMIT  1
+            ];
+
+            if (!employees.isEmpty()) {
+                Account emp = employees[0];
+                if (emp.PersonContactId != null) {
+                    MemberRow row       = new MemberRow();
+                    row.memberId        = null;
+                    row.contactId       = emp.PersonContactId;  
+                    row.personAccountId = emp.Id;               
+                    row.contactName     = emp.Name;
+                    row.tins            = emp.TINS_NUMBER__c;
+                    row.division        = null;
+                    row.region          = null;
+                    row.recruitClassId  = null;
+                    rows.add(row);
+                }
             }
-            System.debug('Mode B rows: ' + rows.size());
             return rows;
         }
 
-        System.debug('getContactMembers: both params null');
         return rows;
     }
 
     @AuraEnabled(cacheable=false)
     public static Boolean checkRosterLabelExists(String rosterLabel) {
         if (String.isBlank(rosterLabel)) return false;
-        String trimmed = rosterLabel.trim();
-        // Use LOWER() on both sides for case-insensitive duplicate detection
-        String lowerLabel = trimmed.toLowerCase();
+        String lowerLabel = rosterLabel.trim().toLowerCase();
         List<FIR_Qualification_Form__c> existing = [
             SELECT Id, Qual_Roster_Label__c
             FROM   FIR_Qualification_Form__c
@@ -173,60 +181,35 @@ public with sharing class QualRosterController {
 
         if (payloadList == null || payloadList.isEmpty()) return 0;
 
-        List<Id> memberIds = new List<Id>();
+        List<Id> allContactIds = new List<Id>();
         for (MemberPayload mp : payloadList) {
-            if (String.isNotBlank(mp.memberId)) memberIds.add(mp.memberId);
+            if (String.isNotBlank(mp.contactId)) allContactIds.add(mp.contactId);
         }
 
-        Map<Id, FAQP_Members__c> memberMap = memberIds.isEmpty()
-            ? new Map<Id, FAQP_Members__c>()
-            : new Map<Id, FAQP_Members__c>([
-                SELECT Id, Contact__c, Contact__r.Name
-                FROM   FAQP_Members__c
-                WHERE  Id IN :memberIds
-              ]);
-
-        List<Id> contactIds = new List<Id>();
-        for (MemberPayload mp : payloadList) {
-            if (String.isBlank(mp.memberId) && String.isNotBlank(mp.contactId)) {
-                contactIds.add(mp.contactId);
-            }
-        }
-
-        Map<Id, Contact> contactMap = contactIds.isEmpty()
+        Map<Id, Contact> contactMap = allContactIds.isEmpty()
             ? new Map<Id, Contact>()
             : new Map<Id, Contact>([
-                SELECT Id, Name FROM Contact WHERE Id IN :contactIds
+                SELECT Id, Name FROM Contact WHERE Id IN :allContactIds
               ]);
 
         List<MemberPayload>             aligned  = new List<MemberPayload>();
         List<FIR_Qualification_Form__c> firForms = new List<FIR_Qualification_Form__c>();
 
         for (MemberPayload mp : payloadList) {
-            String displayName     = null;
-            Id     resolvedContact = null;
+            if (String.isBlank(mp.contactId)) continue;
 
-            if (String.isNotBlank(mp.memberId)) {
-                FAQP_Members__c m = memberMap.get(mp.memberId);
-                if (m == null) continue;
-                resolvedContact = m.Contact__c;
-                displayName     = m.Contact__r != null ? m.Contact__r.Name : 'Member';
-            } else if (String.isNotBlank(mp.contactId)) {
-                Contact c       = contactMap.get(mp.contactId);
-                resolvedContact = mp.contactId;
-                displayName     = (c != null ? c.Name : mp.contactName);
-            }
-
+            Contact c           = contactMap.get(mp.contactId);
+            String  displayName = (c != null ? c.Name : mp.contactName);
             if (String.isBlank(displayName)) continue;
 
             aligned.add(mp);
 
             FIR_Qualification_Form__c fir = new FIR_Qualification_Form__c(
-                Name                  = displayName + ' - FIR',
-                Test_Date__c          = testDate,
-                Location__c           = location,
-                ContactName__c        = resolvedContact,
-                Qual_Roster_Label__c  = String.isNotBlank(rosterLabel) ? rosterLabel.trim() : null  // ← store label
+                Name                 = displayName + ' - FIR',
+                Test_Date__c         = testDate,
+                Location__c          = location,
+                ContactName__c       = mp.contactId,
+                Qual_Roster_Label__c = String.isNotBlank(rosterLabel) ? rosterLabel.trim() : null
             );
             if (instructorId != null) fir.Firearms_Instrutor__c = instructorId;
             firForms.add(fir);
@@ -242,33 +225,23 @@ public with sharing class QualRosterController {
 
             if (mp.pistol == 'Yes') {
                 weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                    FIR_Qualification_Form__c = fir,
-                    Weapon_Type__c            = 'Pistol'
-                ));
+                    FIR_Qualification_Form__c = fir, Weapon_Type__c = 'Pistol'));
             }
             if (mp.shotgun == 'Yes') {
                 weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                    FIR_Qualification_Form__c = fir,
-                    Weapon_Type__c            = 'Shot Gun'
-                ));
+                    FIR_Qualification_Form__c = fir, Weapon_Type__c = 'Shot Gun'));
             }
             if (mp.rifle == 'Yes') {
                 weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                    FIR_Qualification_Form__c = fir,
-                    Weapon_Type__c            = 'Riffle'
-                ));
+                    FIR_Qualification_Form__c = fir, Weapon_Type__c = 'Riffle'));
             }
             if (mp.autoWeapon == 'Yes') {
                 weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                    FIR_Qualification_Form__c = fir,
-                    Weapon_Type__c            = 'Automatic Weapon'
-                ));
+                    FIR_Qualification_Form__c = fir, Weapon_Type__c = 'Automatic Weapon'));
             }
             if (mp.precisionRifle == 'Yes') {
                 weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                    FIR_Qualification_Form__c = fir,
-                    Weapon_Type__c            = 'Precision Riffle'
-                ));
+                    FIR_Qualification_Form__c = fir, Weapon_Type__c = 'Precision Riffle'));
             }
         }
         if (!weapons.isEmpty()) insert weapons;
@@ -277,8 +250,9 @@ public with sharing class QualRosterController {
     }
 
     public class MemberRow {
-        @AuraEnabled public String memberId;
-        @AuraEnabled public String contactId;
+        @AuraEnabled public String memberId;       
+        @AuraEnabled public String contactId;       
+        @AuraEnabled public String personAccountId; 
         @AuraEnabled public String contactName;
         @AuraEnabled public String tins;
         @AuraEnabled public String division;
@@ -288,7 +262,7 @@ public with sharing class QualRosterController {
 
     public class MemberPayload {
         public String memberId;
-        public String contactId;
+        public String contactId;        
         public String contactName;
         public String pistol;
         public String shotgun;
@@ -304,9 +278,10 @@ public with sharing class QualRosterController {
     }
 
     public class ContactSearchItem {
-        @AuraEnabled public Id     Id;
+        @AuraEnabled public Id     Id;              
         @AuraEnabled public String Name;
         @AuraEnabled public String TINS;
+        @AuraEnabled public Id     PersonContactId; 
     }
 
     public class UserResult {

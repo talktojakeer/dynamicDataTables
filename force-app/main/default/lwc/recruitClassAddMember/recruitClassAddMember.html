@@ -16,10 +16,10 @@
                 <div class="modal-body">
                     <lightning-datatable
                         key-field="Id"
-                        data={getContacts}
+                        data={visibleEmployees}
                         columns={columns}
                         onrowselection={handleRowSelection}
-                        selected-rows={selectedContactIds}>
+                        selected-rows={selectedEmployeeIds}>
                     </lightning-datatable>
                 </div> 
             </template>

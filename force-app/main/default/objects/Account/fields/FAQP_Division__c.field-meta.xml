@@ -1,0 +1,22 @@
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FAQP_Division__c</fullName>
+    <label>FAQP Division</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>ABV</fullName>
+                <default>false</default>
+                <label>ABV</label>
+            </value>
+            <value>
+                <fullName>AV</fullName>
+                <default>false</default>
+                <label>AV</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

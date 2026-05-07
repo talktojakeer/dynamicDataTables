@@ -120,9 +120,8 @@ public with sharing class QualRosterController {
 
         if (contactId != null) {
             List<Account> employees = [
-                SELECT Id, Name, TINS_NUMBER__c, PersonContactId
-                FROM   Account
-                WHERE  Id = :contactId
+                SELECT Id, Name, TINS_NUMBER__c, PersonContactId,
+                       FAQP_Region__pc, FAQP_Division__pc From Account WHERE  Id = :contactId
                 AND    IsPersonAccount = true
                 LIMIT  1
             ];
@@ -136,8 +135,8 @@ public with sharing class QualRosterController {
                     row.personAccountId = emp.Id;               
                     row.contactName     = emp.Name;
                     row.tins            = emp.TINS_NUMBER__c;
-                    row.division        = null;
-                    row.region          = null;
+                    row.division        = emp.FAQP_Division__pc;
+                    row.region          = String.valueOf(emp.FAQP_Region__pc);
                     row.recruitClassId  = null;
                     rows.add(row);
                 }

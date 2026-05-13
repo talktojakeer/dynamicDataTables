@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Weapon_Type__c</fullName>
+    <label>Weapon Type</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Shotgun</fullName>
+                <default>false</default>
+                <label>Shotgun</label>
+            </value>
+            <value>
+                <fullName>Rifle</fullName>
+                <default>false</default>
+                <label>Rifle</label>
+            </value>
+            <value>
+                <fullName>Automatic Weapon</fullName>
+                <default>false</default>
+                <label>Automatic Weapon</label>
+            </value>
+            <value>
+                <fullName>Precision Rifle</fullName>
+                <default>false</default>
+                <label>Precision Rifle</label>
+            </value>
+            <value>
+                <fullName>Pistol 1</fullName>
+                <default>false</default>
+                <label>Pistol 1</label>
+            </value>
+            <value>
+                <fullName>Pistol 2</fullName>
+                <default>false</default>
+                <label>Pistol 2</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

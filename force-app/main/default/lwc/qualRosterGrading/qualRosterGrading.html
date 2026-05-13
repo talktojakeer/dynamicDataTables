@@ -1,0 +1,238 @@
+<template>
+    <div class="grading-page">
+
+        <div class="page-header">
+            <h1 class="page-title">Qual Roster</h1>
+            <p class="page-sub">Select a Roster Label to grade qualification results</p>
+        </div>
+
+        <!-- Roster Label selector -->
+        <div class="card">
+            <div class="card-body">
+                <div class="label-selector-row">
+                    <div class="field-item">
+                        <label class="field-label" for="rosterSelect">
+                            Roster Label <span class="required-star">*</span>
+                        </label>
+                        <select id="rosterSelect" class="inline-select"
+                            onchange={handleLabelChange} disabled={isLoadingLabels}>
+                            <option value="">-- Select Roster --</option>
+                            <template for:each={rosterLabels} for:item="lbl">
+                                <option key={lbl} value={lbl}>{lbl}</option>
+                            </template>
+                        </select>
+                        <template if:true={isLoadingLabels}>
+                            <div class="loading-inline">
+                                <lightning-spinner size="x-small" alternative-text="Loading..."></lightning-spinner>
+                                <span class="loading-text-sm">Loading labels...</span>
+                            </div>
+                        </template>
+                        <template if:true={noLabels}>
+                            <p class="empty-sub-msg">No rosters found. Create a Qual Roster first.</p>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session header -->
+        <template if:true={hasGradingData}>
+            <div class="card session-header-card">
+                <div class="session-header-grid">
+                    <div class="session-field">
+                        <span class="session-field-label">Firearm Instructor</span>
+                        <span class="session-field-value">{gradingData.instructorName}</span>
+                    </div>
+                    <div class="session-field">
+                        <span class="session-field-label">Location</span>
+                        <span class="session-field-value">{gradingData.location}</span>
+                    </div>
+                    <div class="session-field">
+                        <span class="session-field-label">Test Date</span>
+                        <span class="session-field-value">{gradingData.testDate}</span>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Loading -->
+        <template if:true={isLoadingGrading}>
+            <div class="table-loading">
+                <lightning-spinner size="medium" alternative-text="Loading..."></lightning-spinner>
+                <p class="loading-text">Loading grading data...</p>
+            </div>
+        </template>
+
+        <!-- Main content: sidebar + table -->
+        <template if:false={isLoadingGrading}>
+            <template if:true={hasGradingData}>
+                <div class="grading-layout">
+
+                    <!-- Left sidebar: weapon navigation -->
+                    <div class="weapon-sidebar">
+                        <div class="sidebar-title">WEAPONS</div>
+                        <template for:each={weaponNavItems} for:item="nav">
+                            <div key={nav.weaponType}
+                                 class={nav.itemClass}
+                                 data-weapon={nav.weaponType}
+                                 onclick={handleWeaponSelect}>
+                                <div class="weapon-nav-top">
+                                    <span class={nav.dotClass}></span>
+                                    <span class="weapon-nav-label">{nav.label}</span>
+                                </div>
+                                <div class="weapon-nav-stat">{nav.statText} - {nav.pct}%</div>
+                                <div class="pct-bar-track">
+                                    <div class={nav.barClass} style={nav.pctBarStyle}></div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Right panel: active weapon datatable -->
+                    <div class="weapon-panel">
+
+                        <!-- Weapon header bar with summary badges -->
+                        <template if:true={activeSummary}>
+                            <div class="weapon-panel-header">
+                                <div class="weapon-panel-title-row">
+                                    <span class={activeSummary.dotClass}></span>
+                                    <h2 class="weapon-panel-title">{activeSummary.weaponType}</h2>
+                                    <span class="badge badge-neutral">{activeSummary.badgeText}</span>
+                                    <span class="badge badge-success">{activeSummary.qualified} qualified</span>
+                                    <span class="badge badge-info">{activeSummary.at90} @ 90%+</span>
+                                    <span class="badge badge-error">{activeSummary.notQualified} not qualified</span>
+                                    <span class="graded-counter">{activeSummary.gradedText}</span>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Datatable -->
+                        <template if:true={hasActiveRows}>
+                            <div class="table-scroll-wrap">
+                                <table class="grading-table">
+                                    <thead>
+                                        <tr class="grading-header-row">
+                                            <th class="th-name">Name</th>
+                                            <th class="th-toggle">Qualified</th>
+                                            <th class="th-toggle">Qualified at 90%?</th>
+                                            <th>Manufacturer</th>
+                                            <th>Model</th>
+                                            <th>Sight Type</th>
+                                            <th>Weapon Code</th>
+                                            <th>Qualification Attempt</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={activeRows} for:item="row">
+                                            <tr key={row.detailId} class="grading-row">
+                                                <!-- Name -->
+                                                <td class="td-name-cell">
+                                                    <span class="member-name">{row.memberName}</span>
+                                                </td>
+                                                <!-- Qualified Yes/No toggle -->
+                                                <td class="td-toggle">
+                                                    <div class="toggle-group">
+                                                        <button
+                                                            class="toggle-btn toggle-yes"
+                                                            data-detail-id={row.detailId}
+                                                            data-value="Yes"
+                                                            data-active={row.qualifiedYes}
+                                                            onclick={handleQualifiedToggle}>Yes</button>
+                                                        <button
+                                                            class="toggle-btn toggle-no"
+                                                            data-detail-id={row.detailId}
+                                                            data-value="No"
+                                                            data-active={row.qualifiedNo}
+                                                            onclick={handleQualifiedToggle}>No</button>
+                                                    </div>
+                                                </td>
+                                                <!-- Qualified at 90% Yes/No toggle -->
+                                                <td class="td-toggle">
+                                                    <div class="toggle-group">
+                                                        <button
+                                                            class="toggle-btn toggle-yes"
+                                                            data-detail-id={row.detailId}
+                                                            data-value="Yes"
+                                                            data-active={row.qualified90Yes}
+                                                            onclick={handleQualified90Toggle}>Yes</button>
+                                                        <button
+                                                            class="toggle-btn toggle-no"
+                                                            data-detail-id={row.detailId}
+                                                            data-value="No"
+                                                            data-active={row.qualified90No}
+                                                            onclick={handleQualified90Toggle}>No</button>
+                                                    </div>
+                                                </td>
+                                                <!-- Manufacturer -->
+                                                <td>
+                                                    <input type="text" class="cell-input" value={row.manufacturer}
+                                                        maxlength="30" data-detail-id={row.detailId}
+                                                        data-field="manufacturer" onblur={handleFieldBlur} placeholder="--" />
+                                                </td>
+                                                <!-- Model -->
+                                                <td>
+                                                    <input type="text" class="cell-input" value={row.model}
+                                                        maxlength="30" data-detail-id={row.detailId}
+                                                        data-field="model" onblur={handleFieldBlur} placeholder="--" />
+                                                </td>
+                                                <!-- Sight Type -->
+                                                <td>
+                                                    <select class="cell-select" data-detail-id={row.detailId}
+                                                        data-field="sightType" onchange={handleSelectChange}>
+                                                        <option value="">-- Pick --</option>
+                                                        <option value="Iron Sight"      selected={row.isIronSight}>Iron Sight</option>
+                                                        <option value="Optic"           selected={row.isOptic}>Optic</option>
+                                                        <option value="Magnified Optic" selected={row.isMagnifiedOptic}>Magnified Optic</option>
+                                                    </select>
+                                                </td>
+                                                <!-- Weapon Code -->
+                                                <td>
+                                                    <input type="text" class="cell-input" value={row.weaponCode}
+                                                        maxlength="30" data-detail-id={row.detailId}
+                                                        data-field="weaponCode" onblur={handleFieldBlur} placeholder="--" />
+                                                </td>
+                                                <!-- Qualification Attempt -->
+                                                <td>
+                                                    <select class="cell-select" data-detail-id={row.detailId}
+                                                        data-field="qualificationAttempt" onchange={handleSelectChange}>
+                                                        <option value="">--</option>
+                                                        <option value="1st" selected={row.is1st}>1st</option>
+                                                        <option value="2nd" selected={row.is2nd}>2nd</option>
+                                                        <option value="3rd" selected={row.is3rd}>3rd</option>
+                                                        <option value="4th" selected={row.is4th}>4th</option>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
+
+                    </div>
+                </div>
+            </template>
+
+            <!-- Empty state -->
+            <template if:true={selectedLabel}>
+                <template if:false={hasGradingData}>
+                    <div class="empty-state">
+                        <lightning-icon icon-name="utility:list" size="large"></lightning-icon>
+                        <p class="empty-title">No grading data found</p>
+                        <p class="empty-sub">No weapon qualification records found for "{selectedLabel}".</p>
+                    </div>
+                </template>
+            </template>
+        </template>
+
+        <!-- Initial state -->
+        <template if:false={selectedLabel}>
+            <div class="initial-state">
+                <lightning-icon icon-name="utility:shield" size="large"></lightning-icon>
+                <p class="initial-title">Select a Roster Label to begin grading</p>
+                <p class="initial-sub">Choose from the dropdown above to load qualification results.</p>
+            </div>
+        </template>
+
+    </div>
+</template>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Model__c</fullName>
+    <label>Model</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <controllingField>Manufacturer__c</controllingField>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>P320</fullName>
+                <default>false</default>
+                <label>P320</label>
+            </value>
+            <value>
+                <fullName>P365</fullName>
+                <default>false</default>
+                <label>P365</label>
+            </value>
+            <value>
+                <fullName>P226</fullName>
+                <default>false</default>
+                <label>P226</label>
+            </value>
+            <value>
+                <fullName>P229</fullName>
+                <default>false</default>
+                <label>P229</label>
+            </value>
+            <value>
+                <fullName>DDM4V7</fullName>
+                <default>false</default>
+                <label>DDM4V7</label>
+            </value>
+            <value>
+                <fullName>DDM4 V7 RIS 3</fullName>
+                <default>false</default>
+                <label>DDM4 V7 RIS 3</label>
+            </value>
+            <value>
+                <fullName>Mod 1</fullName>
+                <default>false</default>
+                <label>Mod 1</label>
+            </value>
+            <value>
+                <fullName>Mod 2</fullName>
+                <default>false</default>
+                <label>Mod 2</label>
+            </value>
+            <value>
+                <fullName>P90</fullName>
+                <default>false</default>
+                <label>P90</label>
+            </value>
+            <value>
+                <fullName>416</fullName>
+                <default>false</default>
+                <label>416</label>
+            </value>
+            <value>
+                <fullName>762 A1</fullName>
+                <default>false</default>
+                <label>762 A1</label>
+            </value>
+            <value>
+                <fullName>590A1</fullName>
+                <default>false</default>
+                <label>590A1</label>
+            </value>
+            <value>
+                <fullName>870</fullName>
+                <default>false</default>
+                <label>870</label>
+            </value>
+            <value>
+                <fullName>1187</fullName>
+                <default>false</default>
+                <label>1187</label>
+            </value>
+        </valueSetDefinition>
+        <valueSettings>
+            <controllingFieldValue>Sig Sauer</controllingFieldValue>
+            <valueName>P320</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Sig Sauer</controllingFieldValue>
+            <valueName>P365</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Sig Sauer</controllingFieldValue>
+            <valueName>P226</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Sig Sauer</controllingFieldValue>
+            <valueName>P229</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Daniel Defense</controllingFieldValue>
+            <valueName>DDM4V7</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Daniel Defense</controllingFieldValue>
+            <valueName>DDM4 V7 RIS 3</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Hodge Defense</controllingFieldValue>
+            <valueName>Mod 1</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Hodge Defense</controllingFieldValue>
+            <valueName>Mod 2</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>FN Herstal</controllingFieldValue>
+            <valueName>P90</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Heckler Koch</controllingFieldValue>
+            <valueName>416</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Heckler Koch</controllingFieldValue>
+            <valueName>762 A1</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Mossberg</controllingFieldValue>
+            <valueName>590A1</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Remington</controllingFieldValue>
+            <valueName>870</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Remington</controllingFieldValue>
+            <valueName>1187</valueName>
+        </valueSettings>
+    </valueSet>
+</CustomField>

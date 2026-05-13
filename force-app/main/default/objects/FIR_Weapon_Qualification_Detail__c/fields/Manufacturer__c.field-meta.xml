@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Manufacturer__c</fullName>
+    <label>Manufacturer</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <controllingField>Weapon_Type__c</controllingField>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Sig Sauer</fullName>
+                <default>false</default>
+                <label>Sig Sauer</label>
+            </value>
+            <value>
+                <fullName>Daniel Defense</fullName>
+                <default>false</default>
+                <label>Daniel Defense</label>
+            </value>
+            <value>
+                <fullName>Hodge Defense</fullName>
+                <default>false</default>
+                <label>Hodge Defense</label>
+            </value>
+            <value>
+                <fullName>FN Herstal</fullName>
+                <default>false</default>
+                <label>FN Herstal</label>
+            </value>
+            <value>
+                <fullName>Heckler Koch</fullName>
+                <default>false</default>
+                <label>Heckler Koch</label>
+            </value>
+            <value>
+                <fullName>Mossberg</fullName>
+                <default>false</default>
+                <label>Mossberg</label>
+            </value>
+            <value>
+                <fullName>Remington</fullName>
+                <default>false</default>
+                <label>Remington</label>
+            </value>
+        </valueSetDefinition>
+        <valueSettings>
+            <controllingFieldValue>Shotgun</controllingFieldValue>
+            <valueName>Mossberg</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Shotgun</controllingFieldValue>
+            <valueName>Remington</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Rifle</controllingFieldValue>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
+            <valueName>Daniel Defense</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Rifle</controllingFieldValue>
+            <controllingFieldValue>Precision Rifle</controllingFieldValue>
+            <valueName>Hodge Defense</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Rifle</controllingFieldValue>
+            <valueName>FN Herstal</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Rifle</controllingFieldValue>
+            <valueName>Heckler Koch</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Pistol 1</controllingFieldValue>
+            <controllingFieldValue>Pistol 2</controllingFieldValue>
+            <valueName>Sig Sauer</valueName>
+        </valueSettings>
+    </valueSet>
+</CustomField>

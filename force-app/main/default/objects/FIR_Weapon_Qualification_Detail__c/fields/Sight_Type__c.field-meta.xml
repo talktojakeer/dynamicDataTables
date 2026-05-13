@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Sight_Type__c</fullName>
+    <label>Sight Type</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <controllingField>Weapon_Type__c</controllingField>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Iron Sight</fullName>
+                <default>false</default>
+                <label>Iron Sight</label>
+            </value>
+            <value>
+                <fullName>Optic</fullName>
+                <default>false</default>
+                <label>Optic</label>
+            </value>
+            <value>
+                <fullName>Magnified Optic</fullName>
+                <default>false</default>
+                <label>Magnified Optic</label>
+            </value>
+            <value>
+                <fullName>Scope</fullName>
+                <default>false</default>
+                <label>Scope</label>
+            </value>
+        </valueSetDefinition>
+        <valueSettings>
+            <controllingFieldValue>Shotgun</controllingFieldValue>
+            <controllingFieldValue>Rifle</controllingFieldValue>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
+            <controllingFieldValue>Pistol 1</controllingFieldValue>
+            <controllingFieldValue>Pistol 2</controllingFieldValue>
+            <valueName>Iron Sight</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Shotgun</controllingFieldValue>
+            <controllingFieldValue>Rifle</controllingFieldValue>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
+            <controllingFieldValue>Pistol 1</controllingFieldValue>
+            <controllingFieldValue>Pistol 2</controllingFieldValue>
+            <valueName>Optic</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Rifle</controllingFieldValue>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
+            <valueName>Magnified Optic</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Precision Rifle</controllingFieldValue>
+            <valueName>Scope</valueName>
+        </valueSettings>
+    </valueSet>
+</CustomField>

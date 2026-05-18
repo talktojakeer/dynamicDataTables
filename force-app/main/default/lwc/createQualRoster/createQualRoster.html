@@ -16,41 +16,26 @@
                 <div class="fields-row">
 
                     <div class="field-item field-item-rc">
-                        <label class="field-label">Recruit Class / Member</label>
-
+                        <label class="field-label required-field">Recruit Class / Member</label>
                         <div class="lookup-wrapper">
                             <div class="lookup-input-box">
                                 <lightning-icon icon-name="utility:search" size="x-small" class="lookup-search-icon"></lightning-icon>
-                                <input 
-                                    type="text" 
-                                    class="lookup-input"
-                                    placeholder="Search Recruit Class or Contact..."
-                                    value={lookupSearchKey}
-                                    oninput={handleLookupSearch}
-                                    onfocus={handleLookupFocus}
-                                    autocomplete="off" />
+                                <input type="text" class="lookup-input" placeholder="Search Recruit Class or Contact..." value={lookupSearchKey} oninput={handleLookupSearch} onfocus={handleLookupFocus} autocomplete="off" />
                                 <template if:true={isLookupSearching}>
                                     <div class="lookup-spinner">
                                         <lightning-spinner size="x-small" alternative-text="Searching..."></lightning-spinner>
                                     </div>
                                 </template>
                             </div>
-
                             <template if:true={showLookupDropdown}>
                                 <div class="lookup-dropdown">
-                                    
                                     <template if:true={hasRcResults}>
                                         <div class="lookup-section-label">
                                             <lightning-icon icon-name="standard:account" size="xx-small"></lightning-icon>
                                             Recruit Classes
                                         </div>
                                         <template for:each={rcSearchResults} for:item="rc">
-                                            <div key={rc.Id}
-                                                class={rc.itemClass}
-                                                data-id={rc.Id}
-                                                data-name={rc.Name}
-                                                data-type="rc"
-                                                onmousedown={handleLookupSelect}>
+                                            <div key={rc.Id} class={rc.itemClass} data-id={rc.Id} data-name={rc.Name} data-type="rc" onmousedown={handleLookupSelect}>
                                                 <div class="lookup-item-main">{rc.Name}</div>
                                                 <template if:true={rc.alreadySelected}>
                                                     <lightning-icon icon-name="utility:check" size="xx-small" class="lookup-check-icon"></lightning-icon>
@@ -61,85 +46,67 @@
                                             </div>
                                         </template>
                                     </template>
-                                    
                                     <template if:true={hasContactResults}>
                                         <div class="lookup-section-label">
                                             <lightning-icon icon-name="standard:contact" size="xx-small"></lightning-icon>
                                             Contacts
                                         </div>
                                         <template for:each={contactSearchResults} for:item="con">
-                                            <div key={con.Id}
-                                                class={con.itemClass}
-                                                data-id={con.Id}
-                                                data-name={con.Name}
-                                                data-type="contact"
-                                                data-tins={con.tins}
-                                                onmousedown={handleLookupSelect}>
+                                            <div key={con.Id} class={con.itemClass} data-id={con.Id} data-name={con.Name} data-type="contact" data-tins={con.tins} onmousedown={handleLookupSelect}>
                                                 <div class="lookup-item-main">{con.Name}</div>
                                                 <template if:true={con.alreadySelected}>
                                                     <lightning-icon icon-name="utility:check" size="xx-small" class="lookup-check-icon"></lightning-icon>
                                                 </template>
                                                 <template if:false={con.alreadySelected}>
-                                                    <span class="lookup-item-meta">{con.tins}</span>
+                                                    <span class="lookup-item-badge contact-badge-pill">
+                                                        <template if:true={con.tins}>TINS: {con.tins}</template>
+                                                        <template if:false={con.tins}>Contact</template>
+                                                    </span>
                                                 </template>
                                             </div>
                                         </template>
                                     </template>
-
                                     <template if:false={hasAnyResults}>
-                                        <div class="lookup-no-results">
-                                            <lightning-icon icon-name="utility:search" size="x-small"></lightning-icon>
-                                            No results for "{lookupSearchKey}"
-                                        </div>
+                                        <template if:false={isLookupSearching}>
+                                            <div class="lookup-no-results">No results found</div>
+                                        </template>
                                     </template>
-
                                 </div>
                             </template>
                         </div>
-                        
                         <template if:true={hasSelections}>
-                            <div class="selection-tags">
-                                <template for:each={selectedItems} for:item="item">
-                                    <span key={item.id} class={item.tagClass}>
-                                        <lightning-icon icon-name={item.icon} size="xx-small" class="tag-icon"></lightning-icon>
-                                        <span class="tag-label">{item.name}</span>
-                                        <button class="tag-remove"
-                                            data-id={item.id}
-                                            onclick={handleRemoveSelection}
-                                            title="Remove">✕</button>
+                            <div class="selected-tags">
+                                <template for:each={selectedItems} for:item="tag">
+                                    <span key={tag.id} class={tag.tagClass}>
+                                        <lightning-icon icon-name={tag.icon} size="xx-small"></lightning-icon>
+                                        {tag.name}
+                                        <button class="tag-remove" data-id={tag.id} onclick={handleRemoveSelection} aria-label="Remove">×</button>
                                     </span>
                                 </template>
-                                <button class="clear-all-btn" onclick={handleClearAll} title="Clear all">
-                                    Clear all
-                                </button>
+                                <button class="clear-all-btn" onclick={handleClearAll}>Clear all</button>
                             </div>
                         </template>
                     </div>
 
                     <div class="field-item">
-                        <lightning-input
-                            type="date"
-                            label="Test Date"
-                            value={testDate}
-                            required
-                            onchange={handleTestDateChange}>
-                        </lightning-input>
+                        <label class="field-label required-field">Test Date</label>
+                        <input type="date" class="field-input" value={testDate} onchange={handleTestDateChange} required />
                     </div>
 
                     <div class="field-item">
-                        <label class="field-label">Firearm Instructor</label>
+                        <label class="field-label required-field">Firearm Instructor</label>
+                        <template if:true={selectedInstructor}>
+                            <div class="instructor-pill">
+                                <lightning-icon icon-name="standard:user" size="xx-small"></lightning-icon>
+                                <span class="instructor-pill-name">{selectedInstructor.Name}</span>
+                                <button class="instructor-pill-clear" onclick={handleClearInstructor} aria-label="Clear instructor">×</button>
+                            </div>
+                        </template>
                         <template if:false={selectedInstructor}>
                             <div class="lookup-wrapper">
                                 <div class="lookup-input-box">
-                                    <lightning-icon icon-name="standard:user" size="x-small" class="lookup-search-icon"></lightning-icon>
-                                    <input
-                                        type="text"
-                                        class="lookup-input"
-                                        placeholder="Search user..."
-                                        value={instructorSearchKey}
-                                        oninput={handleInstructorSearch}
-                                        onfocus={handleInstructorFocus}
-                                        autocomplete="off" />
+                                    <lightning-icon icon-name="utility:search" size="x-small" class="lookup-search-icon"></lightning-icon>
+                                    <input type="text" class="lookup-input" placeholder="Search instructor..." value={instructorSearchKey} oninput={handleInstructorSearch} onfocus={handleInstructorFocus} autocomplete="off" />
                                     <template if:true={isInstructorSearching}>
                                         <div class="lookup-spinner">
                                             <lightning-spinner size="x-small" alternative-text="Searching..."></lightning-spinner>
@@ -148,56 +115,36 @@
                                 </div>
                                 <template if:true={showInstructorDropdown}>
                                     <div class="lookup-dropdown">
-                                        <template if:true={instructorResults.length}>
-                                            <template for:each={instructorResults} for:item="usr">
-                                                <div key={usr.Id}
-                                                    class="lookup-item"
-                                                    data-id={usr.Id}
-                                                    data-name={usr.Name}
-                                                    onmousedown={handleInstructorSelect}>
-                                                    <div class="lookup-item-main">{usr.Name}</div>
-                                                    <span class="lookup-item-meta">{usr.Title}</span>
-                                                </div>
-                                            </template>
+                                        <template for:each={instructorResults} for:item="usr">
+                                            <div key={usr.Id} class="lookup-item" data-id={usr.Id} data-name={usr.Name} onmousedown={handleInstructorSelect}>
+                                                <div class="lookup-item-main">{usr.Name}</div>
+                                                <template if:true={usr.Title}>
+                                                    <span class="lookup-item-badge">{usr.Title}</span>
+                                                </template>
+                                            </div>
                                         </template>
                                         <template if:false={instructorResults.length}>
-                                            <div class="lookup-no-results">
-                                                <lightning-icon icon-name="utility:search" size="x-small"></lightning-icon>
-                                                No users found for "{instructorSearchKey}"
-                                            </div>
+                                            <template if:false={isInstructorSearching}>
+                                                <div class="lookup-no-results">No users found</div>
+                                            </template>
                                         </template>
                                     </div>
                                 </template>
                             </div>
                         </template>
-                        <template if:true={selectedInstructor}>
-                            <div class="lookup-selected-pill">
-                                <lightning-icon icon-name="standard:user" size="x-small" class="pill-icon"></lightning-icon>
-                                <span class="pill-name">{selectedInstructor.Name}</span>
-                                <button class="pill-clear" onclick={handleClearInstructor} title="Remove">
-                                    <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
-                                </button>
-                            </div>
-                        </template>
                     </div>
 
                     <div class="field-item">
-                        <lightning-input
-                            type="text"
-                            label="Location"
-                            placeholder="Location..."
-                            value={location}
-                            onchange={handleLocationChange}>
-                        </lightning-input>
+                        <label class="field-label required-field">Location</label>
+                        <input type="text" class="field-input" value={location} onchange={handleLocationChange} placeholder="Enter location" />
                     </div>
 
                     <div class="field-item">
-                        <label class="field-label">Lightning Condition</label>
-                        <select class="inline-select top-select"
-                            onchange={handleLightningConditionChange}>
+                        <label class="field-label required-field">Lightning Condition</label>
+                        <select class="field-input" value={lightningCondition} onchange={handleLightningChange}>
                             <option value="">-- Select --</option>
-                            <option value="DayTime/Norrmal Lighting"   selected={lcDaytime}>DayTime / Normal Lighting</option>
-                            <option value="NightTime/Reduced Lighting" selected={lcNighttime}>NightTime / Reduced Lighting</option>
+                            <option value="DayTime / Normal Lighting">DayTime / Normal Lighting</option>
+                            <option value="NightTime / Reduced Lighting">NightTime / Reduced Lighting</option>
                         </select>
                     </div>
 
@@ -206,173 +153,208 @@
         </div>
 
         <template if:true={hasSelections}>
-            <div class="table-card">
 
-                <div class="table-toolbar">
-                    <div class="toolbar-left">
-                        <span class="step-badge">2</span>
-                        <h2 class="card-title">Members &amp; Weapon Details</h2>
-                        <span class="row-count">{memberCount} members</span>
+        <!-- ═══ Weapon Details — Mass Apply ═══ -->
+        <div class="card mass-apply-card">
+            <div class="card-header">
+                <lightning-icon icon-name="utility:filterList" size="x-small" class="filter-icon"></lightning-icon>
+                <h2 class="card-title">Weapon Details — Mass Apply</h2>
+                <span class="card-sub">— select values and apply to checked employees below</span>
+            </div>
+            <div class="card-body">
+                <div class="mass-apply-fields">
+                    <div class="mass-field-item">
+                        <label class="field-label">Weapon Type</label>
+                        <select class="field-input" value={massWeaponType} onchange={handleMassWeaponTypeChange}>
+                            <option value="">-- Select --</option>
+                            <template for:each={weaponTypeOptions} for:item="opt">
+                                <option key={opt} value={opt}>{opt}</option>
+                            </template>
+                        </select>
                     </div>
-                    <div class="toolbar-right">
-                        <div class="toolbar-search-wrap">
-                            <lightning-input
-                                type="search"
-                                label=""
-                                placeholder="Filter by name or TINS..."
-                                value={tableSearchKey}
-                                onchange={handleTableSearch}
-                                class="table-search">
-                            </lightning-input>
+                    <div class="mass-field-item">
+                        <label class="field-label">Manufacturer</label>
+                        <select class="field-input" value={massManufacturer} onchange={handleMassManufacturerChange} disabled={isMassManufacturerDisabled}>
+                            <option value="">-- Select --</option>
+                            <template for:each={massManufacturerOptions} for:item="opt">
+                                <option key={opt} value={opt}>{opt}</option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="mass-field-item">
+                        <label class="field-label">Model</label>
+                        <select class="field-input" value={massModel} onchange={handleMassModelChange} disabled={isMassModelDisabled}>
+                            <option value="">-- Select --</option>
+                            <template for:each={massModelOptions} for:item="opt">
+                                <option key={opt} value={opt}>{opt}</option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="mass-field-item">
+                        <label class="field-label">Sight Type</label>
+                        <select class="field-input" value={massSightType} onchange={handleMassSightTypeChange} disabled={isMassSightTypeDisabled}>
+                            <option value="">-- Select --</option>
+                            <template for:each={massSightTypeOptions} for:item="opt">
+                                <option key={opt} value={opt}>{opt}</option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+                <div class="mass-apply-actions">
+                    <button class="btn-clear" onclick={handleMassClear}>Clear</button>
+                    <button class="btn-apply" onclick={handleMassApply} disabled={isMassApplyDisabled}>Apply to selected rows</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ Section 2: Recruit Class Members ═══ -->
+        <template if:true={hasRcSelection}>
+            <div class="card">
+                <div class="card-header">
+                    <span class="step-badge step-badge-green">2</span>
+                    <h2 class="card-title">Recruit Class Members</h2>
+                    <span class="card-sub">— {selectedRcName}</span>
+                    <span class="card-sub member-count-badge">{rcMemberCount} members</span>
+                    <div class="table-actions">
+                        <div class="search-box">
+                            <lightning-icon icon-name="utility:search" size="x-small" class="search-icon"></lightning-icon>
+                            <input type="text" class="search-input" placeholder="Filter by name or TINS..." value={rcTableSearchKey} oninput={handleRcTableSearch} />
                         </div>
-
-                        <template if:true={hasCheckedRows}>
-                            <div class="toolbar-btn-tooltip-wrap">
-                                <div class="toolbar-btn-wrap">
-                                    <lightning-button
-                                        variant="neutral"
-                                        label="Remove"
-                                        icon-name="utility:delete"
-                                        onclick={handleRemoveSelected}>
-                                    </lightning-button>
-                                </div>
-                            </div>
-                        </template>
-
-                        <template if:false={hasCheckedRows}>
-                            <div class="toolbar-btn-tooltip-wrap">
-                                <div class="toolbar-btn-wrap">
-                                    <lightning-button
-                                        variant="brand"
-                                        label="Add To Roster"
-                                        icon-name="utility:add"
-                                        onclick={handleAddToRoster}
-                                        disabled={isAddDisabled}>
-                                    </lightning-button>
-                                </div>
-                            </div>
+                        <template if:true={hasRcCheckedRows}>
+                            <button class="btn-remove" onclick={handleRemoveSelectedRc}>
+                                <lightning-icon icon-name="utility:delete" size="x-small"></lightning-icon>
+                                Remove
+                            </button>
                         </template>
                     </div>
                 </div>
+                <div class="card-body table-container">
+                    <template if:true={isLoadingMembers}>
+                        <div class="table-loading">
+                            <lightning-spinner size="medium" alternative-text="Loading..."></lightning-spinner>
+                            <p class="loading-text">Loading members...</p>
+                        </div>
+                    </template>
+                    <template if:false={isLoadingMembers}>
+                        <template if:true={filteredRcRows.length}>
+                            <div class="table-scroll-wrap">
+                                <table class="roster-table">
+                                    <colgroup>
+                                        <col style="width:44px" /><col style="width:200px" /><col style="width:100px" /><col style="width:100px" /><col style="width:80px" /><col style="width:140px" /><col style="width:140px" /><col style="width:130px" /><col style="width:130px" />
+                                    </colgroup>
+                                    <thead>
+                                        <tr class="col-header-row">
+                                            <th class="th-select td-center"><input type="checkbox" class="row-select-check" title="Select / deselect all" checked={allRcRowsChecked} onchange={handleSelectAllRcRows} /></th>
+                                            <th class="th-name">Employee Name</th>
+                                            <th class="th-tins">TINS</th>
+                                            <th class="th-div">Division</th>
+                                            <th class="th-reg">Region</th>
+                                            <th class="th-weapon th-weapontype">Weapon Type</th>
+                                            <th class="th-weapon th-manufacturer">Manufacturer</th>
+                                            <th class="th-weapon th-model">Model</th>
+                                            <th class="th-weapon th-sighttype">Sight Type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={filteredRcRows} for:item="row">
+                                            <tr key={row.contactId} class={row.rowClass}>
+                                                <td class="td-select td-center"><input type="checkbox" class="row-select-check" checked={row.selected} data-contact-id={row.contactId} data-source="rc" title="Select row" onchange={handleRowCheck} /></td>
+                                                <td class="td-name"><a href={row.contactUrl} target="_blank" class="member-link">{row.contactName}</a></td>
+                                                <td class="td-tins">{row.tins}</td>
+                                                <td class="td-div">{row.division}</td>
+                                                <td class="td-reg">{row.region}</td>
+                                                <td class="td-weapon td-weapontype">{row.weaponType}</td>
+                                                <td class="td-weapon td-manufacturer">{row.manufacturer}</td>
+                                                <td class="td-weapon td-model">{row.model}</td>
+                                                <td class="td-weapon td-sighttype">{row.sightType}</td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
+                        <template if:false={filteredRcRows.length}>
+                            <div class="empty-state">
+                                <lightning-icon icon-name="utility:people" size="large"></lightning-icon>
+                                <p class="empty-title">No recruit class members found</p>
+                                <p class="empty-sub">No member records found for the selected recruit class.</p>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+            </div>
+        </template>
 
-                <template if:true={isLoadingMembers}>
-                    <div class="table-loading">
-                        <lightning-spinner size="medium" alternative-text="Loading..."></lightning-spinner>
-                        <p class="loading-text">Loading members...</p>
+        <!-- ═══ Section 3: Individual Members ═══ -->
+        <template if:true={hasIndividualRows}>
+            <div class="card">
+                <div class="card-header">
+                    <span class="step-badge step-badge-purple">3</span>
+                    <h2 class="card-title">Individual Members</h2>
+                    <span class="card-sub member-count-badge">{individualMemberCount} members</span>
+                    <div class="table-actions">
+                        <div class="search-box">
+                            <lightning-icon icon-name="utility:search" size="x-small" class="search-icon"></lightning-icon>
+                            <input type="text" class="search-input" placeholder="Filter by name or TINS..." value={indTableSearchKey} oninput={handleIndTableSearch} />
+                        </div>
+                        <template if:true={hasIndCheckedRows}>
+                            <button class="btn-remove" onclick={handleRemoveSelectedInd}>
+                                <lightning-icon icon-name="utility:delete" size="x-small"></lightning-icon>
+                                Remove
+                            </button>
+                        </template>
                     </div>
-                </template>
-
-                <template if:false={isLoadingMembers}>
-                    <template if:true={filteredRows.length}>
+                </div>
+                <div class="card-body table-container">
+                    <template if:true={filteredIndRows.length}>
                         <div class="table-scroll-wrap">
                             <table class="roster-table">
                                 <colgroup>
-                                    <col style="width:44px" />
-                                    <col style="width:200px" />
-                                    <col style="width:100px" />
-                                    <col style="width:90px" />
-                                    <col style="width:65px" />
-                                    <col style="width:88px" />
-                                    <col style="width:88px" />
-                                    <col style="width:88px" />
-                                    <col style="width:108px" />
-                                    <col style="width:115px" />
+                                    <col style="width:44px" /><col style="width:200px" /><col style="width:100px" /><col style="width:100px" /><col style="width:80px" /><col style="width:140px" /><col style="width:140px" /><col style="width:130px" /><col style="width:130px" />
                                 </colgroup>
                                 <thead>
                                     <tr class="col-header-row">
-                                        <th class="th-select td-center">
-                                            <input
-                                                type="checkbox"
-                                                class="row-select-check"
-                                                title="Select / deselect all rows"
-                                                checked={allRowsChecked}
-                                                onchange={handleSelectAllRows} />
-                                        </th>
+                                        <th class="th-select td-center"><input type="checkbox" class="row-select-check" title="Select / deselect all" checked={allIndRowsChecked} onchange={handleSelectAllIndRows} /></th>
                                         <th class="th-name">Employee Name</th>
                                         <th class="th-tins">TINS</th>
                                         <th class="th-div">Division</th>
                                         <th class="th-reg">Region</th>
-                                        <th class="th-weapon th-pistol">
-                                            <div class="weapon-header">
-                                                <span>Pistol</span>
-                                                <input type="checkbox" class="weapon-col-check" title="Select all Pistol" checked={allPistol} data-field="pistol" onchange={handleSelectAllWeapon} />
-                                            </div>
-                                        </th>
-                                        <th class="th-weapon th-shotgun">
-                                            <div class="weapon-header">
-                                                <span>Shot Gun</span>
-                                                <input type="checkbox" class="weapon-col-check" title="Select all Shot Gun" checked={allShotgun} data-field="shotgun" onchange={handleSelectAllWeapon} />
-                                            </div>
-                                        </th>
-                                        <th class="th-weapon th-rifle">
-                                            <div class="weapon-header">
-                                                <span>Riffle</span>
-                                                <input type="checkbox" class="weapon-col-check" title="Select all Riffle" checked={allRifle} data-field="rifle" onchange={handleSelectAllWeapon} />
-                                            </div>
-                                        </th>
-                                        <th class="th-weapon th-autoweapon">
-                                            <div class="weapon-header">
-                                                <span>Automatic Weapon</span>
-                                                <input type="checkbox" class="weapon-col-check" title="Select all Automatic Weapon" checked={allAutoWeapon} data-field="autoWeapon" onchange={handleSelectAllWeapon} />
-                                            </div>
-                                        </th>
-                                        <th class="th-weapon th-precisionrifle">
-                                            <div class="weapon-header">
-                                                <span>Precision Riffle</span>
-                                                <input type="checkbox" class="weapon-col-check" title="Select all Precision Riffle" checked={allPrecisionRifle} data-field="precisionRifle" onchange={handleSelectAllWeapon} />
-                                            </div>
-                                        </th>
+                                        <th class="th-weapon th-weapontype">Weapon Type</th>
+                                        <th class="th-weapon th-manufacturer">Manufacturer</th>
+                                        <th class="th-weapon th-model">Model</th>
+                                        <th class="th-weapon th-sighttype">Sight Type</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <template for:each={filteredRows} for:item="row">
+                                    <template for:each={filteredIndRows} for:item="row">
                                         <tr key={row.contactId} class={row.rowClass}>
-                                            <td class="td-select td-center">
-                                                <input
-                                                    type="checkbox"
-                                                    class="row-select-check"
-                                                    checked={row.selected}
-                                                    data-contact-id={row.contactId}
-                                                    title="Select to remove"
-                                                    onchange={handleRowCheck} />
-                                            </td>
-                                            <td class="td-name">
-                                                <a href={row.contactUrl} target="_blank" class="member-link">{row.contactName}</a>
-                                            </td>
+                                            <td class="td-select td-center"><input type="checkbox" class="row-select-check" checked={row.selected} data-contact-id={row.contactId} data-source="ind" title="Select row" onchange={handleRowCheck} /></td>
+                                            <td class="td-name"><a href={row.contactUrl} target="_blank" class="member-link">{row.contactName}</a></td>
                                             <td class="td-tins">{row.tins}</td>
                                             <td class="td-div">{row.division}</td>
                                             <td class="td-reg">{row.region}</td>
-                                            <td class="td-weapon td-pistol td-center">
-                                                <input type="checkbox" class="weapon-check" checked={row.pistol} data-contact-id={row.contactId} data-field="pistol" onchange={handleWeaponCheck} />
-                                            </td>
-                                            <td class="td-weapon td-shotgun td-center">
-                                                <input type="checkbox" class="weapon-check" checked={row.shotgun} data-contact-id={row.contactId} data-field="shotgun" onchange={handleWeaponCheck} />
-                                            </td>
-                                            <td class="td-weapon td-rifle td-center">
-                                                <input type="checkbox" class="weapon-check" checked={row.rifle} data-contact-id={row.contactId} data-field="rifle" onchange={handleWeaponCheck} />
-                                            </td>
-                                            <td class="td-weapon td-autoweapon td-center">
-                                                <input type="checkbox" class="weapon-check" checked={row.autoWeapon} data-contact-id={row.contactId} data-field="autoWeapon" onchange={handleWeaponCheck} />
-                                            </td>
-                                            <td class="td-weapon td-precisionrifle td-center">
-                                                <input type="checkbox" class="weapon-check" checked={row.precisionRifle} data-contact-id={row.contactId} data-field="precisionRifle" onchange={handleWeaponCheck} />
-                                            </td>
+                                            <td class="td-weapon td-weapontype">{row.weaponType}</td>
+                                            <td class="td-weapon td-manufacturer">{row.manufacturer}</td>
+                                            <td class="td-weapon td-model">{row.model}</td>
+                                            <td class="td-weapon td-sighttype">{row.sightType}</td>
                                         </tr>
                                     </template>
                                 </tbody>
                             </table>
                         </div>
                     </template>
-                    <template if:false={filteredRows.length}>
-                        <div class="empty-state">
-                            <lightning-icon icon-name="utility:people" size="large"></lightning-icon>
-                            <p class="empty-title">No members found</p>
-                            <p class="empty-sub">No member records found for the selected items, or your filter returned no results.</p>
-                        </div>
-                    </template>
-                </template>
-
+                </div>
             </div>
+        </template>
+
+        <!-- ═══ Add To Roster Bar ═══ -->
+        <template if:true={hasTotalRows}>
+            <div class="roster-action-bar">
+                <span class="roster-action-summary">{totalMemberCount} total member(s) ready</span>
+                <button class="btn-add-roster" onclick={handleAddToRoster} disabled={isAddDisabled}>Add To Roster</button>
+            </div>
+        </template>
+
         </template>
 
         <template if:false={hasSelections}>
@@ -387,25 +369,16 @@
 
     </div>
 
+    <!-- ═══ Roster Label Modal ═══ -->
     <template if:true={showRosterLabelModal}>
         <div class="modal-backdrop" onclick={handleModalBackdropClick}></div>
         <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
-            
             <div class="modal-body">
                 <h2 id="modal-heading" class="modal-title">Name Your Qual Roster</h2>
                 <p class="modal-description">Give this roster a label so it's easy to identify later.</p>
                 <div class="modal-field">
-                    <label class="modal-field-label" for="rosterLabelInput">
-                        Roster Label <span class="required-star">*</span>
-                    </label>
-                    <input
-                        id="rosterLabelInput"
-                        type="text"
-                        class={rosterLabelInputClass}
-                        placeholder="e.g. A-2026 Spring Qual"
-                        value={rosterLabel}
-                        oninput={handleRosterLabelInput}
-                        maxlength="120" />
+                    <label class="modal-field-label" for="rosterLabelInput">Roster Label <span class="required-star">*</span></label>
+                    <input id="rosterLabelInput" type="text" class={rosterLabelInputClass} placeholder="e.g. A-2026 Spring Qual" value={rosterLabel} oninput={handleRosterLabelInput} maxlength="120" />
                     <template if:true={rosterLabelError}>
                         <p class="modal-field-error">
                             <lightning-icon icon-name="utility:error" size="xx-small"></lightning-icon>
@@ -414,22 +387,10 @@
                     </template>
                 </div>
             </div>
-
             <div class="modal-footer">
-                <lightning-button
-                    variant="neutral"
-                    label="Cancel"
-                    onclick={handleRosterLabelCancel}>
-                </lightning-button>
-                <lightning-button
-                    variant="brand"
-                    label="Save Roster"
-                    icon-name="utility:save"
-                    onclick={handleRosterLabelConfirm}
-                    disabled={isSavingRoster}>
-                </lightning-button>
+                <lightning-button variant="neutral" label="Cancel" onclick={handleRosterLabelCancel}></lightning-button>
+                <lightning-button variant="brand" label="Save Roster" icon-name="utility:save" onclick={handleRosterLabelConfirm} disabled={isSavingRoster}></lightning-button>
             </div>
-            
             <template if:true={isSavingRoster}>
                 <div class="modal-saving-overlay">
                     <lightning-spinner size="medium" alternative-text="Saving..."></lightning-spinner>

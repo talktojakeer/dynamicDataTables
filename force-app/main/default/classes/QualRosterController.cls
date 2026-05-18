@@ -21,24 +21,24 @@ public with sharing class QualRosterController {
         ];
 
         List<Account> rawEmployees = [
-            SELECT Id, Name, TINS_NUMBER__c, PersonContactId
+            SELECT Id, Name, LastName, FirstName, TINS_NUMBER__c, PersonContactId
             FROM   Account
             WHERE  IsPersonAccount = true
             AND    RecordType.DeveloperName = :PERSON_ACCOUNT_RT
             AND    (Name LIKE :keyword OR TINS_NUMBER__c LIKE :keyword)
             AND    TINS_NUMBER__c != null
-            ORDER BY Name ASC
+            ORDER BY LastName ASC, FirstName ASC
             LIMIT  10
         ];
 
         if (rawEmployees.isEmpty()) {
             rawEmployees = [
-                SELECT Id, Name, TINS_NUMBER__c, PersonContactId
+                SELECT Id, Name, LastName, FirstName, TINS_NUMBER__c, PersonContactId
                 FROM   Account
                 WHERE  IsPersonAccount = true
                 AND    RecordType.DeveloperName = :PERSON_ACCOUNT_RT
                 AND    (Name LIKE :keyword OR TINS_NUMBER__c LIKE :keyword)
-                ORDER BY TINS_NUMBER__c NULLS LAST, Name ASC
+                ORDER BY TINS_NUMBER__c NULLS LAST, LastName ASC, FirstName ASC
                 LIMIT  10
             ];
         }
@@ -52,7 +52,7 @@ public with sharing class QualRosterController {
         for (Account a : uniqueByName.values()) {
             ContactSearchItem item  = new ContactSearchItem();
             item.Id              = a.Id;
-            item.Name            = a.Name;
+            item.Name            = formatName(a.LastName, a.FirstName);
             item.TINS            = a.TINS_NUMBER__c;
             item.PersonContactId = a.PersonContactId;
             result.contacts.add(item);
@@ -93,6 +93,8 @@ public with sharing class QualRosterController {
                 SELECT  Id,
                         ContactId,
                         Contact.Name,
+                        Contact.LastName,
+                        Contact.FirstName,
                         Contact.Account.Id,
                         Contact.Account.TINS_NUMBER__c,
                         Contact.FAQP_Division__c,
@@ -100,14 +102,17 @@ public with sharing class QualRosterController {
                 FROM    AccountContactRelation
                 WHERE   AccountId = :recruitClassId
                 AND     IsActive  = true
-                ORDER BY Contact.Name ASC
+                ORDER BY Contact.LastName ASC, Contact.FirstName ASC
                 LIMIT   500
             ]) {
                 MemberRow row       = new MemberRow();
-                row.memberId        = acr.Id;                         
-                row.contactId       = acr.ContactId;                  
-                row.personAccountId = acr.Contact?.Account?.Id;       
-                row.contactName     = acr.Contact?.Name;
+                row.memberId        = acr.Id;
+                row.contactId       = acr.ContactId;
+                row.personAccountId = acr.Contact?.Account?.Id;
+                // Format as "LastName FirstName"
+                String lastName  = acr.Contact?.LastName;
+                String firstName = acr.Contact?.FirstName;
+                row.contactName  = formatName(lastName, firstName);
                 row.tins            = acr.Contact?.Account?.TINS_NUMBER__c;
                 row.division        = acr.Contact?.FAQP_Division__c;
                 row.region          = acr.Contact?.FAQP_Region__c != null
@@ -120,8 +125,10 @@ public with sharing class QualRosterController {
 
         if (contactId != null) {
             List<Account> employees = [
-                SELECT Id, Name, TINS_NUMBER__c, PersonContactId,
-                       FAQP_Region__pc, FAQP_Division__pc From Account WHERE  Id = :contactId
+                SELECT Id, Name, LastName, FirstName, TINS_NUMBER__c, PersonContactId,
+                       FAQP_Region__pc, FAQP_Division__pc
+                FROM   Account
+                WHERE  Id = :contactId
                 AND    IsPersonAccount = true
                 LIMIT  1
             ];
@@ -131,9 +138,9 @@ public with sharing class QualRosterController {
                 if (emp.PersonContactId != null) {
                     MemberRow row       = new MemberRow();
                     row.memberId        = null;
-                    row.contactId       = emp.PersonContactId;  
-                    row.personAccountId = emp.Id;               
-                    row.contactName     = emp.Name;
+                    row.contactId       = emp.PersonContactId;
+                    row.personAccountId = emp.Id;
+                    row.contactName     = formatName(emp.LastName, emp.FirstName);
                     row.tins            = emp.TINS_NUMBER__c;
                     row.division        = emp.FAQP_Division__pc;
                     row.region          = String.valueOf(emp.FAQP_Region__pc);
@@ -166,6 +173,11 @@ public with sharing class QualRosterController {
         return false;
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // addToRoster — creates ONE FIR Qualification Form per contact,
+    // then creates multiple FIR Weapon Qualification Detail records
+    // from the weaponEntries array on each payload item.
+    // ═══════════════════════════════════════════════════════════════════════
     @AuraEnabled
     public static Integer addToRoster(
         String rosterPayload,
@@ -180,6 +192,7 @@ public with sharing class QualRosterController {
 
         if (payloadList == null || payloadList.isEmpty()) return 0;
 
+        // Collect all contact Ids to resolve display names
         List<Id> allContactIds = new List<Id>();
         for (MemberPayload mp : payloadList) {
             if (String.isNotBlank(mp.contactId)) allContactIds.add(mp.contactId);
@@ -191,6 +204,7 @@ public with sharing class QualRosterController {
                 SELECT Id, Name FROM Contact WHERE Id IN :allContactIds
               ]);
 
+        // Build one FIR Qualification Form per contact (per payload item)
         List<MemberPayload>             aligned  = new List<MemberPayload>();
         List<FIR_Qualification_Form__c> firForms = new List<FIR_Qualification_Form__c>();
 
@@ -215,32 +229,25 @@ public with sharing class QualRosterController {
         }
         insert firForms;
 
+        // Build FIR Weapon Qualification Detail records from weaponEntries
         List<FIR_Weapon_Qualification_Detail__c> weapons =
             new List<FIR_Weapon_Qualification_Detail__c>();
 
         for (Integer i = 0; i < aligned.size(); i++) {
-            Id            fir = firForms[i].Id;
-            MemberPayload mp  = aligned[i];
+            Id            firId = firForms[i].Id;
+            MemberPayload mp    = aligned[i];
 
-            if (mp.pistol == 'Yes') {
-                weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                    FIR_Qualification_Form__c = fir, Weapon_Type__c = 'Pistol'));
-            }
-            if (mp.shotgun == 'Yes') {
-                weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                    FIR_Qualification_Form__c = fir, Weapon_Type__c = 'Shot Gun'));
-            }
-            if (mp.rifle == 'Yes') {
-                weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                    FIR_Qualification_Form__c = fir, Weapon_Type__c = 'Riffle'));
-            }
-            if (mp.autoWeapon == 'Yes') {
-                weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                    FIR_Qualification_Form__c = fir, Weapon_Type__c = 'Automatic Weapon'));
-            }
-            if (mp.precisionRifle == 'Yes') {
-                weapons.add(new FIR_Weapon_Qualification_Detail__c(
-                    FIR_Qualification_Form__c = fir, Weapon_Type__c = 'Precision Riffle'));
+            if (mp.weaponEntries != null) {
+                for (WeaponEntry we : mp.weaponEntries) {
+                    FIR_Weapon_Qualification_Detail__c det = new FIR_Weapon_Qualification_Detail__c(
+                        FIR_Qualification_Form__c = firId
+                    );
+                    if (String.isNotBlank(we.weaponType))   det.Weapon_Type__c   = we.weaponType;
+                    if (String.isNotBlank(we.manufacturer)) det.Manufacturer__c  = we.manufacturer;
+                    if (String.isNotBlank(we.model))        det.Model__c         = we.model;
+                    if (String.isNotBlank(we.sightType))    det.Sight_Type__c    = we.sightType;
+                    weapons.add(det);
+                }
             }
         }
         if (!weapons.isEmpty()) insert weapons;
@@ -248,10 +255,26 @@ public with sharing class QualRosterController {
         return aligned.size();
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // Helper: format name as "LastName FirstName"
+    // ═══════════════════════════════════════════════════════════════════════
+    private static String formatName(String lastName, String firstName) {
+        String ln = String.isNotBlank(lastName)  ? lastName.trim()  : '';
+        String fn = String.isNotBlank(firstName) ? firstName.trim() : '';
+        if (String.isNotBlank(ln) && String.isNotBlank(fn)) {
+            return ln + ' ' + fn;
+        }
+        return String.isNotBlank(ln) ? ln : fn;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Inner classes
+    // ═══════════════════════════════════════════════════════════════════════
+
     public class MemberRow {
-        @AuraEnabled public String memberId;       
-        @AuraEnabled public String contactId;       
-        @AuraEnabled public String personAccountId; 
+        @AuraEnabled public String memberId;
+        @AuraEnabled public String contactId;
+        @AuraEnabled public String personAccountId;
         @AuraEnabled public String contactName;
         @AuraEnabled public String tins;
         @AuraEnabled public String division;
@@ -259,16 +282,19 @@ public with sharing class QualRosterController {
         @AuraEnabled public String recruitClassId;
     }
 
+    public class WeaponEntry {
+        public String weaponType;
+        public String manufacturer;
+        public String model;
+        public String sightType;
+    }
+
     public class MemberPayload {
         public String memberId;
-        public String contactId;        
+        public String contactId;
         public String contactName;
-        public String pistol;
-        public String shotgun;
-        public String rifle;
-        public String autoWeapon;
-        public String precisionRifle;
         public String lightningCondition;
+        public List<WeaponEntry> weaponEntries;
     }
 
     public class SearchResultWrapper {
@@ -277,10 +303,10 @@ public with sharing class QualRosterController {
     }
 
     public class ContactSearchItem {
-        @AuraEnabled public Id     Id;              
+        @AuraEnabled public Id     Id;
         @AuraEnabled public String Name;
         @AuraEnabled public String TINS;
-        @AuraEnabled public Id     PersonContactId; 
+        @AuraEnabled public Id     PersonContactId;
     }
 
     public class UserResult {

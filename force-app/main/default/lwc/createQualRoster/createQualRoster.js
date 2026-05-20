@@ -114,7 +114,7 @@ export default class CreateQualRoster extends LightningElement {
     get hasCheckedRows()    { return this.hasRcCheckedRows || this.hasIndCheckedRows; }
     get hasTotalRows()      { return this.rcRowData.length > 0 || this.indRowData.length > 0; }
     get totalMemberCount()  { return this.rcRowData.length + this.indRowData.length; }
-    get isAddDisabled()     { return !this.testDate; }
+    get isAddDisabled()     { return !this.testDate || !this.location || !this.lightningCondition || !this.selectedInstructor; }
 
     _refreshDropdownState() {
         const selectedIds = new Set(this._selectedData.map(i => i.id));
@@ -241,6 +241,15 @@ export default class CreateQualRoster extends LightningElement {
         this.massManufacturer = '';
         this.massModel        = '';
         this.massSightType    = '';
+
+        // Force-reset native select elements
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => {
+            const massCard = this.template.querySelector('.mass-apply-card');
+            if (massCard) {
+                massCard.querySelectorAll('select.field-input').forEach(el => { el.value = ''; });
+            }
+        }, 0);
 
         this.dispatchEvent(new ShowToastEvent({ title: 'Applied', message: `Weapon details applied to ${totalChecked} member(s).`, variant: 'success' }));
     }
@@ -557,6 +566,13 @@ export default class CreateQualRoster extends LightningElement {
             this.massManufacturer    = '';
             this.massModel           = '';
             this.massSightType       = '';
+
+            // Force-reset native select/date elements that don't bind reactively
+            // eslint-disable-next-line @lwc/lwc/no-async-operation
+            setTimeout(() => {
+                this.template.querySelectorAll('select.field-input').forEach(el => { el.value = ''; });
+                this.template.querySelectorAll('input[type="date"]').forEach(el => { el.value = ''; });
+            }, 0);
 
             this.dispatchEvent(new ShowToastEvent({ title: 'Roster Saved', message: `${count} FIR Qualification Form(s) created successfully.`, variant: 'success' }));
         })

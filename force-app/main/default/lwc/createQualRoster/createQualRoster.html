@@ -74,18 +74,6 @@
                                 </div>
                             </template>
                         </div>
-                        <template if:true={hasSelections}>
-                            <div class="selected-tags">
-                                <template for:each={selectedItems} for:item="tag">
-                                    <span key={tag.id} class={tag.tagClass}>
-                                        <lightning-icon icon-name={tag.icon} size="xx-small"></lightning-icon>
-                                        {tag.name}
-                                        <button class="tag-remove" data-id={tag.id} onclick={handleRemoveSelection} aria-label="Remove">×</button>
-                                    </span>
-                                </template>
-                                <button class="clear-all-btn" onclick={handleClearAll}>Clear all</button>
-                            </div>
-                        </template>
                     </div>
 
                     <div class="field-item">

@@ -9,14 +9,19 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>ABC</fullName>
+                <fullName>DI</fullName>
                 <default>false</default>
-                <label>ABC</label>
+                <label>DI</label>
             </value>
             <value>
-                <fullName>ZXC</fullName>
+                <fullName>IAT</fullName>
                 <default>false</default>
-                <label>ZXC</label>
+                <label>IAT</label>
+            </value>
+            <value>
+                <fullName>ILO</fullName>
+                <default>false</default>
+                <label>ILO</label>
             </value>
         </valueSetDefinition>
     </valueSet>

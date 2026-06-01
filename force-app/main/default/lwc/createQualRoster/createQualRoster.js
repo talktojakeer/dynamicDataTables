@@ -118,16 +118,23 @@ export default class CreateQualRoster extends LightningElement {
 
     _refreshDropdownState() {
         const selectedIds = new Set(this._selectedData.map(i => i.id));
+
+        // Collect IDs of members already in the RC table so they don't appear in search
+        const rcContactIds  = new Set(this.rcRowData.map(r => r.contactId).filter(Boolean));
+        const rcAccountIds  = new Set(this.rcRowData.map(r => r.personAccountId).filter(Boolean));
+
         this._rcResults  = this._rcRaw.map(r => ({
             Id: r.Id, Name: r.Name,
             alreadySelected: selectedIds.has(r.Id),
             itemClass: selectedIds.has(r.Id) ? 'lookup-item lookup-item-selected' : 'lookup-item'
         }));
-        this._conResults = this._conRaw.map(c => ({
-            Id: c.Id, Name: c.Name, tins: c.tins,
-            alreadySelected: selectedIds.has(c.Id),
-            itemClass: selectedIds.has(c.Id) ? 'lookup-item lookup-item-selected' : 'lookup-item'
-        }));
+        this._conResults = this._conRaw
+            .filter(c => !rcAccountIds.has(c.Id) && !rcContactIds.has(c.personContactId))
+            .map(c => ({
+                Id: c.Id, Name: c.Name, tins: c.tins,
+                alreadySelected: selectedIds.has(c.Id),
+                itemClass: selectedIds.has(c.Id) ? 'lookup-item lookup-item-selected' : 'lookup-item'
+            }));
     }
 
     // ── Instructor Lookup ──────────────────────────────────────────────────

@@ -1,7 +1,6 @@
 public with sharing class QualRosterController {
 
     private static final String FAQP_ACCOUNT_RT  = 'FAQP_Account';
-    private static final String PERSON_ACCOUNT_RT = 'PersonAccount';
 
     @AuraEnabled(cacheable=true)
     public static SearchResultWrapper searchRecruitClassAndContacts(String searchKey) {
@@ -21,27 +20,13 @@ public with sharing class QualRosterController {
         ];
 
         List<Account> rawEmployees = [
-            SELECT Id, Name, LastName, FirstName, TINS_NUMBER__c, PersonContactId
+            SELECT Id, Name, LastName, FirstName, TINS_NUMBER__pc, PersonContactId
             FROM   Account
             WHERE  IsPersonAccount = true
-            AND    RecordType.DeveloperName = :PERSON_ACCOUNT_RT
-            AND    (Name LIKE :keyword OR TINS_NUMBER__c LIKE :keyword)
-            AND    TINS_NUMBER__c != null
+            AND    (Name LIKE :keyword OR TINS_NUMBER__pc LIKE :keyword)
             ORDER BY LastName ASC, FirstName ASC
-            LIMIT  10
+            LIMIT  20
         ];
-
-        if (rawEmployees.isEmpty()) {
-            rawEmployees = [
-                SELECT Id, Name, LastName, FirstName, TINS_NUMBER__c, PersonContactId
-                FROM   Account
-                WHERE  IsPersonAccount = true
-                AND    RecordType.DeveloperName = :PERSON_ACCOUNT_RT
-                AND    (Name LIKE :keyword OR TINS_NUMBER__c LIKE :keyword)
-                ORDER BY TINS_NUMBER__c NULLS LAST, LastName ASC, FirstName ASC
-                LIMIT  10
-            ];
-        }
 
         Map<String, Account> uniqueByName = new Map<String, Account>();
         for (Account a : rawEmployees) {
@@ -53,7 +38,7 @@ public with sharing class QualRosterController {
             ContactSearchItem item  = new ContactSearchItem();
             item.Id              = a.Id;
             item.Name            = formatName(a.LastName, a.FirstName);
-            item.TINS            = a.TINS_NUMBER__c;
+            item.TINS            = a.TINS_NUMBER__pc;
             item.PersonContactId = a.PersonContactId;
             result.contacts.add(item);
         }
@@ -96,7 +81,7 @@ public with sharing class QualRosterController {
                         Contact.LastName,
                         Contact.FirstName,
                         Contact.Account.Id,
-                        Contact.Account.TINS_NUMBER__c,
+                        Contact.TINS_NUMBER__c,
                         Contact.FAQP_Division__c,
                         Contact.FAQP_Region__c
                 FROM    AccountContactRelation
@@ -113,7 +98,7 @@ public with sharing class QualRosterController {
                 String lastName  = acr.Contact?.LastName;
                 String firstName = acr.Contact?.FirstName;
                 row.contactName  = formatName(lastName, firstName);
-                row.tins            = acr.Contact?.Account?.TINS_NUMBER__c;
+                row.tins            = acr.Contact?.TINS_NUMBER__c;
                 row.division        = acr.Contact?.FAQP_Division__c;
                 row.region          = acr.Contact?.FAQP_Region__c != null
                                       ? String.valueOf(acr.Contact.FAQP_Region__c) : null;
@@ -125,7 +110,7 @@ public with sharing class QualRosterController {
 
         if (contactId != null) {
             List<Account> employees = [
-                SELECT Id, Name, LastName, FirstName, TINS_NUMBER__c, PersonContactId,
+                SELECT Id, Name, LastName, FirstName, TINS_NUMBER__pc, PersonContactId,
                        FAQP_Region__pc, FAQP_Division__pc
                 FROM   Account
                 WHERE  Id = :contactId
@@ -141,7 +126,7 @@ public with sharing class QualRosterController {
                     row.contactId       = emp.PersonContactId;
                     row.personAccountId = emp.Id;
                     row.contactName     = formatName(emp.LastName, emp.FirstName);
-                    row.tins            = emp.TINS_NUMBER__c;
+                    row.tins            = emp.TINS_NUMBER__pc;
                     row.division        = emp.FAQP_Division__pc;
                     row.region          = String.valueOf(emp.FAQP_Region__pc);
                     row.recruitClassId  = null;

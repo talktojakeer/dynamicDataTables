@@ -216,12 +216,27 @@ public with sharing class QualRosterGradingController {
             detail.Sight_Type__c            = sightType;
             detail.Weapon_Code__c           = weaponCode;
             detail.Qualification_Attempt__c = qualificationAttempt;
-            detail.Qualified__c             = qualified != null ? qualified : 'No';
-            detail.Qualified_at_90__c       = qualified90 != null ? qualified90 : 'No';
+            detail.Qualified__c             = String.isNotBlank(qualified) ? qualified : 'Yes';
+            detail.Qualified_at_90__c       = String.isNotBlank(qualified90) ? qualified90 : 'No';
             update detail;
         } catch (Exception ex) {
             throw new AuraHandledException('Save failed: ' + ex.getMessage());
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // Get Weapon_Code__c picklist values from object metadata
+    // -----------------------------------------------------------------------
+    @AuraEnabled(cacheable=true)
+    public static List<String> getWeaponCodeOptions() {
+        List<String> options = new List<String>();
+        Schema.DescribeFieldResult dfr = FIR_Weapon_Qualification_Detail__c.Weapon_Code__c.getDescribe();
+        for (Schema.PicklistEntry pe : dfr.getPicklistValues()) {
+            if (pe.isActive()) {
+                options.add(pe.getValue());
+            }
+        }
+        return options;
     }
 
     // -----------------------------------------------------------------------

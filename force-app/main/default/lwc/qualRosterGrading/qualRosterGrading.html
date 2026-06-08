@@ -96,10 +96,6 @@
                 <div class="card session-header-card">
                     <div class="session-header-grid">
                         <div class="session-field">
-                            <span class="session-field-label">Recruit Class</span>
-                            <span class="session-field-value">{gradingData.recruitClassName}</span>
-                        </div>
-                        <div class="session-field">
                             <span class="session-field-label">Test Date</span>
                             <span class="session-field-value">{gradingData.testDate}</span>
                         </div>
@@ -176,38 +172,66 @@
                                                 <th>Sight Type</th>
                                                 <th>Weapon Code</th>
                                                 <th>Qual Attempt</th>
-                                                <th class="th-check">Qualified</th>
-                                                <th class="th-check">Qualified at 90%?</th>
+                                                <th class="th-toggle">Qualified</th>
+                                                <th class="th-toggle">Qualified at 90%?</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <template for:each={activeRows} for:item="row">
-                                                <tr key={row.detailId} class="grading-row">
-                                                    <td class="td-name-cell"><span class="member-name">{row.memberName}</span></td>
-                                                    <td class="td-readonly">{row.manufacturer}</td>
-                                                    <td class="td-readonly">{row.model}</td>
+                                                <tr key={row.detailId} class={row.groupClass}>
+                                                    <td class="td-name-cell">
+                                                        <template if:true={row.showName}>
+                                                            <span class="member-name">{row.memberName}</span>
+                                                        </template>
+                                                    </td>
+                                                    <td class="td-readonly">
+                                                        <template if:true={row.showName}>{row.manufacturer}</template>
+                                                    </td>
+                                                    <td class="td-readonly">
+                                                        <template if:true={row.showName}>{row.model}</template>
+                                                    </td>
                                                     <td class="td-readonly">{row.sightType}</td>
                                                     <td>
                                                         <select class="cell-select" data-detail-id={row.detailId} data-field="weaponCode" onchange={handleSelectChange}>
                                                             <option value="">--</option>
-                                                            <option value="ABC" selected={row.isWeaponCodeABC}>ABC</option>
-                                                            <option value="ZXC" selected={row.isWeaponCodeZXC}>ZXC</option>
+                                                            <template for:each={weaponCodeOptions} for:item="opt">
+                                                                <option key={opt} value={opt}>{opt}</option>
+                                                            </template>
                                                         </select>
                                                     </td>
                                                     <td>
-                                                        <select class="cell-select" data-detail-id={row.detailId} data-field="qualificationAttempt" onchange={handleSelectChange}>
-                                                            <option value="">--</option>
-                                                            <option value="1st" selected={row.is1st}>1st</option>
-                                                            <option value="2nd" selected={row.is2nd}>2nd</option>
-                                                            <option value="3rd" selected={row.is3rd}>3rd</option>
-                                                            <option value="4th" selected={row.is4th}>4th</option>
-                                                        </select>
+                                                        <div class="qual-combo">
+                                                            <input type="text" class="cell-input"
+                                                                value={row.qualificationAttempt} maxlength="30"
+                                                                data-detail-id={row.detailId} data-field="qualificationAttempt"
+                                                                onblur={handleFieldBlur} placeholder="--" />
+                                                            <div class="qual-pills">
+                                                                <button class="qual-pill" data-detail-id={row.detailId} data-value="1st" onclick={handleQualPillClick}>1st</button>
+                                                                <button class="qual-pill" data-detail-id={row.detailId} data-value="2nd" onclick={handleQualPillClick}>2nd</button>
+                                                                <button class="qual-pill" data-detail-id={row.detailId} data-value="3rd" onclick={handleQualPillClick}>3rd</button>
+                                                                <button class="qual-pill" data-detail-id={row.detailId} data-value="4th" onclick={handleQualPillClick}>4th</button>
+                                                            </div>
+                                                        </div>
                                                     </td>
-                                                    <td class="td-check">
-                                                        <input type="checkbox" class="grading-checkbox" checked={row.qualifiedYes} data-detail-id={row.detailId} data-field="qualified" onchange={handleCheckboxChange} />
+                                                    <td class="td-toggle">
+                                                        <div class="toggle-group">
+                                                            <button class="toggle-btn toggle-yes" data-detail-id={row.detailId} data-value="Yes" data-active={row.qualifiedYes} onclick={handleQualifiedToggle}>Yes</button>
+                                                            <button class="toggle-btn toggle-no" data-detail-id={row.detailId} data-value="No" data-active={row.qualifiedNo} onclick={handleQualifiedToggle}>No</button>
+                                                        </div>
                                                     </td>
-                                                    <td class="td-check">
-                                                        <input type="checkbox" class="grading-checkbox" checked={row.qualified90Yes} data-detail-id={row.detailId} data-field="qualified90" onchange={handleCheckboxChange} />
+                                                    <td class="td-toggle">
+                                                        <template if:false={row.qualified90Disabled}>
+                                                            <div class="toggle-group">
+                                                                <button class="toggle-btn toggle-yes" data-detail-id={row.detailId} data-value="Yes" data-active={row.qualified90Yes} onclick={handleQualified90Toggle}>Yes</button>
+                                                                <button class="toggle-btn toggle-no" data-detail-id={row.detailId} data-value="No" data-active={row.qualified90No} onclick={handleQualified90Toggle}>No</button>
+                                                            </div>
+                                                        </template>
+                                                        <template if:true={row.qualified90Disabled}>
+                                                            <div class="toggle-group toggle-disabled">
+                                                                <button class="toggle-btn" disabled>Yes</button>
+                                                                <button class="toggle-btn toggle-no" data-active="true" disabled>No</button>
+                                                            </div>
+                                                        </template>
                                                     </td>
                                                 </tr>
                                             </template>
@@ -216,6 +240,21 @@
                                 </div>
                             </template>
                         </div>
+                    </div>
+                </template>
+
+                <!-- Global Save Bar -->
+                <template if:true={hasGradingData}>
+                    <div class="grading-save-bar">
+                        <button class="btn-save-grading" onclick={handleSaveAll} disabled={isSavingGrading}>
+                            <template if:true={isSavingGrading}>
+                                <lightning-spinner size="x-small" alternative-text="Saving..."></lightning-spinner>
+                                Saving...
+                            </template>
+                            <template if:false={isSavingGrading}>
+                                Save
+                            </template>
+                        </button>
                     </div>
                 </template>
 

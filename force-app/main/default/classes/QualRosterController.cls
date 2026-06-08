@@ -206,6 +206,7 @@ public with sharing class QualRosterController {
                 Name                 = displayName + ' - FIR',
                 Test_Date__c         = testDate,
                 Location__c          = location,
+                Light_Condition__c   = mp.lightningCondition,
                 ContactName__c       = mp.contactId,
                 Qual_Roster_Label__c = String.isNotBlank(rosterLabel) ? rosterLabel.trim() : null
             );

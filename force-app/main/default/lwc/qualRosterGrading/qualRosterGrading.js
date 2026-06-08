@@ -3,6 +3,7 @@ import { ShowToastEvent }          from 'lightning/platformShowToastEvent';
 import getRosterLabelDetails       from '@salesforce/apex/QualRosterGradingController.getRosterLabelDetails';
 import getRosterGradingData        from '@salesforce/apex/QualRosterGradingController.getRosterGradingData';
 import saveGradingRow              from '@salesforce/apex/QualRosterGradingController.saveGradingRow';
+import getWeaponCodeOptions        from '@salesforce/apex/QualRosterGradingController.getWeaponCodeOptions';
 
 export default class QualRosterGrading extends LightningElement {
 
@@ -125,8 +126,13 @@ export default class QualRosterGrading extends LightningElement {
     // ═══════════════════════════════════════════════════════════════════════
     // Lifecycle
     // ═══════════════════════════════════════════════════════════════════════
+    @track weaponCodeOptions = [];
+
     connectedCallback() {
         this.loadRosterList();
+        getWeaponCodeOptions()
+            .then(options => { this.weaponCodeOptions = options || []; })
+            .catch(() => { this.weaponCodeOptions = []; });
     }
 
     // ── List View methods ──────────────────────────────────────────────────
@@ -176,6 +182,9 @@ export default class QualRosterGrading extends LightningElement {
                 if (this.gradingData.weaponSections && this.gradingData.weaponSections.length > 0) {
                     this.selectedWeapon = this.gradingData.weaponSections[0].weaponType;
                 }
+                // Sync select elements with row data after render
+                // eslint-disable-next-line @lwc/lwc/no-async-operation
+                setTimeout(() => { this._syncSelectValues(); }, 0);
             })
             .catch(error => {
                 this.isLoadingGrading = false;
@@ -183,37 +192,95 @@ export default class QualRosterGrading extends LightningElement {
             });
     }
 
+    /** Set native select elements to match row data values */
+    _syncSelectValues() {
+        const rows = this.activeRows || [];
+        rows.forEach(row => {
+            if (row.weaponCode) {
+                const el = this.template.querySelector(`select[data-detail-id="${row.detailId}"][data-field="weaponCode"]`);
+                if (el) el.value = row.weaponCode;
+            }
+        });
+    }
+
     enrichData(data) {
         const enriched = Object.assign({}, data);
-        enriched.weaponSections = (data.weaponSections || []).map(section => ({
-            weaponType : section.weaponType,
-            rows       : (section.rows || []).map(row => this.enrichRow(row))
-        }));
+        enriched.weaponSections = (data.weaponSections || []).map(section => {
+            const enrichedRows = (section.rows || []).map(row => this.enrichRow(row));
+
+            // Sort by memberName so same-member rows are adjacent
+            enrichedRows.sort((a, b) => (a.memberName || '').localeCompare(b.memberName || ''));
+
+            // Mark first row of each member group to show the name
+            let lastMember = null;
+            let groupIndex = 0;
+            enrichedRows.forEach(row => {
+                if (row.firFormId !== lastMember) {
+                    row.showName   = true;
+                    row.groupFirst = true;
+                    row.groupClass = 'grading-row group-first';
+                    lastMember     = row.firFormId;
+                    groupIndex++;
+                } else {
+                    row.showName   = false;
+                    row.groupFirst = false;
+                    row.groupClass = 'grading-row group-cont';
+                }
+                row.groupEven = (groupIndex % 2 === 0);
+            });
+
+            return { weaponType: section.weaponType, rows: enrichedRows };
+        });
         return enriched;
     }
 
     enrichRow(row) {
-        const isQualified   = (row.qualified   || '').toLowerCase() === 'yes';
-        const isQualified90 = (row.qualified90  || '').toLowerCase() === 'yes';
+        // Null-safe all string fields
+        const manufacturer        = row.manufacturer        || '';
+        const model               = row.model               || '';
+        const sightType           = row.sightType           || '';
+        const weaponCode          = row.weaponCode          || '';
+        const qualificationAttempt = row.qualificationAttempt || '';
+
+        // Default Qualified to 'Yes' if not set
+        let qualified = (row.qualified || '').trim();
+        if (!qualified) qualified = 'Yes';
+
+        let qualified90 = (row.qualified90 || '').trim();
+
+        // If Qualified = No, force Qualified at 90% to No
+        if (qualified.toLowerCase() === 'no') {
+            qualified90 = 'No';
+        }
+
+        const isQualified   = qualified.toLowerCase() === 'yes';
+        const isQualified90 = qualified90.toLowerCase() === 'yes';
+
         return {
             ...row,
-            qualifiedChecked   : isQualified,
-            qualified90Checked : isQualified90,
+            manufacturer,
+            model,
+            sightType,
+            weaponCode,
+            qualificationAttempt,
+            qualified,
+            qualified90,
             qualifiedYes       : isQualified,
             qualifiedNo        : !isQualified,
             qualified90Yes     : isQualified90,
             qualified90No      : !isQualified90,
-            isWeaponCodeABC    : row.weaponCode === 'ABC',
-            isWeaponCodeZXC    : row.weaponCode === 'ZXC',
-            is1st              : row.qualificationAttempt === '1st',
-            is2nd              : row.qualificationAttempt === '2nd',
-            is3rd              : row.qualificationAttempt === '3rd',
-            is4th              : row.qualificationAttempt === '4th'
+            qualified90Disabled: !isQualified,
+            is1st              : qualificationAttempt === '1st',
+            is2nd              : qualificationAttempt === '2nd',
+            is3rd              : qualificationAttempt === '3rd',
+            is4th              : qualificationAttempt === '4th'
         };
     }
 
     handleWeaponSelect(event) {
         this.selectedWeapon = event.currentTarget.dataset.weapon;
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => { this._syncSelectValues(); }, 0);
     }
 
     handleFieldBlur(event) {
@@ -221,7 +288,13 @@ export default class QualRosterGrading extends LightningElement {
         const field    = event.target.dataset.field;
         const value    = event.target.value;
         this.trackChange(detailId, field, value);
-        this.autoSaveRow(detailId);
+    }
+
+    handleQualPillClick(event) {
+        const detailId = event.currentTarget.dataset.detailId;
+        const value    = event.currentTarget.dataset.value;
+        this.trackChange(detailId, 'qualificationAttempt', value);
+        this.updateRowField(detailId, 'qualificationAttempt', value);
     }
 
     handleSelectChange(event) {
@@ -229,16 +302,26 @@ export default class QualRosterGrading extends LightningElement {
         const field    = event.target.dataset.field;
         const value    = event.target.value;
         this.trackChange(detailId, field, value);
-        this.autoSaveRow(detailId);
     }
 
-    handleCheckboxChange(event) {
-        const detailId = event.target.dataset.detailId;
-        const field    = event.target.dataset.field;
-        const value    = event.target.checked ? 'Yes' : 'No';
-        this.trackChange(detailId, field, value);
-        this.updateRowField(detailId, field, value);
-        this.autoSaveRow(detailId);
+    handleQualifiedToggle(event) {
+        const detailId = event.currentTarget.dataset.detailId;
+        const value    = event.currentTarget.dataset.value;
+        this.trackChange(detailId, 'qualified', value);
+        this.updateRowField(detailId, 'qualified', value);
+
+        // If Qualified = No, auto-set Qualified at 90% to No
+        if (value === 'No') {
+            this.trackChange(detailId, 'qualified90', 'No');
+            this.updateRowField(detailId, 'qualified90', 'No');
+        }
+    }
+
+    handleQualified90Toggle(event) {
+        const detailId = event.currentTarget.dataset.detailId;
+        const value    = event.currentTarget.dataset.value;
+        this.trackChange(detailId, 'qualified90', value);
+        this.updateRowField(detailId, 'qualified90', value);
     }
 
     updateRowField(detailId, field, value) {
@@ -282,25 +365,46 @@ export default class QualRosterGrading extends LightningElement {
         return null;
     }
 
-    autoSaveRow(detailId) {
-        const changes = this._pendingChanges[detailId];
-        if (!changes) return;
-        saveGradingRow({
-            detailId            : detailId,
-            manufacturer        : changes.manufacturer        || '',
-            model               : changes.model               || '',
-            sightType           : changes.sightType           || '',
-            weaponCode          : changes.weaponCode          || '',
-            qualificationAttempt: changes.qualificationAttempt || '',
-            qualified           : changes.qualified           || '',
-            qualified90         : changes.qualified90         || ''
-        })
-        .then(() => {
-            delete this._pendingChanges[detailId];
-        })
-        .catch(error => {
-            this.showErrorToast('Auto-save failed: ' + this.reduceError(error));
+    get hasUnsavedChanges() {
+        return Object.keys(this._pendingChanges).length > 0;
+    }
+
+    @track isSavingGrading = false;
+
+    handleSaveAll() {
+        const detailIds = Object.keys(this._pendingChanges);
+        if (detailIds.length === 0) {
+            this.dispatchEvent(new ShowToastEvent({ title: 'Info', message: 'No changes to save.', variant: 'info' }));
+            return;
+        }
+
+        this.isSavingGrading = true;
+        const promises = detailIds.map(detailId => {
+            const changes = this._pendingChanges[detailId];
+            return saveGradingRow({
+                detailId            : detailId,
+                manufacturer        : changes.manufacturer        || '',
+                model               : changes.model               || '',
+                sightType           : changes.sightType           || '',
+                weaponCode          : changes.weaponCode          || '',
+                qualificationAttempt: changes.qualificationAttempt || '',
+                qualified           : changes.qualified           || 'Yes',
+                qualified90         : changes.qualified90         || ''
+            });
         });
+
+        Promise.all(promises)
+            .then(() => {
+                this._pendingChanges = {};
+                this.isSavingGrading = false;
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Saved', message: `${detailIds.length} record(s) saved successfully.`, variant: 'success'
+                }));
+            })
+            .catch(error => {
+                this.isSavingGrading = false;
+                this.showErrorToast('Save failed: ' + this.reduceError(error));
+            });
     }
 
     // ── Utilities ──────────────────────────────────────────────────────────

@@ -39,6 +39,11 @@
                 <default>false</default>
                 <label>Pistol 2</label>
             </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

@@ -170,6 +170,7 @@
 .weapon-dot-rifle     { background: #2e7d32; }
 .weapon-dot-auto      { background: #6a1b9a; }
 .weapon-dot-precision { background: #b71c1c; }
+.weapon-dot-other     { background: #757575; }
 
 .weapon-nav-label { font-size: 13px; font-weight: 600; color: #032d60; }
 .weapon-nav-stat  { font-size: 11px; color: #706e6b; margin-bottom: 6px; }
@@ -181,6 +182,7 @@
 .pct-bar-rifle     { background: #2e7d32; }
 .pct-bar-auto      { background: #6a1b9a; }
 .pct-bar-precision { background: #b71c1c; }
+.pct-bar-other     { background: #757575; }
 
 .weapon-panel {
     flex: 1; background: #fff; border-radius: 8px;
@@ -211,16 +213,7 @@
 .btn-save-grading:hover { background: #014486; }
 .btn-save-grading:disabled { background: #e5e5e5; color: #aeaeae; cursor: not-allowed; }
 
-/* Qual Attempt Combo */
-.qual-combo { display: flex; flex-direction: column; gap: 3px; }
-.qual-pills { display: flex; gap: 3px; }
-.qual-pill {
-    padding: 1px 7px; font-size: 10px; font-weight: 600;
-    border: 1px solid #dddbda; border-radius: 3px;
-    background: #fff; color: #706e6b; cursor: pointer;
-    transition: all 0.12s; line-height: 1.4;
-}
-.qual-pill:hover { background: #e8f4fd; border-color: #0176d3; color: #0176d3; }
+/* Qual Attempt - uses standard cell-select */
 
 .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 12px; white-space: nowrap; }
 .badge-neutral { background: #f3f3f3; color: #3e3e3c; }

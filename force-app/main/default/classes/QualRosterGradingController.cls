@@ -157,7 +157,7 @@ public with sharing class QualRosterGradingController {
         ];
 
         List<String> weaponOrder = new List<String>{
-            'Pistol 1', 'Pistol 2', 'Shotgun', 'Rifle', 'Automatic Weapon', 'Precision Rifle'
+            'Pistol 1', 'Pistol 2', 'Shotgun', 'Rifle', 'Automatic Weapon', 'Precision Rifle', 'Other'
         };
         Map<String, List<GradingRow>> weaponGroups = new Map<String, List<GradingRow>>();
 

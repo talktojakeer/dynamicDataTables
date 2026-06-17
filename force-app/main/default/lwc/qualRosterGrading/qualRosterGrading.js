@@ -118,9 +118,10 @@ export default class QualRosterGrading extends LightningElement {
             'Shotgun'          : 'shotgun',
             'Rifle'            : 'rifle',
             'Automatic Weapon' : 'auto',
-            'Precision Rifle'  : 'precision'
+            'Precision Rifle'  : 'precision',
+            'Other'            : 'other'
         };
-        return map[weaponType] || 'pistol';
+        return map[weaponType] || 'other';
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -265,6 +266,7 @@ export default class QualRosterGrading extends LightningElement {
             qualificationAttempt,
             qualified,
             qualified90,
+            isOtherType        : (row.weaponType || '') === 'Other',
             qualifiedYes       : isQualified,
             qualifiedNo        : !isQualified,
             qualified90Yes     : isQualified90,
@@ -288,13 +290,6 @@ export default class QualRosterGrading extends LightningElement {
         const field    = event.target.dataset.field;
         const value    = event.target.value;
         this.trackChange(detailId, field, value);
-    }
-
-    handleQualPillClick(event) {
-        const detailId = event.currentTarget.dataset.detailId;
-        const value    = event.currentTarget.dataset.value;
-        this.trackChange(detailId, 'qualificationAttempt', value);
-        this.updateRowField(detailId, 'qualificationAttempt', value);
     }
 
     handleSelectChange(event) {

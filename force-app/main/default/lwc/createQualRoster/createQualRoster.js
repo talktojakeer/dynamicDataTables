@@ -12,7 +12,7 @@ import checkRosterLabelExists           from '@salesforce/apex/QualRosterControl
 import DPS_BADGE                        from '@salesforce/resourceUrl/FaqpDpsLogo';
 
 const WEAPON_TYPE_VALUES = [
-    'Pistol 1', 'Pistol 2', 'Shotgun', 'Rifle', 'Automatic Weapon', 'Precision Rifle'
+    'Pistol 1', 'Pistol 2', 'Shotgun', 'Rifle', 'Automatic Weapon', 'Precision Rifle', 'Other'
 ];
 
 const MANUFACTURER_BY_WEAPON = {
@@ -201,12 +201,13 @@ export default class CreateQualRoster extends LightningElement {
     @track massSightType    = '';
 
     get weaponTypeOptions()        { return WEAPON_TYPE_VALUES; }
-    get massManufacturerOptions()  { return !this.massWeaponType ? [] : (MANUFACTURER_BY_WEAPON[this.massWeaponType] || []); }
-    get isMassManufacturerDisabled() { return !this.massWeaponType; }
+    get isOtherWeaponType()        { return this.massWeaponType === 'Other'; }
+    get massManufacturerOptions()  { return !this.massWeaponType || this.isOtherWeaponType ? [] : (MANUFACTURER_BY_WEAPON[this.massWeaponType] || []); }
+    get isMassManufacturerDisabled() { return !this.massWeaponType || this.isOtherWeaponType; }
     get massModelOptions()         { return !this.massManufacturer ? [] : (MODEL_BY_MANUFACTURER[this.massManufacturer] || []); }
-    get isMassModelDisabled()      { return !this.massManufacturer; }
-    get massSightTypeOptions()     { return !this.massWeaponType ? [] : (SIGHT_BY_WEAPON[this.massWeaponType] || []); }
-    get isMassSightTypeDisabled()  { return !this.massWeaponType; }
+    get isMassModelDisabled()      { return !this.massManufacturer || this.isOtherWeaponType; }
+    get massSightTypeOptions()     { return !this.massWeaponType || this.isOtherWeaponType ? [] : (SIGHT_BY_WEAPON[this.massWeaponType] || []); }
+    get isMassSightTypeDisabled()  { return !this.massWeaponType || this.isOtherWeaponType; }
     get isMassApplyDisabled()      { return !this.massWeaponType || !this.hasCheckedRows; }
 
     handleMassWeaponTypeChange(event)   { this.massWeaponType = event.target.value; this.massManufacturer = ''; this.massModel = ''; this.massSightType = ''; }

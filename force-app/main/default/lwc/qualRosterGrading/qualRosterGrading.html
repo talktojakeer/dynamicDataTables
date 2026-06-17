@@ -185,12 +185,29 @@
                                                         </template>
                                                     </td>
                                                     <td class="td-readonly">
-                                                        <template if:true={row.showName}>{row.manufacturer}</template>
+                                                        <template if:true={row.isOtherType}>
+                                                            <input type="text" class="cell-input" value={row.manufacturer} maxlength="50" data-detail-id={row.detailId} data-field="manufacturer" onblur={handleFieldBlur} placeholder="Enter manufacturer" />
+                                                        </template>
+                                                        <template if:false={row.isOtherType}>
+                                                            <template if:true={row.showName}>{row.manufacturer}</template>
+                                                        </template>
                                                     </td>
                                                     <td class="td-readonly">
-                                                        <template if:true={row.showName}>{row.model}</template>
+                                                        <template if:true={row.isOtherType}>
+                                                            <input type="text" class="cell-input" value={row.model} maxlength="50" data-detail-id={row.detailId} data-field="model" onblur={handleFieldBlur} placeholder="Enter model" />
+                                                        </template>
+                                                        <template if:false={row.isOtherType}>
+                                                            <template if:true={row.showName}>{row.model}</template>
+                                                        </template>
                                                     </td>
-                                                    <td class="td-readonly">{row.sightType}</td>
+                                                    <td class="td-readonly">
+                                                        <template if:true={row.isOtherType}>
+                                                            <input type="text" class="cell-input" value={row.sightType} maxlength="50" data-detail-id={row.detailId} data-field="sightType" onblur={handleFieldBlur} placeholder="Enter sight type" />
+                                                        </template>
+                                                        <template if:false={row.isOtherType}>
+                                                            {row.sightType}
+                                                        </template>
+                                                    </td>
                                                     <td>
                                                         <select class="cell-select" data-detail-id={row.detailId} data-field="weaponCode" onchange={handleSelectChange}>
                                                             <option value="">--</option>
@@ -200,18 +217,13 @@
                                                         </select>
                                                     </td>
                                                     <td>
-                                                        <div class="qual-combo">
-                                                            <input type="text" class="cell-input"
-                                                                value={row.qualificationAttempt} maxlength="30"
-                                                                data-detail-id={row.detailId} data-field="qualificationAttempt"
-                                                                onblur={handleFieldBlur} placeholder="--" />
-                                                            <div class="qual-pills">
-                                                                <button class="qual-pill" data-detail-id={row.detailId} data-value="1st" onclick={handleQualPillClick}>1st</button>
-                                                                <button class="qual-pill" data-detail-id={row.detailId} data-value="2nd" onclick={handleQualPillClick}>2nd</button>
-                                                                <button class="qual-pill" data-detail-id={row.detailId} data-value="3rd" onclick={handleQualPillClick}>3rd</button>
-                                                                <button class="qual-pill" data-detail-id={row.detailId} data-value="4th" onclick={handleQualPillClick}>4th</button>
-                                                            </div>
-                                                        </div>
+                                                        <select class="cell-select" data-detail-id={row.detailId} data-field="qualificationAttempt" onchange={handleSelectChange}>
+                                                            <option value="">--</option>
+                                                            <option value="1st" selected={row.is1st}>1st</option>
+                                                            <option value="2nd" selected={row.is2nd}>2nd</option>
+                                                            <option value="3rd" selected={row.is3rd}>3rd</option>
+                                                            <option value="4th" selected={row.is4th}>4th</option>
+                                                        </select>
                                                     </td>
                                                     <td class="td-toggle">
                                                         <div class="toggle-group">

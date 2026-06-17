@@ -2,6 +2,7 @@
 <RecordType xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FAQP_Account</fullName>
     <active>true</active>
+    <compactLayoutAssignment>FAQP_Compact_Layout</compactLayoutAssignment>
     <label>FAQP_Account</label>
     <picklistValues>
         <picklist>AccountSource</picklist>
@@ -49,6 +50,17 @@
         </values>
         <values>
             <fullName>Medium</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>FAQP_Division__c</picklist>
+        <values>
+            <fullName>ABV</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>AV</fullName>
             <default>false</default>
         </values>
     </picklistValues>

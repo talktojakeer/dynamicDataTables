@@ -83,7 +83,8 @@ public with sharing class QualRosterController {
                         Contact.Account.Id,
                         Contact.TINS_NUMBER__c,
                         Contact.FAQP_Division__c,
-                        Contact.FAQP_Region__c
+                        Contact.FAQP_Region__c,
+                        Contact.Is_Firearms_Instructor__c
                 FROM    AccountContactRelation
                 WHERE   AccountId = :recruitClassId
                 AND     IsActive  = true
@@ -102,6 +103,7 @@ public with sharing class QualRosterController {
                 row.division        = acr.Contact?.FAQP_Division__c;
                 row.region          = acr.Contact?.FAQP_Region__c != null
                                       ? String.valueOf(acr.Contact.FAQP_Region__c) : null;
+                row.isFirearmsInstructor = acr.Contact?.Is_Firearms_Instructor__c == true;
                 row.recruitClassId  = recruitClassId;
                 rows.add(row);
             }
@@ -111,7 +113,7 @@ public with sharing class QualRosterController {
         if (contactId != null) {
             List<Account> employees = [
                 SELECT Id, Name, LastName, FirstName, TINS_NUMBER__pc, PersonContactId,
-                       FAQP_Region__pc, FAQP_Division__pc
+                       FAQP_Region__pc, FAQP_Division__pc, Is_Firearms_Instructor__pc
                 FROM   Account
                 WHERE  Id = :contactId
                 AND    IsPersonAccount = true
@@ -129,6 +131,7 @@ public with sharing class QualRosterController {
                     row.tins            = emp.TINS_NUMBER__pc;
                     row.division        = emp.FAQP_Division__pc;
                     row.region          = String.valueOf(emp.FAQP_Region__pc);
+                    row.isFirearmsInstructor = emp.Is_Firearms_Instructor__pc == true;
                     row.recruitClassId  = null;
                     rows.add(row);
                 }
@@ -258,14 +261,15 @@ public with sharing class QualRosterController {
     // ═══════════════════════════════════════════════════════════════════════
 
     public class MemberRow {
-        @AuraEnabled public String memberId;
-        @AuraEnabled public String contactId;
-        @AuraEnabled public String personAccountId;
-        @AuraEnabled public String contactName;
-        @AuraEnabled public String tins;
-        @AuraEnabled public String division;
-        @AuraEnabled public String region;
-        @AuraEnabled public String recruitClassId;
+        @AuraEnabled public String  memberId;
+        @AuraEnabled public String  contactId;
+        @AuraEnabled public String  personAccountId;
+        @AuraEnabled public String  contactName;
+        @AuraEnabled public String  tins;
+        @AuraEnabled public String  division;
+        @AuraEnabled public String  region;
+        @AuraEnabled public Boolean isFirearmsInstructor;
+        @AuraEnabled public String  recruitClassId;
     }
 
     public class WeaponEntry {

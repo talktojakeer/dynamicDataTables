@@ -245,6 +245,18 @@
 .group-first:first-child { border-top: none; }
 .group-cont td { border-top: 1px dashed #e8e8e8; }
 
+/* Firearm Instructor highlight */
+.instructor-row td       { background: #fffbeb !important; }
+.instructor-row:hover td { background: #fff6d9 !important; }
+.instructor-row .td-name-cell { border-left: 3px solid #e6a700; }
+
+.instructor-badge {
+    display: inline-block; margin-left: 6px;
+    background: #e6a700; color: #fff;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 1px 5px; border-radius: 8px; vertical-align: middle;
+}
+
 .grading-row td {
     padding: 6px 10px; vertical-align: middle; background: #fff; color: #181818;
 }

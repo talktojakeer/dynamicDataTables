@@ -239,6 +239,19 @@ input[type="date"].field-input:focus { color: #181818; }
 .row-selected td       { background: #fff8f8 !important; }
 .row-selected:hover td { background: #fef0f0 !important; }
 
+/* Firearm Instructor row highlight */
+.instructor-row td        { background: #fffbeb !important; }
+.instructor-row:hover td  { background: #fff6d9 !important; }
+.instructor-row.row-selected td       { background: #fff4e0 !important; }
+.instructor-row .td-name  { border-left: 3px solid #e6a700; }
+
+.instructor-badge {
+    display: inline-block; margin-left: 6px;
+    background: #e6a700; color: #fff;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 1px 5px; border-radius: 8px; vertical-align: middle;
+}
+
 .member-row td {
     padding: 7px 10px; vertical-align: middle; background: #fff;
     color: #181818; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -258,7 +271,7 @@ input[type="date"].field-input:focus { color: #181818; }
 
 .member-link {
     color: #0176d3; text-decoration: none; font-weight: 600; font-size: 12.5px;
-    display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    display: inline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .member-link:hover { text-decoration: underline; }
 .td-tins { font-family: monospace; font-size: 11.5px; color: #706e6b; letter-spacing: 0.3px; }

@@ -182,6 +182,9 @@
                                                     <td class="td-name-cell">
                                                         <template if:true={row.showName}>
                                                             <span class="member-name">{row.memberName}</span>
+                                                            <template if:true={row.isFirearmsInstructor}>
+                                                                <span class="instructor-badge" title="Firearm Instructor">FI</span>
+                                                            </template>
                                                         </template>
                                                     </td>
                                                     <td class="td-readonly">

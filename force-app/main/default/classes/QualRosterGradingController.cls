@@ -95,6 +95,7 @@ public with sharing class QualRosterGradingController {
                    Name,
                    ContactName__c,
                    ContactName__r.Name,
+                   ContactName__r.Account.Is_Firearms_Instructor__pc,
                    Test_Date__c,
                    Location__c,
                    Light_Condition__c,
@@ -133,11 +134,16 @@ public with sharing class QualRosterGradingController {
         }
 
         Set<Id> formIds = new Set<Id>();
-        Map<Id, String> formToMember = new Map<Id, String>();
+        Map<Id, String>  formToMember     = new Map<Id, String>();
+        Map<Id, Boolean> formToInstructor = new Map<Id, Boolean>();
         for (FIR_Qualification_Form__c f : forms) {
             formIds.add(f.Id);
             String memberName = f.ContactName__r != null ? f.ContactName__r.Name : '';
             formToMember.put(f.Id, memberName);
+            Boolean isInstr = f.ContactName__r != null
+                              && f.ContactName__r.Account != null
+                              && f.ContactName__r.Account.Is_Firearms_Instructor__pc == true;
+            formToInstructor.put(f.Id, isInstr);
         }
 
         List<FIR_Weapon_Qualification_Detail__c> details = [
@@ -170,6 +176,7 @@ public with sharing class QualRosterGradingController {
             row.detailId            = d.Id;
             row.firFormId           = d.FIR_Qualification_Form__c;
             row.memberName          = formToMember.get(d.FIR_Qualification_Form__c);
+            row.isFirearmsInstructor = formToInstructor.get(d.FIR_Qualification_Form__c) == true;
             row.weaponType          = weaponType;
             row.manufacturer        = d.Manufacturer__c;
             row.model               = d.Model__c;
@@ -270,6 +277,7 @@ public with sharing class QualRosterGradingController {
         @AuraEnabled public String detailId;
         @AuraEnabled public String firFormId;
         @AuraEnabled public String memberName;
+        @AuraEnabled public Boolean isFirearmsInstructor;
         @AuraEnabled public String weaponType;
         @AuraEnabled public String manufacturer;
         @AuraEnabled public String model;

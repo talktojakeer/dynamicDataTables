@@ -238,7 +238,7 @@ export default class CreateQualRoster extends LightningElement {
             );
             if (!isDuplicate) entries.push(newEntry);
             // Unselect the row after applying
-            return this._computeWeaponDisplay({ ...r, weaponEntries: entries, selected: false, rowClass: 'member-row' });
+            return this._computeWeaponDisplay({ ...r, weaponEntries: entries, selected: false, rowClass: this._rowClassFor(r, false) });
         });
 
         this.rcRowData  = applyToRows(this.rcRowData);
@@ -429,12 +429,15 @@ export default class CreateQualRoster extends LightningElement {
         const recordLink = row.personAccountId
             ? `/lightning/r/Account/${row.personAccountId}/view`
             : (row.contactId ? `/lightning/r/Contact/${row.contactId}/view` : '#');
+        const isInstructor = row.isFirearmsInstructor === true;
         return {
             memberId: row.memberId || null, contactId: row.contactId || null,
             personAccountId: row.personAccountId || null, contactName: row.contactName || '',
             contactUrl: recordLink, tins: row.tins || '', division: row.division || '',
             region: row.region || '', selected: false, weaponEntries: [],
-            weaponType: '', manufacturer: '', model: '', sightType: '', rowClass: 'member-row'
+            isFirearmsInstructor: isInstructor,
+            weaponType: '', manufacturer: '', model: '', sightType: '',
+            rowClass: isInstructor ? 'member-row instructor-row' : 'member-row'
         };
     }
 
@@ -458,14 +461,19 @@ export default class CreateQualRoster extends LightningElement {
     handleIndTableSearch(event)  { this.indTableSearchKey  = event.target.value; }
 
     // ── Select all per table ──
+    _rowClassFor(r, selected) {
+        const base = r.isFirearmsInstructor ? 'member-row instructor-row' : 'member-row';
+        return selected ? base + ' row-selected' : base;
+    }
+
     handleSelectAllRcRows(event) {
         const checked = event.target.checked;
-        this.rcRowData = this.rcRowData.map(r => ({ ...r, selected: checked, rowClass: checked ? 'member-row row-selected' : 'member-row' }));
+        this.rcRowData = this.rcRowData.map(r => ({ ...r, selected: checked, rowClass: this._rowClassFor(r, checked) }));
     }
 
     handleSelectAllIndRows(event) {
         const checked = event.target.checked;
-        this.indRowData = this.indRowData.map(r => ({ ...r, selected: checked, rowClass: checked ? 'member-row row-selected' : 'member-row' }));
+        this.indRowData = this.indRowData.map(r => ({ ...r, selected: checked, rowClass: this._rowClassFor(r, checked) }));
     }
 
     // ── Row check — routes by data-source attribute ──
@@ -475,7 +483,7 @@ export default class CreateQualRoster extends LightningElement {
         const checked   = event.target.checked;
 
         const updater = (r) => r.contactId === contactId
-            ? { ...r, selected: checked, rowClass: checked ? 'member-row row-selected' : 'member-row' }
+            ? { ...r, selected: checked, rowClass: this._rowClassFor(r, checked) }
             : r;
 
         if (source === 'rc') {

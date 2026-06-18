@@ -216,16 +216,17 @@ export default class QualRosterGrading extends LightningElement {
             let lastMember = null;
             let groupIndex = 0;
             enrichedRows.forEach(row => {
+                const instrCls = row.isFirearmsInstructor ? ' instructor-row' : '';
                 if (row.firFormId !== lastMember) {
                     row.showName   = true;
                     row.groupFirst = true;
-                    row.groupClass = 'grading-row group-first';
+                    row.groupClass = 'grading-row group-first' + instrCls;
                     lastMember     = row.firFormId;
                     groupIndex++;
                 } else {
                     row.showName   = false;
                     row.groupFirst = false;
-                    row.groupClass = 'grading-row group-cont';
+                    row.groupClass = 'grading-row group-cont' + instrCls;
                 }
                 row.groupEven = (groupIndex % 2 === 0);
             });

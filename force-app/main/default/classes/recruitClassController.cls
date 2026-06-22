@@ -112,11 +112,11 @@ public with sharing class recruitClassController {
             throw new AuraHandledException('No employee data received.');
         }
 
-        Set<String> tinsNumbers = new Set<String>();
+        Set<Integer> tinsNumbers = new Set<Integer>();
         for (Map<String, String> row : employeesData) {
             String tins = row.get('tins');
             if (String.isNotBlank(tins)) {
-                tinsNumbers.add(tins.trim());
+                tinsNumbers.add(Integer.valueOf(tins.trim()));
             }
         }
 

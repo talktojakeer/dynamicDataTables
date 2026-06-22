@@ -20,10 +20,10 @@ public with sharing class QualRosterController {
         ];
 
         List<Account> rawEmployees = [
-            SELECT Id, Name, LastName, FirstName, TINS_NUMBER__pc, PersonContactId
+            SELECT Id, Name, LastName, FirstName, TINS_NUMBER__c, PersonContactId
             FROM   Account
             WHERE  IsPersonAccount = true
-            AND    (Name LIKE :keyword OR TINS_NUMBER__pc LIKE :keyword)
+            AND    (Name LIKE :keyword )
             ORDER BY LastName ASC, FirstName ASC
             LIMIT  20
         ];
@@ -38,7 +38,7 @@ public with sharing class QualRosterController {
             ContactSearchItem item  = new ContactSearchItem();
             item.Id              = a.Id;
             item.Name            = formatName(a.LastName, a.FirstName);
-            item.TINS            = a.TINS_NUMBER__pc;
+            item.TINS            = a.TINS_NUMBER__c;
             item.PersonContactId = a.PersonContactId;
             result.contacts.add(item);
         }
@@ -81,7 +81,6 @@ public with sharing class QualRosterController {
                         Contact.LastName,
                         Contact.FirstName,
                         Contact.Account.Id,
-                        Contact.TINS_NUMBER__c,
                         Contact.FAQP_Division__c,
                         Contact.FAQP_Region__c,
                         Contact.Is_Firearms_Instructor__c
@@ -99,7 +98,7 @@ public with sharing class QualRosterController {
                 String lastName  = acr.Contact?.LastName;
                 String firstName = acr.Contact?.FirstName;
                 row.contactName  = formatName(lastName, firstName);
-                row.tins            = acr.Contact?.TINS_NUMBER__c;
+                //row.tins            = acr.Contact?.TINS_NUMBER__c;
                 row.division        = acr.Contact?.FAQP_Division__c;
                 row.region          = acr.Contact?.FAQP_Region__c != null
                                       ? String.valueOf(acr.Contact.FAQP_Region__c) : null;
@@ -112,7 +111,7 @@ public with sharing class QualRosterController {
 
         if (contactId != null) {
             List<Account> employees = [
-                SELECT Id, Name, LastName, FirstName, TINS_NUMBER__pc, PersonContactId,
+                SELECT Id, Name, LastName, FirstName, TINS_NUMBER__c, PersonContactId,
                        FAQP_Region__pc, FAQP_Division__pc, Is_Firearms_Instructor__pc
                 FROM   Account
                 WHERE  Id = :contactId
@@ -128,7 +127,7 @@ public with sharing class QualRosterController {
                     row.contactId       = emp.PersonContactId;
                     row.personAccountId = emp.Id;
                     row.contactName     = formatName(emp.LastName, emp.FirstName);
-                    row.tins            = emp.TINS_NUMBER__pc;
+                    row.tins            = emp.TINS_NUMBER__c;
                     row.division        = emp.FAQP_Division__pc;
                     row.region          = String.valueOf(emp.FAQP_Region__pc);
                     row.isFirearmsInstructor = emp.Is_Firearms_Instructor__pc == true;
@@ -265,7 +264,7 @@ public with sharing class QualRosterController {
         @AuraEnabled public String  contactId;
         @AuraEnabled public String  personAccountId;
         @AuraEnabled public String  contactName;
-        @AuraEnabled public String  tins;
+        @AuraEnabled public Decimal  tins;
         @AuraEnabled public String  division;
         @AuraEnabled public String  region;
         @AuraEnabled public Boolean isFirearmsInstructor;
@@ -295,7 +294,7 @@ public with sharing class QualRosterController {
     public class ContactSearchItem {
         @AuraEnabled public Id     Id;
         @AuraEnabled public String Name;
-        @AuraEnabled public String TINS;
+        @AuraEnabled public Decimal TINS;
         @AuraEnabled public Id     PersonContactId;
     }
 

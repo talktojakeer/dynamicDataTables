@@ -132,7 +132,13 @@ export default class QualRosterGrading extends LightningElement {
     connectedCallback() {
         this.loadRosterList();
         getWeaponCodeOptions()
-            .then(options => { this.weaponCodeOptions = options || []; })
+            .then(options => {
+                this.weaponCodeOptions = options || [];
+                // If grading data already loaded before options arrived, re-enrich
+                if (this.gradingData) {
+                    this.gradingData = this.enrichData(this.gradingData);
+                }
+            })
             .catch(() => { this.weaponCodeOptions = []; });
     }
 
@@ -183,25 +189,11 @@ export default class QualRosterGrading extends LightningElement {
                 if (this.gradingData.weaponSections && this.gradingData.weaponSections.length > 0) {
                     this.selectedWeapon = this.gradingData.weaponSections[0].weaponType;
                 }
-                // Sync select elements with row data after render
-                // eslint-disable-next-line @lwc/lwc/no-async-operation
-                setTimeout(() => { this._syncSelectValues(); }, 0);
             })
             .catch(error => {
                 this.isLoadingGrading = false;
                 this.showErrorToast(this.reduceError(error));
             });
-    }
-
-    /** Set native select elements to match row data values */
-    _syncSelectValues() {
-        const rows = this.activeRows || [];
-        rows.forEach(row => {
-            if (row.weaponCode) {
-                const el = this.template.querySelector(`select[data-detail-id="${row.detailId}"][data-field="weaponCode"]`);
-                if (el) el.value = row.weaponCode;
-            }
-        });
     }
 
     enrichData(data) {
@@ -258,6 +250,12 @@ export default class QualRosterGrading extends LightningElement {
         const isQualified   = qualified.toLowerCase() === 'yes';
         const isQualified90 = qualified90.toLowerCase() === 'yes';
 
+        // Build per-row weapon code options with selected flag (declarative selection)
+        const weaponCodeOptionsForRow = (this.weaponCodeOptions || []).map(opt => ({
+            value   : opt,
+            selected: opt === weaponCode
+        }));
+
         return {
             ...row,
             manufacturer,
@@ -267,6 +265,7 @@ export default class QualRosterGrading extends LightningElement {
             qualificationAttempt,
             qualified,
             qualified90,
+            weaponCodeOptionsForRow,
             isOtherType        : (row.weaponType || '') === 'Other',
             qualifiedYes       : isQualified,
             qualifiedNo        : !isQualified,
@@ -282,8 +281,6 @@ export default class QualRosterGrading extends LightningElement {
 
     handleWeaponSelect(event) {
         this.selectedWeapon = event.currentTarget.dataset.weapon;
-        // eslint-disable-next-line @lwc/lwc/no-async-operation
-        setTimeout(() => { this._syncSelectValues(); }, 0);
     }
 
     handleFieldBlur(event) {
@@ -291,6 +288,7 @@ export default class QualRosterGrading extends LightningElement {
         const field    = event.target.dataset.field;
         const value    = event.target.value;
         this.trackChange(detailId, field, value);
+        this.updateRowField(detailId, field, value);
     }
 
     handleSelectChange(event) {
@@ -298,6 +296,7 @@ export default class QualRosterGrading extends LightningElement {
         const field    = event.target.dataset.field;
         const value    = event.target.value;
         this.trackChange(detailId, field, value);
+        this.updateRowField(detailId, field, value);
     }
 
     handleQualifiedToggle(event) {

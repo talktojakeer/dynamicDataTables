@@ -83,6 +83,7 @@ public with sharing class QualRosterController {
                         Contact.Account.Id,
                         Contact.FAQP_Division__c,
                         Contact.FAQP_Region__c,
+                        Contact.Account.TINS_NUMBER__c,
                         Contact.Is_Firearms_Instructor__c
                 FROM    AccountContactRelation
                 WHERE   AccountId = :recruitClassId
@@ -98,7 +99,7 @@ public with sharing class QualRosterController {
                 String lastName  = acr.Contact?.LastName;
                 String firstName = acr.Contact?.FirstName;
                 row.contactName  = formatName(lastName, firstName);
-                //row.tins            = acr.Contact?.TINS_NUMBER__c;
+                row.tins            = acr.Contact.Account?.TINS_NUMBER__c;
                 row.division        = acr.Contact?.FAQP_Division__c;
                 row.region          = acr.Contact?.FAQP_Region__c != null
                                       ? String.valueOf(acr.Contact.FAQP_Region__c) : null;

@@ -173,16 +173,7 @@
 .weapon-dot-other     { background: #757575; }
 
 .weapon-nav-label { font-size: 13px; font-weight: 600; color: #032d60; }
-.weapon-nav-stat  { font-size: 11px; color: #706e6b; margin-bottom: 6px; }
-
-.pct-bar-track { height: 4px; background: #e5e5e5; border-radius: 2px; overflow: hidden; }
-.pct-bar-fill  { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
-.pct-bar-pistol    { background: #0176d3; }
-.pct-bar-shotgun   { background: #e65100; }
-.pct-bar-rifle     { background: #2e7d32; }
-.pct-bar-auto      { background: #6a1b9a; }
-.pct-bar-precision { background: #b71c1c; }
-.pct-bar-other     { background: #757575; }
+.weapon-nav-stat { font-size: 11px; color: #706e6b; margin-top: 2px; }
 
 .weapon-panel {
     flex: 1; background: #fff; border-radius: 8px;
@@ -234,7 +225,7 @@
     white-space: nowrap; border-bottom: 2px solid #e5e5e5;
 }
 .th-name   { min-width: 180px; }
-.th-toggle { min-width: 120px; text-align: center; }
+.th-toggle { min-width: 130px; width: 130px; text-align: left; padding-left: 14px; }
 
 .grading-row { border-bottom: 1px solid #f3f3f3; transition: background 0.1s; }
 .grading-row:last-child { border-bottom: none; }
@@ -262,7 +253,7 @@
 }
 .td-name-cell { min-width: 180px; }
 .member-name  { font-weight: 600; color: #032d60; font-size: 12.5px; white-space: nowrap; }
-.td-toggle { text-align: center; }
+.td-toggle { min-width: 130px; width: 130px; text-align: left; padding-left: 14px; }
 .td-readonly { color: #3e3e3c; font-size: 12.5px; white-space: nowrap; }
 
 .toggle-group { display: inline-flex; border-radius: 4px; overflow: hidden; border: 1px solid #dddbda; }

@@ -32,7 +32,7 @@ public with sharing class QualRosterGradingController {
             if (!labelMap.containsKey(lbl)) {
                 RosterLabelRow row = new RosterLabelRow();
                 row.rosterLabel    = lbl;
-                row.testDate       = f.Test_Date__c != null ? String.valueOf(f.Test_Date__c) : '';
+                row.testDate       = formatDate(f.Test_Date__c);
                 row.location       = f.Location__c != null ? f.Location__c : '';
                 row.instructorName = f.Firearms_Instrutor__r != null
                                      ? f.Firearms_Instrutor__r.Name : '';
@@ -111,8 +111,7 @@ public with sharing class QualRosterGradingController {
 
         FIR_Qualification_Form__c first = forms[0];
         wrapper.rosterLabel    = rosterLabel;
-        wrapper.testDate       = first.Test_Date__c != null
-                                 ? String.valueOf(first.Test_Date__c) : '';
+        wrapper.testDate       = formatDate(first.Test_Date__c);
         wrapper.location       = first.Location__c != null ? first.Location__c : '';
         wrapper.lightCondition = first.Light_Condition__c != null ? first.Light_Condition__c : '';
         wrapper.instructorName = first.Firearms_Instrutor__r != null
@@ -229,6 +228,17 @@ public with sharing class QualRosterGradingController {
         } catch (Exception ex) {
             throw new AuraHandledException('Save failed: ' + ex.getMessage());
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // Format a Date as MM/DD/YYYY
+    // -----------------------------------------------------------------------
+    private static String formatDate(Date d) {
+        if (d == null) return '';
+        String mm = (d.month() < 10 ? '0' : '') + String.valueOf(d.month());
+        String dd = (d.day()   < 10 ? '0' : '') + String.valueOf(d.day());
+        String yyyy = String.valueOf(d.year());
+        return mm + '/' + dd + '/' + yyyy;
     }
 
     // -----------------------------------------------------------------------

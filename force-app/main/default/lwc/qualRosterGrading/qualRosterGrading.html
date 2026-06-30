@@ -138,9 +138,6 @@
                                         <span class="weapon-nav-label">{nav.label}</span>
                                     </div>
                                     <div class="weapon-nav-stat">{nav.statText} - {nav.pct}%</div>
-                                    <div class="pct-bar-track">
-                                        <div class={nav.barClass} style={nav.pctBarStyle}></div>
-                                    </div>
                                 </div>
                             </template>
                         </div>
@@ -214,8 +211,8 @@
                                                     <td>
                                                         <select class="cell-select" data-detail-id={row.detailId} data-field="weaponCode" onchange={handleSelectChange}>
                                                             <option value="">--</option>
-                                                            <template for:each={weaponCodeOptions} for:item="opt">
-                                                                <option key={opt} value={opt}>{opt}</option>
+                                                            <template for:each={row.weaponCodeOptionsForRow} for:item="opt">
+                                                                <option key={opt.value} value={opt.value} selected={opt.selected}>{opt.value}</option>
                                                             </template>
                                                         </select>
                                                     </td>

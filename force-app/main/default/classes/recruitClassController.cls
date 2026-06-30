@@ -24,13 +24,20 @@ public with sharing class recruitClassController {
     public static List<Account> searchEmployees(String searchKey, Boolean filterByKey) {
         try {
             if (filterByKey == true && String.isNotBlank(searchKey)) {
-                String key = searchKey.trim() + '%';
+                String trimmed = searchKey.trim();
+                String nameKey = trimmed + '%';
+                // Try to parse the search term as a number for TINS matching
+                Decimal tinsValue = null;
+                if (trimmed.isNumeric()) {
+                    tinsValue = Decimal.valueOf(trimmed);
+                }
                 return [
                     SELECT Id, FirstName, LastName, TINS_NUMBER__c
                     FROM   Account
                     WHERE  IsPersonAccount = true
                     AND    RecordType.DeveloperName = :PERSON_ACCOUNT_RT
-                    AND    FirstName LIKE :key
+                    AND    (LastName LIKE :nameKey
+                        OR TINS_NUMBER__c = :tinsValue)
                     ORDER BY LastName ASC
                     LIMIT  :SEARCH_LIMIT
                 ];

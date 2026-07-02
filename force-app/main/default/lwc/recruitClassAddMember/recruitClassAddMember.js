@@ -29,7 +29,7 @@ export default class RecruitClassAddMember extends LightningElement {
             return list.filter(emp =>
                 emp.FirstName?.toLowerCase().includes(key) ||
                 emp.LastName?.toLowerCase().includes(key)  ||
-                emp.TINS_NUMBER__c?.toLowerCase().includes(key)
+                emp.TINS_NUMBER__c === Number(key)
             );
         }
         return list;

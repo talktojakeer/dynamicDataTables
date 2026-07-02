@@ -70,7 +70,7 @@
 .lh-date       { min-width: 110px; }
 .lh-instructor { min-width: 160px; }
 .lh-location   { min-width: 140px; }
-.lh-count      { min-width: 80px; text-align: center; }
+.lh-count      { width: 110px; min-width: 110px; text-align: center; }
 .lh-created    { min-width: 160px; }
 
 .list-row {
@@ -101,7 +101,7 @@
 
 .td-location { color: #706e6b; }
 
-.td-count { text-align: center; }
+.td-count { width: 110px; min-width: 110px; text-align: center; vertical-align: middle; }
 
 .count-badge {
     display: inline-flex; align-items: center; justify-content: center;

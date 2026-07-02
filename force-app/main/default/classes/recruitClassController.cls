@@ -119,11 +119,11 @@ public with sharing class recruitClassController {
             throw new AuraHandledException('No employee data received.');
         }
 
-        Set<Integer> tinsNumbers = new Set<Integer>();
+        Set<Decimal> tinsNumbers = new Set<Decimal>();
         for (Map<String, String> row : employeesData) {
             String tins = row.get('tins');
             if (String.isNotBlank(tins)) {
-                tinsNumbers.add(Integer.valueOf(tins.trim()));
+                tinsNumbers.add(Decimal.valueOf(tins.trim()));
             }
         }
 

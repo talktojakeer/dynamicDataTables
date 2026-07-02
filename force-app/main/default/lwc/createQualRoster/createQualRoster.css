@@ -243,7 +243,6 @@ input[type="date"].field-input:focus { color: #181818; }
 .instructor-row td        { background: #fffbeb !important; }
 .instructor-row:hover td  { background: #fff6d9 !important; }
 .instructor-row.row-selected td       { background: #fff4e0 !important; }
-.instructor-row .td-name  { border-left: 3px solid #e6a700; }
 
 .instructor-badge {
     display: inline-block; margin-left: 6px;

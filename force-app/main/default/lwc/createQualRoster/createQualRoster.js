@@ -89,7 +89,7 @@ export default class CreateQualRoster extends LightningElement {
         const key = this.rcTableSearchKey.toLowerCase();
         return this.rcRowData.filter(r =>
             (r.contactName && r.contactName.toLowerCase().includes(key)) ||
-            (r.tins        && r.tins.toLowerCase().includes(key))        ||
+            (r.tins != null && String(r.tins).toLowerCase().includes(key)) ||
             (r.division    && r.division.toLowerCase().includes(key))
         );
     }
@@ -105,7 +105,7 @@ export default class CreateQualRoster extends LightningElement {
         const key = this.indTableSearchKey.toLowerCase();
         return this.indRowData.filter(r =>
             (r.contactName && r.contactName.toLowerCase().includes(key)) ||
-            (r.tins        && r.tins.toLowerCase().includes(key))        ||
+            (r.tins != null && String(r.tins).toLowerCase().includes(key)) ||
             (r.division    && r.division.toLowerCase().includes(key))
         );
     }

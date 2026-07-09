@@ -4,6 +4,7 @@ import getRosterLabelDetails       from '@salesforce/apex/QualRosterGradingContr
 import getRosterGradingData        from '@salesforce/apex/QualRosterGradingController.getRosterGradingData';
 import saveGradingRow              from '@salesforce/apex/QualRosterGradingController.saveGradingRow';
 import getWeaponCodeOptions        from '@salesforce/apex/QualRosterGradingController.getWeaponCodeOptions';
+import saveInstructorSignature     from '@salesforce/apex/QualRosterGradingController.saveInstructorSignature';
 
 export default class QualRosterGrading extends LightningElement {
 
@@ -372,9 +373,31 @@ export default class QualRosterGrading extends LightningElement {
             this.dispatchEvent(new ShowToastEvent({ title: 'Info', message: 'No changes to save.', variant: 'info' }));
             return;
         }
+        // Require signature FIRST - open the modal. Nothing is saved until signed.
+        this.openSignatureModal();
+    }
+
+    // ── Signature capture ───────────────────────────────────────────────────
+    get instructorNameForSignature() {
+        return this.gradingData ? (this.gradingData.instructorName || '') : '';
+    }
+
+    openSignatureModal() {
+        const pad = this.template.querySelector('c-signature-pad');
+        if (pad) {
+            pad.open();
+        }
+    }
+
+    handleSignatureSave(event) {
+        const signature = event.detail.signature;
+        const pad = this.template.querySelector('c-signature-pad');
+        const detailIds = Object.keys(this._pendingChanges);
 
         this.isSavingGrading = true;
-        const promises = detailIds.map(detailId => {
+
+        // 1) Save all grading rows
+        const gradingPromises = detailIds.map(detailId => {
             const changes = this._pendingChanges[detailId];
             return saveGradingRow({
                 detailId            : detailId,
@@ -388,18 +411,43 @@ export default class QualRosterGrading extends LightningElement {
             });
         });
 
-        Promise.all(promises)
+        Promise.all(gradingPromises)
             .then(() => {
+                // 2) Only after grading saves, save the signature
+                return saveInstructorSignature({
+                    rosterLabel: this.selectedLabel,
+                    signature  : signature
+                });
+            })
+            .then(() => {
+                // 3) Everything saved successfully
                 this._pendingChanges = {};
                 this.isSavingGrading = false;
+                if (pad) pad.finishSaving();
                 this.dispatchEvent(new ShowToastEvent({
-                    title: 'Saved', message: `${detailIds.length} record(s) saved successfully.`, variant: 'success'
+                    title  : 'Saved',
+                    message: `${detailIds.length} record(s) and signature saved successfully.`,
+                    variant: 'success'
                 }));
             })
             .catch(error => {
                 this.isSavingGrading = false;
+                if (pad) pad.saveFailed();
                 this.showErrorToast('Save failed: ' + this.reduceError(error));
             });
+    }
+
+    handleSignatureCancel() {
+        // Instructor cancelled - nothing is saved, changes remain pending
+        this.dispatchEvent(new ShowToastEvent({
+            title  : 'Not Saved',
+            message: 'Signature is required to save. Your changes have not been saved yet.',
+            variant: 'warning'
+        }));
+    }
+
+    handleSignatureError(event) {
+        this.showErrorToast(event.detail.message);
     }
 
     // ── Utilities ──────────────────────────────────────────────────────────

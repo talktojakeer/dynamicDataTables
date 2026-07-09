@@ -282,6 +282,13 @@
                 </template>
             </template>
 
+            <!-- Signature capture modal -->
+            <c-signature-pad
+                signer-name={instructorNameForSignature}
+                onsignaturesave={handleSignatureSave}
+                oncancel={handleSignatureCancel}
+                onerror={handleSignatureError}></c-signature-pad>
+
         </template>
 
     </div>

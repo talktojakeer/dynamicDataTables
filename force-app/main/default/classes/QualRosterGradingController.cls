@@ -242,6 +242,44 @@ public with sharing class QualRosterGradingController {
     }
 
     // -----------------------------------------------------------------------
+    // Save the firearm instructor signature (base64) to all FIR forms
+    // in a roster. Stored in Firearms_Instructor_Signature__c (Long Text Area).
+    // @param rosterLabel  - the roster whose forms get the signature
+    // @param signature    - base64 data URL string (e.g. data:image/png;base64,...)
+    // -----------------------------------------------------------------------
+    @AuraEnabled
+    public static void saveInstructorSignature(String rosterLabel, String signature) {
+        if (String.isBlank(rosterLabel)) {
+            throw new AuraHandledException('Roster label is required.');
+        }
+        if (String.isBlank(signature)) {
+            throw new AuraHandledException('Signature is required.');
+        }
+        // Guard against exceeding the Long Text Area limit
+        if (signature.length() > 131072) {
+            throw new AuraHandledException('Signature image is too large to store.');
+        }
+        try {
+            List<FIR_Qualification_Form__c> forms = [
+                SELECT Id
+                FROM   FIR_Qualification_Form__c
+                WHERE  Qual_Roster_Label__c = :rosterLabel
+            ];
+            if (forms.isEmpty()) {
+                throw new AuraHandledException('No qualification forms found for this roster.');
+            }
+            for (FIR_Qualification_Form__c f : forms) {
+                f.Firearms_Instructor_Signature__c = signature;
+            }
+            update forms;
+        } catch (AuraHandledException ahe) {
+            throw ahe;
+        } catch (Exception ex) {
+            throw new AuraHandledException('Failed to save signature: ' + ex.getMessage());
+        }
+    }
+
+    // -----------------------------------------------------------------------
     // Get Weapon_Code__c picklist values from object metadata
     // -----------------------------------------------------------------------
     @AuraEnabled(cacheable=true)

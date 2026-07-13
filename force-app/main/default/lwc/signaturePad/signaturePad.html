@@ -1,51 +1,19 @@
 <template>
-    <template if:true={isOpen}>
-        <section class="sig-backdrop" role="dialog" aria-modal="true" aria-labelledby="sig-title">
-            <div class="sig-modal">
-
-                <!-- Header -->
-                <div class="sig-header">
-                    <h2 id="sig-title" class="sig-title">Firearm Instructor Signature</h2>
-                    <button class="sig-close" title="Close" onclick={handleCancel}>&times;</button>
-                </div>
-
-                <!-- Instruction -->
-                <p class="sig-instruction">Please sign in the box below to certify these qualification results.</p>
-
-                <!-- Canvas -->
-                <div class="sig-canvas-wrap">
-                    <canvas class="sig-canvas"
-                            onmousedown={handlePointerDown}
-                            onmousemove={handlePointerMove}
-                            onmouseup={handlePointerUp}
-                            onmouseleave={handlePointerUp}
-                            ontouchstart={handleTouchStart}
-                            ontouchmove={handleTouchMove}
-                            ontouchend={handlePointerUp}></canvas>
-                    <template if:true={isEmpty}>
-                        <span class="sig-placeholder">Sign here</span>
-                    </template>
-                </div>
-
-                <!-- Signer name (optional label under the line) -->
-                <div class="sig-signer-row">
-                    <span class="sig-signer-label">Signed by:</span>
-                    <span class="sig-signer-name">{signerName}</span>
-                </div>
-
-                <!-- Footer buttons -->
-                <div class="sig-footer">
-                    <button class="sig-btn sig-btn-clear" onclick={handleClear}>Clear</button>
-                    <div class="sig-footer-right">
-                        <button class="sig-btn sig-btn-cancel" onclick={handleCancel}>Cancel</button>
-                        <button class="sig-btn sig-btn-save" onclick={handleSave} disabled={isEmpty}>
-                            <template if:true={isSaving}>Saving...</template>
-                            <template if:false={isSaving}>Save Signature</template>
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-    </template>
+    <div class="sig-canvas-wrap">
+        <canvas class="sig-canvas"
+                onmousedown={handlePointerDown}
+                onmousemove={handlePointerMove}
+                onmouseup={handlePointerUp}
+                onmouseleave={handlePointerUp}
+                ontouchstart={handleTouchStart}
+                ontouchmove={handleTouchMove}
+                ontouchend={handlePointerUp}></canvas>
+        <template if:true={isEmpty}>
+            <span class="sig-placeholder">Sign here</span>
+        </template>
+    </div>
+    <div class="sig-signer-row">
+        <span class="sig-signer-label">Signed by:</span>
+        <span class="sig-signer-name">{signerName}</span>
+    </div>
 </template>

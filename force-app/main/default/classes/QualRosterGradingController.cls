@@ -242,22 +242,36 @@ public with sharing class QualRosterGradingController {
     }
 
     // -----------------------------------------------------------------------
-    // Save the firearm instructor signature (base64) to all FIR forms
-    // in a roster. Stored in Firearms_Instructor_Signature__c (Long Text Area).
-    // @param rosterLabel  - the roster whose forms get the signature
-    // @param signature    - base64 data URL string (e.g. data:image/png;base64,...)
+    // Save the firearm instructor signature (base64), and the witness
+    // signature when one is required, to all FIR forms in a roster.
+    // Stored in Firearms_Instructor_Signature__c / Witness_Signature__c
+    // (both Long Text Area). A witness is only required when the FI
+    // themselves is one of the graded members on this roster - the caller
+    // (LWC) decides that and only sends witnessName/witnessSignature then.
+    // @param rosterLabel        - the roster whose forms get the signatures
+    // @param instructorSignature - base64 data URL string, always required
+    // @param witnessName        - witness's typed full name, optional
+    // @param witnessSignature   - base64 data URL string, optional
     // -----------------------------------------------------------------------
     @AuraEnabled
-    public static void saveInstructorSignature(String rosterLabel, String signature) {
+    public static void saveSignatures(
+        String rosterLabel,
+        String instructorSignature,
+        String witnessName,
+        String witnessSignature
+    ) {
         if (String.isBlank(rosterLabel)) {
             throw new AuraHandledException('Roster label is required.');
         }
-        if (String.isBlank(signature)) {
-            throw new AuraHandledException('Signature is required.');
+        if (String.isBlank(instructorSignature)) {
+            throw new AuraHandledException('Firearm instructor signature is required.');
         }
-        // Guard against exceeding the Long Text Area limit
-        if (signature.length() > 131072) {
-            throw new AuraHandledException('Signature image is too large to store.');
+        if (instructorSignature.length() > 131072) {
+            throw new AuraHandledException('Instructor signature image is too large to store.');
+        }
+        Boolean hasWitnessSignature = String.isNotBlank(witnessSignature);
+        if (hasWitnessSignature && witnessSignature.length() > 131072) {
+            throw new AuraHandledException('Witness signature image is too large to store.');
         }
         try {
             List<FIR_Qualification_Form__c> forms = [
@@ -269,7 +283,11 @@ public with sharing class QualRosterGradingController {
                 throw new AuraHandledException('No qualification forms found for this roster.');
             }
             for (FIR_Qualification_Form__c f : forms) {
-                f.Firearms_Instructor_Signature__c = signature;
+                f.Firearms_Instructor_Signature__c = instructorSignature;
+                if (hasWitnessSignature) {
+                    f.Witness_Signature__c = witnessSignature;
+                    f.Witness_Name__c      = witnessName;
+                }
             }
             update forms;
         } catch (AuraHandledException ahe) {

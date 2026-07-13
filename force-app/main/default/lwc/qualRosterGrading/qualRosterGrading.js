@@ -4,7 +4,7 @@ import getRosterLabelDetails       from '@salesforce/apex/QualRosterGradingContr
 import getRosterGradingData        from '@salesforce/apex/QualRosterGradingController.getRosterGradingData';
 import saveGradingRow              from '@salesforce/apex/QualRosterGradingController.saveGradingRow';
 import getWeaponCodeOptions        from '@salesforce/apex/QualRosterGradingController.getWeaponCodeOptions';
-import saveInstructorSignature     from '@salesforce/apex/QualRosterGradingController.saveInstructorSignature';
+import saveSignatures              from '@salesforce/apex/QualRosterGradingController.saveSignatures';
 
 export default class QualRosterGrading extends LightningElement {
 
@@ -368,35 +368,88 @@ export default class QualRosterGrading extends LightningElement {
     @track isSavingGrading = false;
 
     handleSaveAll() {
-        const detailIds = Object.keys(this._pendingChanges);
-        if (detailIds.length === 0) {
-            this.dispatchEvent(new ShowToastEvent({ title: 'Info', message: 'No changes to save.', variant: 'info' }));
-            return;
-        }
-        // Require signature FIRST - open the modal. Nothing is saved until signed.
+        if (!this.hasGradingData) return;
+        // Always require a signature to certify the roster, even when no row
+        // edits are pending (e.g. the roster was already fully graded).
+        // Nothing is committed until the modal is signed and saved.
         this.openSignatureModal();
     }
 
     // ── Signature capture ───────────────────────────────────────────────────
+    @track showSignatureModal = false;
+    @track witnessName        = '';
+    @track signatureError     = '';
+
     get instructorNameForSignature() {
         return this.gradingData ? (this.gradingData.instructorName || '') : '';
     }
 
-    openSignatureModal() {
-        const pad = this.template.querySelector('c-signature-pad');
-        if (pad) {
-            pad.open();
-        }
+    // A witness signature is required whenever the firearm instructor
+    // themselves shows up as one of the graded members on this roster
+    // (row.isFirearmsInstructor is set server-side in getRosterGradingData).
+    get needsWitnessSignature() {
+        if (!this.hasGradingData) return false;
+        return this.gradingData.weaponSections.some(section =>
+            section.rows.some(row => row.isFirearmsInstructor === true)
+        );
     }
 
-    handleSignatureSave(event) {
-        const signature = event.detail.signature;
-        const pad = this.template.querySelector('c-signature-pad');
-        const detailIds = Object.keys(this._pendingChanges);
+    handleWitnessNameInput(event) {
+        this.witnessName    = event.target.value;
+        this.signatureError = '';
+    }
 
+    openSignatureModal() {
+        this.witnessName        = '';
+        this.signatureError     = '';
+        this.showSignatureModal = true;
+    }
+
+    handleClearAllSignatures() {
+        const fiPad = this.template.querySelector('[data-pad="instructor"]');
+        if (fiPad) fiPad.clear();
+        const witnessPad = this.template.querySelector('[data-pad="witness"]');
+        if (witnessPad) witnessPad.clear();
+    }
+
+    handleSignatureSave() {
+        const fiPad = this.template.querySelector('[data-pad="instructor"]');
+        if (!fiPad || !fiPad.hasSignature) {
+            this.signatureError = 'Firearm instructor signature is required.';
+            return;
+        }
+
+        const fiCapture = fiPad.captureSignature();
+        if (fiCapture.error) {
+            this.signatureError = fiCapture.error;
+            return;
+        }
+
+        let witnessDataUrl = null;
+        if (this.needsWitnessSignature) {
+            const witnessPad = this.template.querySelector('[data-pad="witness"]');
+            if (!this.witnessName || !this.witnessName.trim()) {
+                this.signatureError = 'Witness name is required.';
+                return;
+            }
+            if (!witnessPad || !witnessPad.hasSignature) {
+                this.signatureError = 'Witness signature is required.';
+                return;
+            }
+            const witnessCapture = witnessPad.captureSignature();
+            if (witnessCapture.error) {
+                this.signatureError = witnessCapture.error;
+                return;
+            }
+            witnessDataUrl = witnessCapture.dataUrl;
+        }
+
+        this.signatureError  = '';
         this.isSavingGrading = true;
 
-        // 1) Save all grading rows
+        const detailIds = Object.keys(this._pendingChanges);
+
+        // 1) Save all pending grading row edits
         const gradingPromises = detailIds.map(detailId => {
             const changes = this._pendingChanges[detailId];
             return saveGradingRow({
@@ -406,48 +459,49 @@ export default class QualRosterGrading extends LightningElement {
                 sightType           : changes.sightType           || '',
                 weaponCode          : changes.weaponCode          || '',
                 qualificationAttempt: changes.qualificationAttempt || '',
-                qualified           : changes.qualified           || 'Yes',
-                qualified90         : changes.qualified90         || ''
+                qualified           : changes.qualified            || 'Yes',
+                qualified90         : changes.qualified90          || ''
             });
         });
 
         Promise.all(gradingPromises)
             .then(() => {
-                // 2) Only after grading saves, save the signature
-                return saveInstructorSignature({
-                    rosterLabel: this.selectedLabel,
-                    signature  : signature
+                // 2) Only after grading saves, save the signature(s)
+                return saveSignatures({
+                    rosterLabel         : this.selectedLabel,
+                    instructorSignature : fiCapture.dataUrl,
+                    witnessName         : this.needsWitnessSignature ? this.witnessName.trim() : null,
+                    witnessSignature    : witnessDataUrl
                 });
             })
             .then(() => {
                 // 3) Everything saved successfully
-                this._pendingChanges = {};
-                this.isSavingGrading = false;
-                if (pad) pad.finishSaving();
+                this._pendingChanges    = {};
+                this.isSavingGrading    = false;
+                this.showSignatureModal = false;
+                const msg = detailIds.length > 0
+                    ? `${detailIds.length} record(s) and signature(s) saved successfully.`
+                    : 'Signature(s) saved successfully.';
                 this.dispatchEvent(new ShowToastEvent({
                     title  : 'Saved',
-                    message: `${detailIds.length} record(s) and signature saved successfully.`,
+                    message: msg,
                     variant: 'success'
                 }));
             })
             .catch(error => {
                 this.isSavingGrading = false;
-                if (pad) pad.saveFailed();
                 this.showErrorToast('Save failed: ' + this.reduceError(error));
             });
     }
 
     handleSignatureCancel() {
+        this.showSignatureModal = false;
         // Instructor cancelled - nothing is saved, changes remain pending
         this.dispatchEvent(new ShowToastEvent({
             title  : 'Not Saved',
             message: 'Signature is required to save. Your changes have not been saved yet.',
             variant: 'warning'
         }));
-    }
-
-    handleSignatureError(event) {
-        this.showErrorToast(event.detail.message);
     }
 
     // ── Utilities ──────────────────────────────────────────────────────────

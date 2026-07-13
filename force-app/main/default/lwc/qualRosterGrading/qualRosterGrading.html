@@ -283,11 +283,52 @@
             </template>
 
             <!-- Signature capture modal -->
-            <c-signature-pad
-                signer-name={instructorNameForSignature}
-                onsignaturesave={handleSignatureSave}
-                oncancel={handleSignatureCancel}
-                onerror={handleSignatureError}></c-signature-pad>
+            <template if:true={showSignatureModal}>
+                <section class="sig-backdrop" role="dialog" aria-modal="true" aria-labelledby="sig-title">
+                    <div class="sig-modal">
+
+                        <div class="sig-header">
+                            <h2 id="sig-title" class="sig-title">Certify Qualification Results</h2>
+                            <button class="sig-close" title="Close" onclick={handleSignatureCancel}>&times;</button>
+                        </div>
+
+                        <p class="sig-instruction">Please sign below to certify these qualification results.</p>
+
+                        <div class="sig-block">
+                            <h3 class="sig-block-title">Firearm Instructor Signature</h3>
+                            <c-signature-pad data-pad="instructor" signer-name={instructorNameForSignature}></c-signature-pad>
+                        </div>
+
+                        <template if:true={needsWitnessSignature}>
+                            <div class="sig-block sig-witness-block">
+                                <h3 class="sig-block-title">Witness Signature</h3>
+                                <p class="sig-witness-note">A witness is required because the firearm instructor is also being graded on this roster.</p>
+                                <div class="witness-name-field">
+                                    <label class="witness-name-label" for="witnessNameInput">Witness Name <span class="required-star">*</span></label>
+                                    <input id="witnessNameInput" type="text" class="witness-name-input" value={witnessName} maxlength="255" oninput={handleWitnessNameInput} placeholder="Enter witness full name" />
+                                </div>
+                                <c-signature-pad data-pad="witness" signer-name={witnessName}></c-signature-pad>
+                            </div>
+                        </template>
+
+                        <template if:true={signatureError}>
+                            <p class="sig-error">{signatureError}</p>
+                        </template>
+
+                        <div class="sig-footer">
+                            <button class="sig-btn sig-btn-clear" onclick={handleClearAllSignatures}>Clear</button>
+                            <div class="sig-footer-right">
+                                <button class="sig-btn sig-btn-cancel" onclick={handleSignatureCancel}>Cancel</button>
+                                <button class="sig-btn sig-btn-save" onclick={handleSignatureSave} disabled={isSavingGrading}>
+                                    <template if:true={isSavingGrading}>Saving...</template>
+                                    <template if:false={isSavingGrading}>Save</template>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+            </template>
 
         </template>
 

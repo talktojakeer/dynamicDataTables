@@ -2,38 +2,24 @@ import { LightningElement, api, track } from 'lwc';
 
 const MAX_BASE64_BYTES = 125000; // stay safely under the ~131072 Long Text Area limit
 
+// Reusable signature CANVAS widget only - no modal chrome, no Save/Cancel
+// buttons, no isOpen state. The parent component owns the modal and decides
+// when/how many of these to show (e.g. instructor + witness together).
 export default class SignaturePad extends LightningElement {
 
-    @api signerName = '';          // e.g. the firearm instructor's name
-    @track isOpen   = false;
+    @api signerName = '';          // e.g. the firearm instructor's or witness's name
     @track isEmpty  = true;
-    @track isSaving = false;
 
-    _ctx        = null;
-    _canvas     = null;
-    _drawing    = false;
-    _lastX      = 0;
-    _lastY      = 0;
+    _ctx         = null;
+    _canvas      = null;
+    _drawing     = false;
+    _lastX       = 0;
+    _lastY       = 0;
     _hasRendered = false;
-
-    // ── Public API ──────────────────────────────────────────────────────────
-    @api
-    open() {
-        this.isOpen  = true;
-        this.isEmpty = true;
-        this.isSaving = false;
-        // canvas is set up in renderedCallback once the DOM paints
-        this._hasRendered = false;
-    }
-
-    @api
-    close() {
-        this.isOpen = false;
-    }
 
     // ── Lifecycle ───────────────────────────────────────────────────────────
     renderedCallback() {
-        if (this.isOpen && !this._hasRendered) {
+        if (!this._hasRendered) {
             this._hasRendered = true;
             this._setupCanvas();
         }
@@ -119,23 +105,28 @@ export default class SignaturePad extends LightningElement {
         this._drawTo(p.x, p.y);
     }
 
-    // ── Buttons ─────────────────────────────────────────────────────────────
-    handleClear() {
+    // ── Public API for the parent modal ────────────────────────────────────
+    @api
+    clear() {
         if (!this._ctx || !this._canvas) return;
         this._ctx.fillStyle = '#ffffff';
         this._ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
         this.isEmpty = true;
     }
 
-    handleCancel() {
-        this.isOpen = false;
-        this.dispatchEvent(new CustomEvent('cancel'));
+    @api
+    get hasSignature() {
+        return !this.isEmpty;
     }
 
-    handleSave() {
-        if (this.isEmpty || !this._canvas) return;
+    // Returns { dataUrl, error }. dataUrl is null when there is nothing drawn,
+    // or when the drawing can't be shrunk below the storage limit.
+    @api
+    captureSignature() {
+        if (this.isEmpty || !this._canvas) {
+            return { dataUrl: null, error: null };
+        }
 
-        // Export as PNG base64. Try to keep it under the field limit.
         let dataUrl = this._canvas.toDataURL('image/png');
 
         // If too large, fall back to JPEG at reducing quality
@@ -149,29 +140,13 @@ export default class SignaturePad extends LightningElement {
         }
 
         if (this._byteLength(dataUrl) > MAX_BASE64_BYTES) {
-            this.dispatchEvent(new CustomEvent('error', {
-                detail: { message: 'Signature image is too large to store. Please try a simpler signature.' }
-            }));
-            return;
+            return {
+                dataUrl: null,
+                error: 'Signature image is too large to store. Please try a simpler signature.'
+            };
         }
 
-        this.isSaving = true;
-        // Emit the base64 string to the parent, which saves it via Apex
-        this.dispatchEvent(new CustomEvent('signaturesave', {
-            detail: { signature: dataUrl }
-        }));
-    }
-
-    // Parent calls this after Apex save completes to close the modal
-    @api
-    finishSaving() {
-        this.isSaving = false;
-        this.isOpen   = false;
-    }
-
-    @api
-    saveFailed() {
-        this.isSaving = false;
+        return { dataUrl, error: null };
     }
 
     // ── Utility: byte length of a base64 data URL string ────────────────────

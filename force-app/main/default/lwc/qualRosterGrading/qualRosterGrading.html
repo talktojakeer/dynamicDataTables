@@ -294,22 +294,44 @@
 
                         <p class="sig-instruction">Please sign below to certify these qualification results.</p>
 
-                        <div class="sig-block">
-                            <h3 class="sig-block-title">Firearm Instructor Signature</h3>
-                            <c-signature-pad data-pad="instructor" signer-name={instructorNameForSignature}></c-signature-pad>
-                        </div>
-
-                        <template if:true={needsWitnessSignature}>
-                            <div class="sig-block sig-witness-block">
-                                <h3 class="sig-block-title">Witness Signature</h3>
-                                <p class="sig-witness-note">A witness is required because the firearm instructor is also being graded on this roster.</p>
-                                <div class="witness-name-field">
-                                    <label class="witness-name-label" for="witnessNameInput">Witness Name <span class="required-star">*</span></label>
-                                    <input id="witnessNameInput" type="text" class="witness-name-input" value={witnessName} maxlength="255" oninput={handleWitnessNameInput} placeholder="Enter witness full name" />
+                        <div class={signatureRowClass}>
+                            <div class="sig-block">
+                                <h3 class="sig-block-title">Firearm Instructor Signature</h3>
+                                <p class="sig-note-line">Certifying instructor of record for these qualification results.</p>
+                                <div class="sig-fields">
+                                    <div class="sig-field">
+                                        <label class="sig-field-label">Instructor Name</label>
+                                        <input type="text" class="sig-input sig-input--readonly" value={instructorNameForSignature} readonly />
+                                    </div>
+                                    <div class="sig-field">
+                                        <label class="sig-field-label">Date</label>
+                                        <input type="text" class="sig-input sig-input--readonly" value={certificationDate} readonly />
+                                    </div>
                                 </div>
-                                <c-signature-pad data-pad="witness" signer-name={witnessName}></c-signature-pad>
+                                <c-signature-pad data-pad="instructor" signer-name={instructorNameForSignature}></c-signature-pad>
                             </div>
-                        </template>
+
+                            <template if:true={needsWitnessSignature}>
+                                <div class="sig-block sig-witness-block">
+                                    <h3 class="sig-block-title">Witness Signature</h3>
+                                    <p class="sig-note-line">A witness is required because the firearm instructor 
+                                            is also being graded on this roster.</p>
+                                    <div class="sig-fields">
+                                        <div class="sig-field">
+                                            <label class="sig-field-label" for="witnessNameInput">Witness Name 
+                                                <span class="required-star">*</span></label>
+                                            <input id="witnessNameInput" type="text" class="sig-input" value={witnessName} 
+                                                maxlength="255" oninput={handleWitnessNameInput} placeholder="Enter witness full name" />
+                                        </div>
+                                        <div class="sig-field">
+                                            <label class="sig-field-label">Date</label>
+                                            <input type="text" class="sig-input sig-input--readonly" value={certificationDate} readonly />
+                                        </div>
+                                    </div>
+                                    <c-signature-pad data-pad="witness" signer-name={witnessName}></c-signature-pad>
+                                </div>
+                            </template>
+                        </div>
 
                         <template if:true={signatureError}>
                             <p class="sig-error">{signatureError}</p>

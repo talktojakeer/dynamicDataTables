@@ -1,20 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 	<types>
-		<members>Account_Record_Page</members>
-		<name>FlexiPage</name>
+		<members>*</members>
+		<name>customobject</name>
 	</types>
-	<types>
-		<members>Account-FAQP Account</members>
-		<name>Layout</name>
-	</types>
-	<types>
-		<members>recruitClassAddMember</members>
-		<name>LightningComponentBundle</name>
-	</types>
-	<types>
-		<members>Account.Add_Recruit_Members</members>
-		<name>QuickAction</name>
-	</types>
-	<version>66.0</version>
+	
 </Package>

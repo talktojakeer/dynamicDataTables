@@ -1,6 +1,10 @@
 import { LightningElement, api, track } from 'lwc';
 
-const MAX_BASE64_BYTES = 125000; // stay safely under the ~131072 Long Text Area limit
+const MAX_BASE64_BYTES = 125000; // stay safely under the ~131072 field limit
+const MAX_OUTPUT_WIDTH = 320;     // target signature width (px) after trimming
+const INK_BRIGHTNESS   = 240;     // a pixel is "ink" if darker than this (0-255)
+const INK_ALPHA        = 20;      // ...and more opaque than this (0-255)
+const TRIM_PADDING     = 6;       // px of whitespace kept around the signature
 
 // Reusable signature CANVAS widget only - no modal chrome, no Save/Cancel
 // buttons, no isOpen state. The parent component owns the modal and decides
@@ -121,21 +125,27 @@ export default class SignaturePad extends LightningElement {
 
     // Returns { dataUrl, error }. dataUrl is null when there is nothing drawn,
     // or when the drawing can't be shrunk below the storage limit.
+    // The image is trimmed to the drawn strokes and scaled down before export,
+    // which greatly reduces the stored size (and removes empty whitespace).
     @api
     captureSignature() {
         if (this.isEmpty || !this._canvas) {
             return { dataUrl: null, error: null };
         }
 
-        let dataUrl = this._canvas.toDataURL('image/png');
+        // 1) Trim to the ink bounding box and scale down; fall back to the
+        //    full canvas if pixel data can't be read for any reason.
+        const source = this._trimAndScale() || this._canvas;
 
-        // If too large, fall back to JPEG at reducing quality
+        // 2) Export - PNG first (crisp line art, small when trimmed), then
+        //    JPEG at reducing quality only if still over the limit.
+        let dataUrl = source.toDataURL('image/png');
         if (this._byteLength(dataUrl) > MAX_BASE64_BYTES) {
             let quality = 0.7;
-            dataUrl = this._canvas.toDataURL('image/jpeg', quality);
+            dataUrl = source.toDataURL('image/jpeg', quality);
             while (this._byteLength(dataUrl) > MAX_BASE64_BYTES && quality > 0.3) {
                 quality -= 0.1;
-                dataUrl = this._canvas.toDataURL('image/jpeg', quality);
+                dataUrl = source.toDataURL('image/jpeg', quality);
             }
         }
 
@@ -147,6 +157,61 @@ export default class SignaturePad extends LightningElement {
         }
 
         return { dataUrl, error: null };
+    }
+
+    // Crop the canvas to just the drawn strokes (dropping empty margins) and
+    // scale the result down to MAX_OUTPUT_WIDTH. Returns a new canvas, or
+    // null if pixels can't be read or nothing was drawn.
+    _trimAndScale() {
+        const w = this._canvas.width;
+        const h = this._canvas.height;
+        let data;
+        try {
+            data = this._ctx.getImageData(0, 0, w, h).data;
+        } catch (e) {
+            return null;
+        }
+
+        // Find the bounding box of "ink" pixels
+        let minX = w, minY = h, maxX = -1, maxY = -1;
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const i      = (y * w + x) * 4;
+                const alpha  = data[i + 3];
+                const bright = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                if (alpha > INK_ALPHA && bright < INK_BRIGHTNESS) {
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+
+        if (maxX < 0) return null; // no ink detected
+
+        // Pad the box, clamped to the canvas
+        minX = Math.max(0, minX - TRIM_PADDING);
+        minY = Math.max(0, minY - TRIM_PADDING);
+        maxX = Math.min(w - 1, maxX + TRIM_PADDING);
+        maxY = Math.min(h - 1, maxY + TRIM_PADDING);
+
+        const cropW = maxX - minX + 1;
+        const cropH = maxY - minY + 1;
+
+        // Scale down (never up) to the target width
+        const scale = Math.min(1, MAX_OUTPUT_WIDTH / cropW);
+        const outW  = Math.max(1, Math.round(cropW * scale));
+        const outH  = Math.max(1, Math.round(cropH * scale));
+
+        const out  = document.createElement('canvas');
+        out.width  = outW;
+        out.height = outH;
+        const octx = out.getContext('2d');
+        octx.fillStyle = '#ffffff'; // clean white background, JPEG-safe
+        octx.fillRect(0, 0, outW, outH);
+        octx.drawImage(this._canvas, minX, minY, cropW, cropH, 0, 0, outW, outH);
+        return out;
     }
 
     // ── Utility: byte length of a base64 data URL string ────────────────────

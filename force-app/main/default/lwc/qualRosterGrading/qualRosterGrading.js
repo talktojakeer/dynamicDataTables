@@ -5,6 +5,9 @@ import getRosterGradingData        from '@salesforce/apex/QualRosterGradingContr
 import saveGradingRow              from '@salesforce/apex/QualRosterGradingController.saveGradingRow';
 import getWeaponCodeOptions        from '@salesforce/apex/QualRosterGradingController.getWeaponCodeOptions';
 import saveSignatures              from '@salesforce/apex/QualRosterGradingController.saveSignatures';
+import getAvailableEmployees       from '@salesforce/apex/QualRosterGradingController.getAvailableEmployees';
+import addToRoster                 from '@salesforce/apex/QualRosterGradingController.addToRoster';
+import createEmployee              from '@salesforce/apex/QualRosterGradingController.createEmployee';
 
 export default class QualRosterGrading extends LightningElement {
 
@@ -195,6 +198,221 @@ export default class QualRosterGrading extends LightningElement {
                 this.isLoadingGrading = false;
                 this.showErrorToast(this.reduceError(error));
             });
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Add to Roster - employees x weapon types (+ optional weapon details)
+    // ═══════════════════════════════════════════════════════════════════════
+    @track showAddModal       = false;
+    @track isLoadingEmployees = false;
+    @track isAddingEmployees  = false;
+    @track employeeSearchKey  = '';
+    @track addError           = '';
+    _availableEmployees       = [];   // full list from Apex (with existingWeaponTypes)
+    @track availableEmployees = [];   // filtered + decorated view
+    @track weaponTypeOptions  = [];   // { value, label, checked }
+
+    // Optional weapon details applied to all newly created rows
+    @track addManufacturer = '';
+    @track addModel        = '';
+    @track addSightType    = '';
+
+    // Create-new-employee sub-form
+    @track showCreateEmployee = false;
+    @track newFirstName       = '';
+    @track newLastName        = '';
+    @track newIsRetired       = false;
+    @track isCreatingEmployee = false;
+
+    // Static picklist option sets (mirror the field metadata)
+    _manufacturerValues = ['Sig Sauer', 'Daniel Defense', 'Hodge Defense', 'FN Herstal', 'Heckler Koch', 'Mossberg', 'Remington'];
+    _modelValues        = ['P320', 'P365', 'P226', 'P229', 'DDM4V7', 'DDM4 V7 RIS 3', 'Mod 1', 'Mod 2', 'P90', '416', '762 A1', '590A1', '870', '1187'];
+    _sightTypeValues    = ['Iron Sight', 'Optic', 'Magnified Optic', 'Scope'];
+
+    _allWeaponTypes = ['Pistol 1', 'Pistol 2', 'Shotgun', 'Rifle', 'Automatic Weapon', 'Precision Rifle', 'Other'];
+
+    get manufacturerOptions() { return this._toOptions(this._manufacturerValues); }
+    get modelOptions()        { return this._toOptions(this._modelValues); }
+    get sightTypeOptions()    { return this._toOptions(this._sightTypeValues); }
+    _toOptions(vals) { return vals.map(v => ({ label: v, value: v })); }
+
+    get selectedEmployeeCount() {
+        return this._availableEmployees.filter(e => e.selected).length;
+    }
+
+    get addButtonLabel() {
+        const n = this.selectedEmployeeCount;
+        return n > 0 ? `Add ${n} to Roster` : 'Add to Roster';
+    }
+
+    get noEmployeesFound() {
+        return !this.isLoadingEmployees && this.availableEmployees.length === 0;
+    }
+
+    openAddEmployeeModal() {
+        this.showAddModal        = true;
+        this.addError            = '';
+        this.employeeSearchKey   = '';
+        this._availableEmployees = [];
+        this.availableEmployees  = [];
+        this.addManufacturer     = '';
+        this.addModel            = '';
+        this.addSightType        = '';
+        this.showCreateEmployee  = false;
+        this.newFirstName        = '';
+        this.newLastName         = '';
+        this.newIsRetired        = false;
+        this._initWeaponTypeOptions();
+        this._fetchAvailableEmployees();
+    }
+
+    closeAddEmployeeModal() {
+        this.showAddModal = false;
+    }
+
+    _initWeaponTypeOptions() {
+        // Pre-check the weapon types already present on this roster.
+        const onRoster = new Set(
+            this.hasGradingData ? this.gradingData.weaponSections.map(s => s.weaponType) : []
+        );
+        this.weaponTypeOptions = this._allWeaponTypes.map(wt => ({
+            value  : wt,
+            label  : wt,
+            checked: onRoster.has(wt)
+        }));
+    }
+
+    _fetchAvailableEmployees(selectContactId) {
+        this.isLoadingEmployees = true;
+        getAvailableEmployees({ rosterLabel: this.selectedLabel })
+            .then(list => {
+                this._availableEmployees = (list || []).map(e => ({
+                    ...e,
+                    selected: selectContactId ? e.contactId === selectContactId : false
+                }));
+                this._applyEmployeeFilter();
+            })
+            .catch(error => {
+                this.addError = this.reduceError(error);
+            })
+            .finally(() => {
+                this.isLoadingEmployees = false;
+            });
+    }
+
+    handleEmployeeSearch(event) {
+        this.employeeSearchKey = event.target.value || '';
+        this._applyEmployeeFilter();
+    }
+
+    _applyEmployeeFilter() {
+        const key = this.employeeSearchKey.trim().toLowerCase();
+        this.availableEmployees = this._availableEmployees
+            .filter(e => !key || (e.name && e.name.toLowerCase().includes(key)))
+            .map(e => {
+                const existing = e.existingWeaponTypes || [];
+                return {
+                    ...e,
+                    rowClass       : e.selected ? 'emp-row emp-row--selected' : 'emp-row',
+                    hasExisting    : existing.length > 0,
+                    existingLabel  : existing.length > 0 ? `On roster: ${existing.join(', ')}` : ''
+                };
+            });
+    }
+
+    handleEmployeeToggle(event) {
+        const contactId = event.currentTarget.dataset.id;
+        const match = this._availableEmployees.find(e => e.contactId === contactId);
+        if (match) {
+            match.selected = !match.selected;
+            this.addError = '';
+            this._applyEmployeeFilter();
+        }
+    }
+
+    handleWeaponTypeToggle(event) {
+        const value = event.target.value;
+        this.weaponTypeOptions = this.weaponTypeOptions.map(opt =>
+            opt.value === value ? { ...opt, checked: event.target.checked } : opt
+        );
+        this.addError = '';
+    }
+
+    handleAddManufacturer(event) { this.addManufacturer = event.detail.value; }
+    handleAddModel(event)        { this.addModel        = event.detail.value; }
+    handleAddSightType(event)    { this.addSightType    = event.detail.value; }
+
+    handleAddEmployees() {
+        const contactIds  = this._availableEmployees.filter(e => e.selected).map(e => e.contactId);
+        const weaponTypes = this.weaponTypeOptions.filter(o => o.checked).map(o => o.value);
+
+        if (contactIds.length === 0) { this.addError = 'Select at least one employee.'; return; }
+        if (weaponTypes.length === 0) { this.addError = 'Select at least one weapon type.'; return; }
+
+        this.addError          = '';
+        this.isAddingEmployees = true;
+        addToRoster({
+            rosterLabel : this.selectedLabel,
+            contactIds  : contactIds,
+            weaponTypes : weaponTypes,
+            manufacturer: this.addManufacturer || null,
+            model       : this.addModel || null,
+            sightType   : this.addSightType || null
+        })
+            .then(res => {
+                this.showAddModal = false;
+                let msg = `${res.rowsAdded} row(s) added across ${res.employeesAffected} employee(s).`;
+                if (res.rowsSkipped > 0) {
+                    msg += ` ${res.rowsSkipped} already existed and were skipped.`;
+                }
+                this.dispatchEvent(new ShowToastEvent({
+                    title  : 'Added to Roster',
+                    message: msg,
+                    variant: res.rowsAdded > 0 ? 'success' : 'info'
+                }));
+                this.loadGradingData(this.selectedLabel);
+            })
+            .catch(error => { this.addError = this.reduceError(error); })
+            .finally(() => { this.isAddingEmployees = false; });
+    }
+
+    // ── Create new employee (e.g. retired officer) ──────────────────────────
+    toggleCreateEmployee() {
+        this.showCreateEmployee = !this.showCreateEmployee;
+        this.addError = '';
+    }
+    handleNewFirstName(event) { this.newFirstName = event.target.value; }
+    handleNewLastName(event)  { this.newLastName  = event.target.value; }
+    handleNewIsRetired(event) { this.newIsRetired = event.target.checked; }
+
+    handleCreateEmployee() {
+        if (!this.newLastName || !this.newLastName.trim()) {
+            this.addError = 'Last name is required to create an employee.';
+            return;
+        }
+        this.isCreatingEmployee = true;
+        this.addError = '';
+        createEmployee({
+            firstName: this.newFirstName ? this.newFirstName.trim() : null,
+            lastName : this.newLastName.trim(),
+            isRetired: this.newIsRetired
+        })
+            .then(emp => {
+                this.dispatchEvent(new ShowToastEvent({
+                    title  : 'Employee Created',
+                    message: `${emp.name} created and selected.`,
+                    variant: 'success'
+                }));
+                this.newFirstName       = '';
+                this.newLastName        = '';
+                this.newIsRetired       = false;
+                this.showCreateEmployee = false;
+                this.employeeSearchKey  = '';
+                // Reload list and auto-select the new employee
+                this._fetchAvailableEmployees(emp.contactId);
+            })
+            .catch(error => { this.addError = this.reduceError(error); })
+            .finally(() => { this.isCreatingEmployee = false; });
     }
 
     enrichData(data) {
@@ -392,20 +610,6 @@ export default class QualRosterGrading extends LightningElement {
         return this.gradingData.weaponSections.some(section =>
             section.rows.some(row => row.isFirearmsInstructor === true)
         );
-    }
-
-    // Two columns side-by-side when a witness is required, single column otherwise.
-    get signatureRowClass() {
-        return this.needsWitnessSignature ? 'sig-row sig-row--two' : 'sig-row';
-    }
-
-    // Certification date shown (read-only) next to each signature - the day
-    // the roster is being signed. Formatted MM/DD/YYYY to match TEST DATE.
-    get certificationDate() {
-        const d = new Date();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        return `${mm}/${dd}/${d.getFullYear()}`;
     }
 
     handleWitnessNameInput(event) {

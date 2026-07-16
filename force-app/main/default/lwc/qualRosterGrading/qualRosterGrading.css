@@ -8,6 +8,9 @@
 .page-header { margin-bottom: 18px; }
 .page-title  { font-size: 22px; font-weight: 700; color: #032d60; margin: 0 0 4px; }
 .page-sub    { font-size: 13px; color: #706e6b; margin: 0; }
+.page-header-main {
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+}
 
 .card {
     background: #fff;
@@ -195,6 +198,15 @@
     margin-top: 16px; margin-bottom: 16px;
 }
 
+.btn-add-employee {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fff; border: 1.5px solid #0176d3; border-radius: 6px;
+    padding: 8px 18px; font-size: 13px; font-weight: 600; color: #0176d3;
+    cursor: pointer; transition: background 0.12s;
+}
+.btn-add-employee:hover { background: #f0f8ff; }
+.btn-add-icon { --sds-c-icon-color-foreground-default: #0176d3; }
+
 .btn-save-grading {
     display: inline-flex; align-items: center; gap: 6px;
     background: #0176d3; border: none; border-radius: 6px;
@@ -314,7 +326,7 @@
 
 .sig-modal {
     background: #fff; border-radius: 10px;
-    width: 1040px; max-width: 94vw;
+    width: 640px; max-width: 92vw;
     max-height: 90vh; overflow-y: auto;
     box-shadow: 0 8px 32px rgba(0,0,0,0.25);
     padding: 0;
@@ -338,61 +350,31 @@
     font-size: 13px; color: #706e6b;
 }
 
-.sig-row {
-    display: flex; gap: 24px;
-    padding: 12px 20px 4px; align-items: stretch;
-}
-.sig-row--two > .sig-block { flex: 1 1 0; min-width: 0; }
-.sig-row:not(.sig-row--two) > .sig-block { flex: 1 1 auto; }
-
-.sig-block { padding: 0; }
+.sig-block { padding: 12px 20px 4px; }
 .sig-block-title {
     margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #032d60;
     text-transform: uppercase; letter-spacing: 0.03em;
 }
 
 .sig-witness-block {
-    padding-left: 24px;
-    border-left: 1px dashed #dddbda;
+    margin-top: 8px; padding-top: 14px;
+    border-top: 1px dashed #dddbda;
+}
+.sig-witness-note {
+    margin: 0 0 10px; font-size: 12px; color: #706e6b;
 }
 
-/* Note line under each title - fixed height so both canvases line up even
-   though only the witness side actually wraps to two lines. */
-.sig-note-line {
-    margin: 0 0 12px; font-size: 12px; color: #706e6b;
-    min-height: 34px; line-height: 1.4;
-}
-
-/* Name + Date row - identical in both columns to keep the pads aligned. */
-.sig-fields { display: flex; gap: 12px; margin-bottom: 12px; }
-.sig-field  { flex: 1 1 0; min-width: 0; }
-.sig-field-label {
-    display: block; font-size: 12px; font-weight: 700;
-    color: #3e3e3c; margin-bottom: 4px;
-}
-.sig-input {
+.witness-name-field { margin-bottom: 10px; }
+.witness-name-label { display: block; font-size: 12px; font-weight: 700; color: #3e3e3c; margin-bottom: 4px; }
+.witness-name-input {
     width: 100%; box-sizing: border-box;
     border: 1.5px solid #dddbda; border-radius: 6px;
     padding: 8px 10px; font-size: 13px; color: #181818;
     background: #fff; outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
 }
-.sig-input:focus { border-color: #0176d3; box-shadow: 0 0 0 3px rgba(1,118,211,0.15); }
-.sig-input--readonly {
-    background: #f3f3f3; color: #514f4d;
-    border-color: #e5e5e5; cursor: default;
-}
+.witness-name-input:focus { border-color: #0176d3; box-shadow: 0 0 0 3px rgba(1,118,211,0.15); }
 .required-star { color: #c23934; margin-left: 2px; }
-
-/* Stack columns on narrow viewports */
-@media (max-width: 900px) {
-    .sig-row--two { flex-direction: column; gap: 16px; }
-    .sig-witness-block {
-        padding-left: 0; padding-top: 14px;
-        border-left: none; border-top: 1px dashed #dddbda;
-    }
-    .sig-note-line { min-height: 0; }
-}
 
 .sig-error {
     margin: 10px 20px 0; padding: 8px 12px;
@@ -420,3 +402,103 @@
 .sig-btn-save { background: #0176d3; color: #fff; }
 .sig-btn-save:hover { background: #014486; }
 .sig-btn-save:disabled { background: #c9c9c9; cursor: not-allowed; }
+/* === Add Employees Modal === */
+.add-modal {
+    background: #fff; border-radius: 10px;
+    width: 760px; max-width: 94vw;
+    max-height: 88vh; display: flex; flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+}
+
+.add-body {
+    display: flex; gap: 24px; padding: 16px 20px;
+    overflow: hidden; flex: 1 1 auto; min-height: 0;
+}
+.add-col { display: flex; flex-direction: column; min-height: 0; }
+.add-col--employees { flex: 1 1 60%; }
+.add-col--weapons   { flex: 1 1 40%; border-left: 1px dashed #dddbda; padding-left: 24px; }
+
+.add-section-label {
+    font-size: 13px; font-weight: 700; color: #032d60;
+    text-transform: uppercase; letter-spacing: 0.03em;
+}
+.add-hint { margin: 4px 0 10px; font-size: 12px; color: #706e6b; }
+
+.add-search { position: relative; margin-bottom: 8px; }
+.add-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); }
+.add-search-input {
+    width: 100%; box-sizing: border-box;
+    border: 1.5px solid #dddbda; border-radius: 6px;
+    padding: 8px 10px 8px 30px; font-size: 13px; color: #181818; outline: none;
+}
+.add-search-input:focus { border-color: #0176d3; box-shadow: 0 0 0 3px rgba(1,118,211,0.15); }
+
+.emp-list {
+    border: 1px solid #ececec; border-radius: 6px;
+    overflow-y: auto; flex: 1 1 auto; min-height: 180px; max-height: 360px;
+}
+.emp-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; cursor: pointer; border-bottom: 1px solid #f2f2f2;
+    transition: background 0.1s;
+}
+.emp-row:last-child { border-bottom: none; }
+.emp-row:hover { background: #f7fbff; }
+.emp-row--selected { background: #eaf5ff; }
+.emp-check { width: 15px; height: 15px; pointer-events: none; }
+.emp-name { font-size: 13px; color: #181818; flex: 1 1 auto; }
+.emp-fi-badge {
+    background: #f2b100; color: #3a2d00; font-size: 10px; font-weight: 700;
+    padding: 1px 6px; border-radius: 10px; letter-spacing: 0.03em;
+}
+.emp-empty { padding: 24px 12px; text-align: center; color: #969696; font-size: 13px; }
+.add-loading { display: flex; justify-content: center; padding: 40px 0; }
+
+.wt-list { display: flex; flex-direction: column; gap: 4px; }
+.wt-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 13px;
+    transition: background 0.1s;
+}
+.wt-item:hover { background: #f7fbff; }
+.wt-label { color: #181818; }
+
+.add-selected-count { font-size: 12px; color: #706e6b; font-weight: 600; }
+
+@media (max-width: 720px) {
+    .add-body { flex-direction: column; }
+    .add-col--weapons { border-left: none; padding-left: 0; border-top: 1px dashed #dddbda; padding-top: 14px; }
+}
+
+/* === Add-to-Roster modal extras === */
+.add-modal { width: 820px; }
+
+.add-section-head { display: flex; align-items: center; justify-content: space-between; }
+.add-create-toggle {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: none; border: none; color: #0176d3; font-size: 12px; font-weight: 600;
+    cursor: pointer; padding: 2px 4px;
+}
+.add-create-toggle:hover { text-decoration: underline; }
+
+.create-emp-box {
+    border: 1px solid #d6e6f5; background: #f5faff; border-radius: 8px;
+    padding: 12px; margin: 8px 0 12px;
+}
+.create-emp-title { margin: 0 0 8px; font-size: 12px; font-weight: 700; color: #032d60; }
+.create-emp-fields { display: flex; gap: 8px; margin-bottom: 8px; }
+.create-emp-fields .add-search-input { padding-left: 10px; }
+.create-emp-retired {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; color: #3e3e3c; margin-bottom: 10px; cursor: pointer;
+}
+.create-emp-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+.add-search-input--search { padding-left: 30px; }
+
+.emp-info { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.emp-existing { font-size: 11px; color: #8a8a8a; font-style: italic; }
+
+.add-details-label { display: block; margin-top: 18px; }
+.add-detail-field { display: block; margin-top: 6px; }

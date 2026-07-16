@@ -245,14 +245,27 @@ public with sharing class QualRosterGradingController {
     // Save the firearm instructor signature (base64), and the witness
     // signature when one is required, to all FIR forms in a roster.
     // Stored in Firearms_Instructor_Signature__c / Witness_Signature__c
-    // (both Long Text Area). A witness is only required when the FI
-    // themselves is one of the graded members on this roster - the caller
-    // (LWC) decides that and only sends witnessName/witnessSignature then.
+    // (both Rich Text / Html fields). The base64 data URL is wrapped in an
+    // <img> tag so the field renders the signature inline on the record page.
+    // A witness is only required when the FI themselves is one of the graded
+    // members on this roster - the caller (LWC) decides that and only sends
+    // witnessName/witnessSignature then.
     // @param rosterLabel        - the roster whose forms get the signatures
     // @param instructorSignature - base64 data URL string, always required
     // @param witnessName        - witness's typed full name, optional
     // @param witnessSignature   - base64 data URL string, optional
     // -----------------------------------------------------------------------
+    private static final Integer RICH_TEXT_MAX = 131072;
+
+    // Wrap a base64 data URL as an <img> so a Rich Text (Html) field renders
+    // it inline. Returns null for blank input; passes through if already HTML.
+    private static String toSignatureImg(String dataUrl, String altText) {
+        if (String.isBlank(dataUrl)) return null;
+        if (dataUrl.trim().startsWith('<img')) return dataUrl; // already wrapped
+        return '<img src="' + dataUrl + '" alt="' + altText +
+               '" style="max-width:100%;height:auto;" />';
+    }
+
     @AuraEnabled
     public static void saveSignatures(
         String rosterLabel,
@@ -266,13 +279,22 @@ public with sharing class QualRosterGradingController {
         if (String.isBlank(instructorSignature)) {
             throw new AuraHandledException('Firearm instructor signature is required.');
         }
-        if (instructorSignature.length() > 131072) {
-            throw new AuraHandledException('Instructor signature image is too large to store.');
+
+        // Wrap as inline <img> HTML for the Rich Text fields
+        String instructorHtml = toSignatureImg(instructorSignature, 'Firearm Instructor Signature');
+        if (instructorHtml != null && instructorHtml.length() > RICH_TEXT_MAX) {
+            throw new AuraHandledException('Instructor signature image is too large to store. Please try a simpler signature.');
         }
+
         Boolean hasWitnessSignature = String.isNotBlank(witnessSignature);
-        if (hasWitnessSignature && witnessSignature.length() > 131072) {
-            throw new AuraHandledException('Witness signature image is too large to store.');
+        String  witnessHtml         = null;
+        if (hasWitnessSignature) {
+            witnessHtml = toSignatureImg(witnessSignature, 'Witness Signature');
+            if (witnessHtml != null && witnessHtml.length() > RICH_TEXT_MAX) {
+                throw new AuraHandledException('Witness signature image is too large to store. Please try a simpler signature.');
+            }
         }
+
         try {
             List<FIR_Qualification_Form__c> forms = [
                 SELECT Id
@@ -283,9 +305,9 @@ public with sharing class QualRosterGradingController {
                 throw new AuraHandledException('No qualification forms found for this roster.');
             }
             for (FIR_Qualification_Form__c f : forms) {
-                f.Firearms_Instructor_Signature__c = instructorSignature;
+                f.Firearms_Instructor_Signature__c = instructorHtml;
                 if (hasWitnessSignature) {
-                    f.Witness_Signature__c = witnessSignature;
+                    f.Witness_Signature__c = witnessHtml;
                     f.Witness_Name__c      = witnessName;
                 }
             }
@@ -312,9 +334,270 @@ public with sharing class QualRosterGradingController {
         return options;
     }
 
+    // Person Account record type used for employees.
+    private static final String EMPLOYEE_RT = 'DPS_Employee';
+
+    // -----------------------------------------------------------------------
+    // Return ALL Person Account employees for the "Add to Roster" picker,
+    // each annotated with the weapon types they are ALREADY on for this
+    // roster. Employees are NOT hidden when already on the roster, because
+    // they may still be missing other weapon types (dedup happens per
+    // weapon type at insert time, not per roster).
+    // -----------------------------------------------------------------------
+    @AuraEnabled(cacheable=false)
+    public static List<AvailableEmployee> getAvailableEmployees(String rosterLabel) {
+        if (String.isBlank(rosterLabel)) {
+            throw new AuraHandledException('Roster Label is required.');
+        }
+
+        // Map shadow Contact Id -> set of weapon types already on this roster
+        Map<Id, Set<String>> contactToWeaponTypes = new Map<Id, Set<String>>();
+        for (FIR_Weapon_Qualification_Detail__c d : [
+            SELECT Weapon_Type__c, FIR_Qualification_Form__r.ContactName__c
+            FROM   FIR_Weapon_Qualification_Detail__c
+            WHERE  FIR_Qualification_Form__r.Qual_Roster_Label__c = :rosterLabel
+            AND    FIR_Qualification_Form__r.ContactName__c != null
+        ]) {
+            Id cId = d.FIR_Qualification_Form__r.ContactName__c;
+            if (!contactToWeaponTypes.containsKey(cId)) {
+                contactToWeaponTypes.put(cId, new Set<String>());
+            }
+            if (String.isNotBlank(d.Weapon_Type__c)) {
+                contactToWeaponTypes.get(cId).add(d.Weapon_Type__c);
+            }
+        }
+
+        List<AvailableEmployee> result = new List<AvailableEmployee>();
+        for (Account a : [
+            SELECT Id, Name, PersonContactId, Is_Firearms_Instructor__pc
+            FROM   Account
+            WHERE  IsPersonAccount = true
+            AND    PersonContactId != null
+            ORDER BY Name ASC
+            LIMIT  2000
+        ]) {
+            AvailableEmployee e    = new AvailableEmployee();
+            e.accountId            = a.Id;
+            e.contactId            = a.PersonContactId;
+            e.name                 = a.Name;
+            e.isFirearmsInstructor = a.Is_Firearms_Instructor__pc == true;
+            Set<String> existing   = contactToWeaponTypes.get(a.PersonContactId);
+            e.existingWeaponTypes  = existing != null
+                                     ? new List<String>(existing)
+                                     : new List<String>();
+            result.add(e);
+        }
+        return result;
+    }
+
+    // -----------------------------------------------------------------------
+    // Add selected employees to a roster for selected weapon types.
+    //  - An employee already on the roster reuses their existing form.
+    //  - A weapon type the employee already has is skipped (no duplicate).
+    //  - Missing weapon types are added as new detail rows, optionally
+    //    pre-filled with manufacturer / model / sight type.
+    // Returns { employeesAffected, rowsAdded, rowsSkipped }.
+    // -----------------------------------------------------------------------
+    @AuraEnabled
+    public static AddToRosterResult addToRoster(
+        String rosterLabel,
+        List<String> contactIds,
+        List<String> weaponTypes,
+        String manufacturer,
+        String model,
+        String sightType
+    ) {
+        if (String.isBlank(rosterLabel)) {
+            throw new AuraHandledException('Roster Label is required.');
+        }
+        if (contactIds == null || contactIds.isEmpty()) {
+            throw new AuraHandledException('Select at least one employee.');
+        }
+        if (weaponTypes == null || weaponTypes.isEmpty()) {
+            throw new AuraHandledException('Select at least one weapon type.');
+        }
+
+        // Roster-level context copied onto any new form
+        List<FIR_Qualification_Form__c> template = [
+            SELECT Test_Date__c, Location__c, Light_Condition__c, Firearms_Instrutor__c
+            FROM   FIR_Qualification_Form__c
+            WHERE  Qual_Roster_Label__c = :rosterLabel
+            LIMIT  1
+        ];
+        if (template.isEmpty()) {
+            throw new AuraHandledException('No existing forms found for this roster.');
+        }
+        FIR_Qualification_Form__c ctx = template[0];
+
+        Set<Id> selectedContacts = new Set<Id>();
+        for (String cId : contactIds) {
+            if (String.isNotBlank(cId)) selectedContacts.add((Id) cId);
+        }
+
+        // Existing forms on this roster for the selected employees
+        Map<Id, Id> contactToFormId = new Map<Id, Id>();
+        for (FIR_Qualification_Form__c f : [
+            SELECT Id, ContactName__c
+            FROM   FIR_Qualification_Form__c
+            WHERE  Qual_Roster_Label__c = :rosterLabel
+            AND    ContactName__c IN :selectedContacts
+        ]) {
+            contactToFormId.put(f.ContactName__c, f.Id);
+        }
+
+        // Existing (formId + weaponType) pairs so we never duplicate a row
+        Set<String> existingPairs = new Set<String>();
+        if (!contactToFormId.values().isEmpty()) {
+            for (FIR_Weapon_Qualification_Detail__c d : [
+                SELECT FIR_Qualification_Form__c, Weapon_Type__c
+                FROM   FIR_Weapon_Qualification_Detail__c
+                WHERE  FIR_Qualification_Form__c IN :contactToFormId.values()
+            ]) {
+                existingPairs.add(d.FIR_Qualification_Form__c + '|' + d.Weapon_Type__c);
+            }
+        }
+
+        try {
+            // 1) Create forms for employees not yet on the roster
+            List<FIR_Qualification_Form__c> newForms = new List<FIR_Qualification_Form__c>();
+            List<Id> contactsNeedingForm = new List<Id>();
+            for (Id cId : selectedContacts) {
+                if (!contactToFormId.containsKey(cId)) {
+                    contactsNeedingForm.add(cId);
+                    newForms.add(new FIR_Qualification_Form__c(
+                        ContactName__c        = cId,
+                        Qual_Roster_Label__c  = rosterLabel,
+                        Test_Date__c          = ctx.Test_Date__c,
+                        Location__c           = ctx.Location__c,
+                        Light_Condition__c    = ctx.Light_Condition__c,
+                        Firearms_Instrutor__c = ctx.Firearms_Instrutor__c
+                    ));
+                }
+            }
+            if (!newForms.isEmpty()) {
+                insert newForms;
+                for (Integer i = 0; i < newForms.size(); i++) {
+                    contactToFormId.put(contactsNeedingForm[i], newForms[i].Id);
+                }
+            }
+
+            // 2) Add missing weapon rows only
+            Integer rowsAdded   = 0;
+            Integer rowsSkipped = 0;
+            Set<Id> affected    = new Set<Id>();
+            List<FIR_Weapon_Qualification_Detail__c> newDetails =
+                new List<FIR_Weapon_Qualification_Detail__c>();
+
+            for (Id cId : selectedContacts) {
+                Id formId = contactToFormId.get(cId);
+                if (formId == null) continue;
+                for (String wt : weaponTypes) {
+                    if (String.isBlank(wt)) continue;
+                    String key = formId + '|' + wt;
+                    if (existingPairs.contains(key)) {
+                        rowsSkipped++;
+                        continue;
+                    }
+                    existingPairs.add(key); // guard against dup weapon types in the same request
+                    FIR_Weapon_Qualification_Detail__c det = new FIR_Weapon_Qualification_Detail__c(
+                        FIR_Qualification_Form__c = formId,
+                        Weapon_Type__c            = wt
+                    );
+                    if (String.isNotBlank(manufacturer)) det.Manufacturer__c = manufacturer;
+                    if (String.isNotBlank(model))        det.Model__c        = model;
+                    if (String.isNotBlank(sightType))    det.Sight_Type__c   = sightType;
+                    newDetails.add(det);
+                    affected.add(cId);
+                    rowsAdded++;
+                }
+            }
+
+            if (!newDetails.isEmpty()) {
+                insert newDetails;
+            }
+
+            AddToRosterResult res = new AddToRosterResult();
+            res.employeesAffected = affected.size();
+            res.rowsAdded         = rowsAdded;
+            res.rowsSkipped       = rowsSkipped;
+            return res;
+
+        } catch (Exception ex) {
+            throw new AuraHandledException('Failed to add to roster: ' + ex.getMessage());
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Create a brand-new employee Person Account (e.g. a retired officer not
+    // yet in the system) and return it so the UI can select and add it.
+    // isRetired maps to Active__c = 'No' when true, 'Yes' otherwise.
+    // -----------------------------------------------------------------------
+    @AuraEnabled
+    public static AvailableEmployee createEmployee(
+        String firstName,
+        String lastName,
+        Boolean isRetired
+    ) {
+        if (String.isBlank(lastName)) {
+            throw new AuraHandledException('Last name is required.');
+        }
+
+        Id rtId;
+        try {
+            rtId = Schema.SObjectType.Account
+                       .getRecordTypeInfosByDeveloperName()
+                       .get(EMPLOYEE_RT).getRecordTypeId();
+        } catch (Exception e) {
+            rtId = null;
+        }
+        if (rtId == null) {
+            throw new AuraHandledException('Employee record type not found. Check the "' + EMPLOYEE_RT + '" record type.');
+        }
+
+        Account acc = new Account(
+            RecordTypeId = rtId,
+            FirstName    = String.isNotBlank(firstName) ? firstName.trim() : null,
+            LastName     = lastName.trim(),
+            Active__c    = (isRetired == true) ? 'No' : 'Yes'
+        );
+
+        try {
+            insert acc;
+            Account created = [
+                SELECT Id, Name, PersonContactId, Is_Firearms_Instructor__pc
+                FROM   Account
+                WHERE  Id = :acc.Id
+                LIMIT  1
+            ];
+            AvailableEmployee e    = new AvailableEmployee();
+            e.accountId            = created.Id;
+            e.contactId            = created.PersonContactId;
+            e.name                 = created.Name;
+            e.isFirearmsInstructor = created.Is_Firearms_Instructor__pc == true;
+            e.existingWeaponTypes  = new List<String>();
+            return e;
+        } catch (Exception ex) {
+            throw new AuraHandledException('Failed to create employee: ' + ex.getMessage());
+        }
+    }
+
     // -----------------------------------------------------------------------
     // Inner wrapper classes
     // -----------------------------------------------------------------------
+    public class AddToRosterResult {
+        @AuraEnabled public Integer employeesAffected = 0;
+        @AuraEnabled public Integer rowsAdded         = 0;
+        @AuraEnabled public Integer rowsSkipped       = 0;
+    }
+
+    public class AvailableEmployee {
+        @AuraEnabled public String       accountId;
+        @AuraEnabled public String       contactId;
+        @AuraEnabled public String       name;
+        @AuraEnabled public Boolean      isFirearmsInstructor;
+        @AuraEnabled public List<String> existingWeaponTypes = new List<String>();
+    }
+
     public class RosterLabelRow {
         @AuraEnabled public String  rosterLabel    = '';
         @AuraEnabled public String  testDate       = '';

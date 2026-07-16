@@ -87,8 +87,18 @@
                         Back to Rosters
                     </button>
                 </div>
-                <h1 class="page-title">{selectedLabel}</h1>
-                <p class="page-sub">Grade qualification results for this roster</p>
+                <div class="page-header-main">
+                    <div>
+                        <h1 class="page-title">{selectedLabel}</h1>
+                        <p class="page-sub">Grade qualification results for this roster</p>
+                    </div>
+                    <template if:true={hasGradingData}>
+                        <button class="btn-add-employee" onclick={openAddEmployeeModal}>
+                            <lightning-icon icon-name="utility:adduser" size="xx-small" class="btn-add-icon"></lightning-icon>
+                            Add to Roster
+                        </button>
+                    </template>
+                </div>
             </div>
 
             <!-- Session header -->
@@ -137,7 +147,6 @@
                                         <span class={nav.dotClass}></span>
                                         <span class="weapon-nav-label">{nav.label}</span>
                                     </div>
-                                    <div class="weapon-nav-stat">{nav.statText} - {nav.pct}%</div>
                                 </div>
                             </template>
                         </div>
@@ -294,44 +303,22 @@
 
                         <p class="sig-instruction">Please sign below to certify these qualification results.</p>
 
-                        <div class={signatureRowClass}>
-                            <div class="sig-block">
-                                <h3 class="sig-block-title">Firearm Instructor Signature</h3>
-                                <p class="sig-note-line">Certifying instructor of record for these qualification results.</p>
-                                <div class="sig-fields">
-                                    <div class="sig-field">
-                                        <label class="sig-field-label">Instructor Name</label>
-                                        <input type="text" class="sig-input sig-input--readonly" value={instructorNameForSignature} readonly />
-                                    </div>
-                                    <div class="sig-field">
-                                        <label class="sig-field-label">Date</label>
-                                        <input type="text" class="sig-input sig-input--readonly" value={certificationDate} readonly />
-                                    </div>
-                                </div>
-                                <c-signature-pad data-pad="instructor" signer-name={instructorNameForSignature}></c-signature-pad>
-                            </div>
-
-                            <template if:true={needsWitnessSignature}>
-                                <div class="sig-block sig-witness-block">
-                                    <h3 class="sig-block-title">Witness Signature</h3>
-                                    <p class="sig-note-line">A witness is required because the firearm instructor 
-                                            is also being graded on this roster.</p>
-                                    <div class="sig-fields">
-                                        <div class="sig-field">
-                                            <label class="sig-field-label" for="witnessNameInput">Witness Name 
-                                                <span class="required-star">*</span></label>
-                                            <input id="witnessNameInput" type="text" class="sig-input" value={witnessName} 
-                                                maxlength="255" oninput={handleWitnessNameInput} placeholder="Enter witness full name" />
-                                        </div>
-                                        <div class="sig-field">
-                                            <label class="sig-field-label">Date</label>
-                                            <input type="text" class="sig-input sig-input--readonly" value={certificationDate} readonly />
-                                        </div>
-                                    </div>
-                                    <c-signature-pad data-pad="witness" signer-name={witnessName}></c-signature-pad>
-                                </div>
-                            </template>
+                        <div class="sig-block">
+                            <h3 class="sig-block-title">Firearm Instructor Signature</h3>
+                            <c-signature-pad data-pad="instructor" signer-name={instructorNameForSignature}></c-signature-pad>
                         </div>
+
+                        <template if:true={needsWitnessSignature}>
+                            <div class="sig-block sig-witness-block">
+                                <h3 class="sig-block-title">Witness Signature</h3>
+                                <p class="sig-witness-note">A witness is required because the firearm instructor is also being graded on this roster.</p>
+                                <div class="witness-name-field">
+                                    <label class="witness-name-label" for="witnessNameInput">Witness Name <span class="required-star">*</span></label>
+                                    <input id="witnessNameInput" type="text" class="witness-name-input" value={witnessName} maxlength="255" oninput={handleWitnessNameInput} placeholder="Enter witness full name" />
+                                </div>
+                                <c-signature-pad data-pad="witness" signer-name={witnessName}></c-signature-pad>
+                            </div>
+                        </template>
 
                         <template if:true={signatureError}>
                             <p class="sig-error">{signatureError}</p>
@@ -344,6 +331,137 @@
                                 <button class="sig-btn sig-btn-save" onclick={handleSignatureSave} disabled={isSavingGrading}>
                                     <template if:true={isSavingGrading}>Saving...</template>
                                     <template if:false={isSavingGrading}>Save</template>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+            </template>
+
+            <!-- Add Employee(s) modal -->
+            <template if:true={showAddModal}>
+                <section class="sig-backdrop" role="dialog" aria-modal="true" aria-labelledby="add-title">
+                    <div class="add-modal">
+
+                        <div class="sig-header">
+                            <h2 id="add-title" class="sig-title">Add Employees to Roster</h2>
+                            <button class="sig-close" title="Close" onclick={closeAddEmployeeModal}>&times;</button>
+                        </div>
+
+                        <div class="add-body">
+                            <!-- Employee picker -->
+                            <div class="add-col add-col--employees">
+                                <div class="add-section-head">
+                                    <label class="add-section-label">Employees</label>
+                                    <button class="add-create-toggle" onclick={toggleCreateEmployee}>
+                                        <lightning-icon icon-name="utility:add" size="xx-small"></lightning-icon>
+                                        New Employee
+                                    </button>
+                                </div>
+
+                                <!-- Create new employee (retired officer) -->
+                                <template if:true={showCreateEmployee}>
+                                    <div class="create-emp-box">
+                                        <p class="create-emp-title">Create New Employee</p>
+                                        <div class="create-emp-fields">
+                                            <input type="text" class="add-search-input" placeholder="First name"
+                                                   value={newFirstName} oninput={handleNewFirstName} />
+                                            <input type="text" class="add-search-input" placeholder="Last name *"
+                                                   value={newLastName} oninput={handleNewLastName} />
+                                        </div>
+                                        <label class="create-emp-retired">
+                                            <input type="checkbox" checked={newIsRetired} onchange={handleNewIsRetired} />
+                                            <span>Retired officer (mark as inactive)</span>
+                                        </label>
+                                        <div class="create-emp-actions">
+                                            <button class="sig-btn sig-btn-cancel" onclick={toggleCreateEmployee}>Cancel</button>
+                                            <button class="sig-btn sig-btn-save" onclick={handleCreateEmployee} disabled={isCreatingEmployee}>
+                                                <template if:true={isCreatingEmployee}>Creating...</template>
+                                                <template if:false={isCreatingEmployee}>Create &amp; Select</template>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <div class="add-search">
+                                    <lightning-icon icon-name="utility:search" size="xx-small" class="add-search-icon"></lightning-icon>
+                                    <input type="text" class="add-search-input add-search-input--search" placeholder="Search employees..."
+                                           value={employeeSearchKey} oninput={handleEmployeeSearch} />
+                                </div>
+
+                                <template if:true={isLoadingEmployees}>
+                                    <div class="add-loading">
+                                        <lightning-spinner size="small" alternative-text="Loading..."></lightning-spinner>
+                                    </div>
+                                </template>
+
+                                <template if:false={isLoadingEmployees}>
+                                    <div class="emp-list">
+                                        <template for:each={availableEmployees} for:item="emp">
+                                            <div key={emp.contactId} class={emp.rowClass}
+                                                 data-id={emp.contactId} onclick={handleEmployeeToggle}>
+                                                <input type="checkbox" class="emp-check" checked={emp.selected} tabindex="-1" />
+                                                <div class="emp-info">
+                                                    <span class="emp-name">
+                                                        {emp.name}
+                                                        <template if:true={emp.isFirearmsInstructor}>
+                                                            <span class="emp-fi-badge">FI</span>
+                                                        </template>
+                                                    </span>
+                                                    <template if:true={emp.hasExisting}>
+                                                        <span class="emp-existing">{emp.existingLabel}</span>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <template if:true={noEmployeesFound}>
+                                            <div class="emp-empty">No employees found.</div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Weapon types + details -->
+                            <div class="add-col add-col--weapons">
+                                <label class="add-section-label">Weapon Types</label>
+                                <p class="add-hint">A weapon an employee already has is skipped automatically.</p>
+                                <div class="wt-list">
+                                    <template for:each={weaponTypeOptions} for:item="wt">
+                                        <label key={wt.value} class="wt-item">
+                                            <input type="checkbox" value={wt.value} checked={wt.checked}
+                                                   onchange={handleWeaponTypeToggle} />
+                                            <span class="wt-label">{wt.label}</span>
+                                        </label>
+                                    </template>
+                                </div>
+
+                                <label class="add-section-label add-details-label">Weapon Details (optional)</label>
+                                <p class="add-hint">Applied to every new row added.</p>
+                                <lightning-combobox class="add-detail-field" label="Manufacturer" value={addManufacturer}
+                                    placeholder="-- None --" options={manufacturerOptions} onchange={handleAddManufacturer}
+                                    variant="label-stacked"></lightning-combobox>
+                                <lightning-combobox class="add-detail-field" label="Model" value={addModel}
+                                    placeholder="-- None --" options={modelOptions} onchange={handleAddModel}
+                                    variant="label-stacked"></lightning-combobox>
+                                <lightning-combobox class="add-detail-field" label="Sight Type" value={addSightType}
+                                    placeholder="-- None --" options={sightTypeOptions} onchange={handleAddSightType}
+                                    variant="label-stacked"></lightning-combobox>
+                            </div>
+                        </div>
+
+                        <template if:true={addError}>
+                            <p class="sig-error">{addError}</p>
+                        </template>
+
+                        <div class="sig-footer">
+                            <span class="add-selected-count">{selectedEmployeeCount} selected</span>
+                            <div class="sig-footer-right">
+                                <button class="sig-btn sig-btn-cancel" onclick={closeAddEmployeeModal}>Cancel</button>
+                                <button class="sig-btn sig-btn-save" onclick={handleAddEmployees}
+                                        disabled={isAddingEmployees}>
+                                    <template if:true={isAddingEmployees}>Adding...</template>
+                                    <template if:false={isAddingEmployees}>{addButtonLabel}</template>
                                 </button>
                             </div>
                         </div>

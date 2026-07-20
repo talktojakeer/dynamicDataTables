@@ -326,7 +326,7 @@
 
 .sig-modal {
     background: #fff; border-radius: 10px;
-    width: 640px; max-width: 92vw;
+    width: 1040px; max-width: 94vw;
     max-height: 90vh; overflow-y: auto;
     box-shadow: 0 8px 32px rgba(0,0,0,0.25);
     padding: 0;
@@ -350,31 +350,61 @@
     font-size: 13px; color: #706e6b;
 }
 
-.sig-block { padding: 12px 20px 4px; }
+.sig-row {
+    display: flex; gap: 24px;
+    padding: 12px 20px 4px; align-items: stretch;
+}
+.sig-row--two > .sig-block { flex: 1 1 0; min-width: 0; }
+.sig-row:not(.sig-row--two) > .sig-block { flex: 1 1 auto; }
+
+.sig-block { padding: 0; }
 .sig-block-title {
     margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #032d60;
     text-transform: uppercase; letter-spacing: 0.03em;
 }
 
 .sig-witness-block {
-    margin-top: 8px; padding-top: 14px;
-    border-top: 1px dashed #dddbda;
-}
-.sig-witness-note {
-    margin: 0 0 10px; font-size: 12px; color: #706e6b;
+    padding-left: 24px;
+    border-left: 1px dashed #dddbda;
 }
 
-.witness-name-field { margin-bottom: 10px; }
-.witness-name-label { display: block; font-size: 12px; font-weight: 700; color: #3e3e3c; margin-bottom: 4px; }
-.witness-name-input {
+/* Note line under each title - fixed height so both canvases line up even
+   though only the witness side actually wraps to two lines. */
+.sig-note-line {
+    margin: 0 0 12px; font-size: 12px; color: #706e6b;
+    min-height: 34px; line-height: 1.4;
+}
+
+/* Name + Date row - identical in both columns to keep the pads aligned. */
+.sig-fields { display: flex; gap: 12px; margin-bottom: 12px; }
+.sig-field  { flex: 1 1 0; min-width: 0; }
+.sig-field-label {
+    display: block; font-size: 12px; font-weight: 700;
+    color: #3e3e3c; margin-bottom: 4px;
+}
+.sig-input {
     width: 100%; box-sizing: border-box;
     border: 1.5px solid #dddbda; border-radius: 6px;
     padding: 8px 10px; font-size: 13px; color: #181818;
     background: #fff; outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
 }
-.witness-name-input:focus { border-color: #0176d3; box-shadow: 0 0 0 3px rgba(1,118,211,0.15); }
+.sig-input:focus { border-color: #0176d3; box-shadow: 0 0 0 3px rgba(1,118,211,0.15); }
+.sig-input--readonly {
+    background: #f3f3f3; color: #514f4d;
+    border-color: #e5e5e5; cursor: default;
+}
 .required-star { color: #c23934; margin-left: 2px; }
+
+/* Stack columns on narrow viewports */
+@media (max-width: 900px) {
+    .sig-row--two { flex-direction: column; gap: 16px; }
+    .sig-witness-block {
+        padding-left: 0; padding-top: 14px;
+        border-left: none; border-top: 1px dashed #dddbda;
+    }
+    .sig-note-line { min-height: 0; }
+}
 
 .sig-error {
     margin: 10px 20px 0; padding: 8px 12px;

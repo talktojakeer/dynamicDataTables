@@ -1,92 +1,79 @@
-<apex:page standardController="FIR_Qualification_Form__c" extensions="FIRQualificationFormControllerExt" sidebar="false" showHeader="false" renderAs="pdf" applyBodyTag="false" applyHtmlTag="false">
-
+<apex:page standardController="FIR_Qualification_Form__c"
+           extensions="FIRQualificationFormControllerExt"
+           sidebar="false"
+           showHeader="false"
+           renderAs="pdf"
+           applyBodyTag="false"
+           applyHtmlTag="false">
     <style type="text/css">
         @page {
-            size: A4 portrait;
-            /* change to landacpe if you need more room */
-            margin: 1.3cm;
+        size: A4 portrait;   /* change to landacpe if you need more room */
+        margin: 1.3cm;
         }
-
-        body,
-        td,
-        th {
-            font-family: Arial, sans-serif;
-            font-size: 9px;
-            line-height: 1.2;
+        
+        body, td, th {
+        font-family: Arial, sans-serif;
+        font-size: 9px;
+        line-height: 1.2;
         }
+        
     </style>
-
+    
     <body>
         <!-- Header with dynamic Case Number -->
         <h2 style="text-align: center;">Texas Department of Public Safety</h2>
         <h2 style="text-align: center;">Firearm Qualifcation Report</h2>
-
+        
         <!--Two-column layout -->
-        <table style="width:100%; border-collapse:Auto;">
+        <table style="width:100%; border-collapse;">            
             <tr>
-                <!-- Left Column -->
-                <td style="width:50%; vertical-align: top; padding-right: 20px;">
-                    <apex:outputPanel>
-                        <br />
-                        <strong>Full Legal Name: </strong>
-                        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.Full_Name__c}" />
-                        <br />
-                        <strong>Test Date: </strong>
-                        <apex:outputField value="{!FIR_Qualification_Form__c.Test_Date__c}" />
-                        <br />
-                        <strong>Light Condition: </strong>
-                        <apex:outputField value="{!FIR_Qualification_Form__c.Light_Condition__c}" />
-                        <br />
-                        <strong>Is Firearms Instructor: </strong>
-                        <apex:outputField
-                            value="{!IF(FIR_Qualification_Form__c.ContactName__r.FAQP_Is_Firearms_Instructor__c, 'Yes', 'No')}" />
-                        <br />
-                    </apex:outputPanel>
-                </td>
-
+              
+               <td style="width:50%; vertical-align: top; padding-right: 20px;">
+                <apex:outputPanel>
+                    <br/>
+                    <strong>Full Legal Name: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.Full_Name__c}"/>
+                    <br/>
+                    <strong>Test Date: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.Test_Date__c}"/>
+                    <br/>
+                    <strong>Light Condition: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.Light_Condition__c}"/>
+                    <strong>Is Firearms Instructor: </strong>
+					<apex:outputText value="{!IF(FIR_Qualification_Form__c.ContactName__r.Is_Firearms_Instructor__c, 'Yes', 'No')}"/>
+                </apex:outputPanel>
+            </td>
                 <!-- Right Column -->
                 <td style="width:50%; vertical-align: top; padding-left: 20px;">
-                    <apex:outputPanel
-                        rendered="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Retired_Peace_Officer__c}">
-                        <br />
+                    <apex:outputPanel rendered="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Retired_Peace_Officer__c}">
+                        <br/>
                         <strong>Retired Peace Officer</strong>
-                        <br />
-                        <strong>Year Retired: </strong>
-                        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Year_Retired__c}" />
-                        <br />
-                        <strong>Date of Birth: </strong>
-                        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.BirthDate}" />
-                        <br />
-                        <strong>Peace Officer Type: </strong>
-                        <apex:outputField
-                            value="{!FIR_Qualification_Form__c.ContactName__r.Retired_Peace_Officer_Type__c}" />
-                        <br />
-
+                        <br/>
+                        <strong>Year Retired: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Year_Retired__c}"/>
+                        <br/>
+                        <strong>Date of Birth: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.BirthDate}"/>
+                        <br/>
+                        <strong>Peace Officer Type: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.Retired_Peace_Officer_Type__c}"/>
+                        <br/>
+                        
                     </apex:outputPanel>
-
-                    <apex:outputPanel
-                        rendered=" {!NOT(FIR_Qualification_Form__c.ContactName__r.FAQP_Retired_Peace_Officer__c)}">
-                        <br />
+                    
+                    <apex:outputPanel rendered=" {!NOT(FIR_Qualification_Form__c.ContactName__r.FAQP_Retired_Peace_Officer__c)}">
+                        <br/>
                         <strong>Active Employee</strong>
-                        <br />
-                        <strong>TINS Numner: </strong>
-                        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.TINS__c}" />
-                        <br />
-                        <strong>Division: </strong>
-                        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Division__c}" />
-                        <br />
-                        <strong>Region: </strong>
-                        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Region__c}" />
+                        <br/>
+                        <!--strong>TINS Numner: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.TINS__c}"/-->
+                        <br/>
+                        <strong>Division: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Division__c}"/>
+                        <br/>
+                        <strong>Region: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Region__c}"/>
                     </apex:outputPanel>
-
-
+                    
+                    
                 </td>
             </tr>
         </table>
-
-        <br />
-        <br />
-
+        
+        <br/>
+        <br/>
+        
         <apex:pageBlock title="Weapons Test">
             <table class="detailTable" cellpadding="9" cellspacing="0">
                 <thead>
@@ -102,7 +89,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <apex:repeat value="{!FIR_Qualification_Form__c.FIR_Weapon_Qualification_Details__r}" var="detail">
+                    <apex:repeat value="{!FIR_Qualification_Form__c.Weapon_Qualifications__r}" var="detail">
                         <tr>
                             <td>{!detail.Weapon_Type__c}</td>
                             <td>{!detail.Sight_Type__c}</td>
@@ -117,31 +104,29 @@
                 </tbody>
             </table>
         </apex:pageBlock>
-
-        <br />
+        
+        <br/>
         <table class="detailTable" cellpadding="9" cellspacing="0">
-            <apex:outputPanel>
-                <br />
-                <strong>Firearms Instructor Name: </strong>
-                <apex:outputField value="{!Fir_Qualification_Form__c.Firearms_Instructor__r.Name}" />
+            <apex:outputPanel >
+                <br/>
+                <strong>Firearms Instructor Name: </strong> <apex:outputField value="{!Fir_Qualification_Form__c.Firearms_Instrutor__r.Name}"/>
             </apex:outputPanel>
-
+            
             <apex:outputPanel rendered="{NOT!FIR_Qualification_Form__c.Witness_Name__c}">
-                <br />
-                <strong>Witness Name: </strong>
-                <apex:outputField value="{!FIR_Qualification_Form__c.witness_Name__c}" />
+                <br/>
+                <strong>Witness Name: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.witness_Name__c}"/>
             </apex:outputPanel>
-
-            <br /> <br />
+            
+            <br/> <br/>
         </table>
         <!-- Footer with generation timestamp -->
-        <br />
+        <br/>
         <div class="footer">
-
-            <br />
+            
+            <br/>
             <p>Report Genrated on: {!currentCentralDateTime}</p>
-            <br />
-
+            <br/>
+            
         </div>
     </body>
 </apex:page>

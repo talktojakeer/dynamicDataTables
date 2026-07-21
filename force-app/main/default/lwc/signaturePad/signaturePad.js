@@ -40,10 +40,10 @@ export default class SignaturePad extends LightningElement {
         this._canvas.height = rect.height || 200;
 
         this._ctx = this._canvas.getContext('2d');
-        this._ctx.lineWidth   = 2;
+        this._ctx.lineWidth   = 4;
         this._ctx.lineCap     = 'round';
         this._ctx.lineJoin    = 'round';
-        this._ctx.strokeStyle = '#1a1a1a';
+        this._ctx.strokeStyle = '#000000';
         // white background so exported PNG isn't transparent (renders cleanly in PDF)
         this._ctx.fillStyle = '#ffffff';
         this._ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);

@@ -145,9 +145,8 @@ public with sharing class QualRosterGradingController {
                               && f.ContactName__r.Account.Is_Firearms_Instructor__pc == true;
             formToInstructor.put(f.Id, isInstr);
 
-            // Witness is required only when the roster's OWN certifying instructor
-            // (Firearms_Instrutor__c) is one of the graded members - not merely
-            // because some graded member happens to be a firearms instructor.
+            // Witness required only when the roster's OWN certifying instructor
+            // (Firearms_Instrutor__c) is one of the graded members - matched by name.
             String rosterInstrName = f.Firearms_Instrutor__r != null ? f.Firearms_Instrutor__r.Name : '';
             Boolean isRosterInstr = String.isNotBlank(memberName)
                                     && String.isNotBlank(rosterInstrName)
@@ -468,6 +467,12 @@ public with sharing class QualRosterGradingController {
             }
         }
 
+        // Member names for the form's Name field ("<Member> - FIR")
+        Map<Id, String> contactNames = new Map<Id, String>();
+        for (Contact c : [SELECT Id, Name FROM Contact WHERE Id IN :selectedContacts]) {
+            contactNames.put(c.Id, c.Name);
+        }
+
         try {
             // 1) Create forms for employees not yet on the roster
             List<FIR_Qualification_Form__c> newForms = new List<FIR_Qualification_Form__c>();
@@ -475,7 +480,9 @@ public with sharing class QualRosterGradingController {
             for (Id cId : selectedContacts) {
                 if (!contactToFormId.containsKey(cId)) {
                     contactsNeedingForm.add(cId);
+                    String mName = contactNames.containsKey(cId) ? contactNames.get(cId) : 'Unknown';
                     newForms.add(new FIR_Qualification_Form__c(
+                        Name                  = mName + ' - FIR',
                         ContactName__c        = cId,
                         Qual_Roster_Label__c  = rosterLabel,
                         Test_Date__c          = ctx.Test_Date__c,
@@ -544,9 +551,18 @@ public with sharing class QualRosterGradingController {
     // isRetired maps to Active__c = 'No' when true, 'Yes' otherwise.
     // -----------------------------------------------------------------------
     @AuraEnabled
+    public static void trySet(SObject rec, String field, Object val) {
+        if (val == null) return;
+        try { rec.put(field, val); } catch (Exception e) { /* field absent - skip */ }
+    }
+    @AuraEnabled
     public static AvailableEmployee createEmployee(
         String firstName,
+        String middleName,
         String lastName,
+        String dateOfBirth,
+        String yearRetired,
+        String retiredType,
         Boolean isRetired
     ) {
         if (String.isBlank(lastName)) {
@@ -571,6 +587,16 @@ public with sharing class QualRosterGradingController {
             LastName     = lastName.trim(),
             Active__c    = (isRetired == true) ? 'No' : 'Yes'
         );
+
+        trySet(acc, 'MiddleName', String.isNotBlank(middleName) ? (Object) middleName.trim() : null);
+        if (String.isNotBlank(dateOfBirth)) {
+            try { acc.put('PersonBirthdate', Date.valueOf(dateOfBirth)); } catch (Exception e) {}
+        }
+        if (String.isNotBlank(yearRetired)) {
+            try { acc.put('Year_Retired__pc', Integer.valueOf(yearRetired)); }
+            catch (Exception e) { trySet(acc, 'Year_Retired__pc', yearRetired); }
+        }
+        trySet(acc, 'Type_of_Retired_Peace_Officer__pc', String.isNotBlank(retiredType) ? (Object) retiredType.trim() : null);
 
         try {
             insert acc;

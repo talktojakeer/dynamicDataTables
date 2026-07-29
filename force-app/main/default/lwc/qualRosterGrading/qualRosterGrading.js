@@ -222,6 +222,10 @@ export default class QualRosterGrading extends LightningElement {
     @track newFirstName       = '';
     @track newLastName        = '';
     @track newIsRetired       = false;
+    @track newMiddleName      = '';
+    @track newDob             = '';
+    @track newYearRetired     = '';
+    @track newRetiredType     = '';
     @track isCreatingEmployee = false;
 
     // Static picklist option sets (mirror the field metadata)
@@ -384,6 +388,10 @@ export default class QualRosterGrading extends LightningElement {
     handleNewFirstName(event) { this.newFirstName = event.target.value; }
     handleNewLastName(event)  { this.newLastName  = event.target.value; }
     handleNewIsRetired(event) { this.newIsRetired = event.target.checked; }
+    handleNewMiddleName(event)  { this.newMiddleName  = event.target.value; }
+    handleNewDob(event)         { this.newDob         = event.target.value; }
+    handleNewYearRetired(event) { this.newYearRetired = event.target.value; }
+    handleNewRetiredType(event) { this.newRetiredType = event.target.value; }
 
     handleCreateEmployee() {
         if (!this.newLastName || !this.newLastName.trim()) {
@@ -393,9 +401,13 @@ export default class QualRosterGrading extends LightningElement {
         this.isCreatingEmployee = true;
         this.addError = '';
         createEmployee({
-            firstName: this.newFirstName ? this.newFirstName.trim() : null,
-            lastName : this.newLastName.trim(),
-            isRetired: this.newIsRetired
+            firstName  : this.newFirstName ? this.newFirstName.trim() : null,
+            middleName : this.newMiddleName ? this.newMiddleName.trim() : null,
+            lastName   : this.newLastName.trim(),
+            dateOfBirth: this.newDob || null,
+            yearRetired: this.newYearRetired || null,
+            retiredType: this.newRetiredType ? this.newRetiredType.trim() : null,
+            isRetired  : this.newIsRetired
         })
             .then(emp => {
                 this.dispatchEvent(new ShowToastEvent({
@@ -406,6 +418,10 @@ export default class QualRosterGrading extends LightningElement {
                 this.newFirstName       = '';
                 this.newLastName        = '';
                 this.newIsRetired       = false;
+                this.newMiddleName      = '';
+                this.newDob             = '';
+                this.newYearRetired     = '';
+                this.newRetiredType     = '';
                 this.showCreateEmployee = false;
                 this.employeeSearchKey  = '';
                 // Reload list and auto-select the new employee
@@ -598,10 +614,9 @@ export default class QualRosterGrading extends LightningElement {
     @track witnessName        = '';
     @track signatureError     = '';
 
-    // Certification statements (Jira FAQP-150) - both must be checked to save.
+    // Certification statements (FAQP-150) - both required to save.
     @track certifyAccurate    = false;
     @track certifyProficiency = false;
-
     get certifyStatementsChecked() {
         return this.certifyAccurate && this.certifyProficiency;
     }
@@ -610,10 +625,9 @@ export default class QualRosterGrading extends LightningElement {
         return this.gradingData ? (this.gradingData.instructorName || '') : '';
     }
 
-    // A witness signature is required only when the roster's OWN certifying
-    // instructor is one of the graded members on this roster (row.isRosterInstructor,
-    // set server-side by matching the member to Firearms_Instrutor__c). A member
-    // who merely happens to be a firearms instructor does NOT trigger a witness.
+    // A witness signature is required whenever the firearm instructor
+    // themselves shows up as one of the graded members on this roster
+    // (row.isFirearmsInstructor is set server-side in getRosterGradingData).
     get needsWitnessSignature() {
         if (!this.hasGradingData) return false;
         return this.gradingData.weaponSections.some(section =>
@@ -644,7 +658,6 @@ export default class QualRosterGrading extends LightningElement {
         this.certifyAccurate = event.target.checked;
         this.signatureError  = '';
     }
-
     handleCertifyProficiency(event) {
         this.certifyProficiency = event.target.checked;
         this.signatureError     = '';
@@ -670,7 +683,6 @@ export default class QualRosterGrading extends LightningElement {
             this.signatureError = 'Please confirm both certification statements before signing.';
             return;
         }
-
         const fiPad = this.template.querySelector('[data-pad="instructor"]');
         if (!fiPad || !fiPad.hasSignature) {
             this.signatureError = 'Firearm instructor signature is required.';

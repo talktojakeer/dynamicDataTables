@@ -395,6 +395,7 @@
     border-color: #e5e5e5; cursor: default;
 }
 .sig-input--name { font-weight: 700; color: #181818; }
+.required-star { color: #c23934; margin-left: 2px; }
 
 /* Certification statements (FAQP-150) */
 .cert-box {
@@ -408,7 +409,10 @@
 }
 .cert-item input[type="checkbox"] { margin-top: 2px; flex: 0 0 auto; }
 .cert-text { flex: 1 1 auto; }
-.required-star { color: #c23934; margin-left: 2px; }
+
+/* Create-employee labeled fields (DOB / Year Retired / Type) */
+.create-emp-labeled { display: flex; flex-direction: column; gap: 3px; flex: 1 1 0; min-width: 0; }
+.create-emp-flabel { font-size: 11px; font-weight: 700; color: #3e3e3c; }
 
 /* Stack columns on narrow viewports */
 @media (max-width: 900px) {

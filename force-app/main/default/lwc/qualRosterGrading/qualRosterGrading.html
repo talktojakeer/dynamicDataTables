@@ -397,8 +397,29 @@
                                         <div class="create-emp-fields">
                                             <input type="text" class="add-search-input" placeholder="First name"
                                                    value={newFirstName} oninput={handleNewFirstName} />
+                                            <input type="text" class="add-search-input" placeholder="Middle name"
+                                                   value={newMiddleName} oninput={handleNewMiddleName} />
                                             <input type="text" class="add-search-input" placeholder="Last name *"
                                                    value={newLastName} oninput={handleNewLastName} />
+                                        </div>
+                                        <div class="create-emp-fields">
+                                            <div class="create-emp-labeled">
+                                                <label class="create-emp-flabel">Date of Birth</label>
+                                                <input type="date" class="add-search-input"
+                                                       value={newDob} onchange={handleNewDob} />
+                                            </div>
+                                            <div class="create-emp-labeled">
+                                                <label class="create-emp-flabel">Year Retired</label>
+                                                <input type="number" class="add-search-input" placeholder="e.g. 2018" min="1900" max="2100"
+                                                       value={newYearRetired} oninput={handleNewYearRetired} />
+                                            </div>
+                                        </div>
+                                        <div class="create-emp-fields">
+                                            <div class="create-emp-labeled">
+                                                <label class="create-emp-flabel">Type of Retired Peace Officer</label>
+                                                <input type="text" class="add-search-input" placeholder="Type of retired peace officer"
+                                                       value={newRetiredType} oninput={handleNewRetiredType} />
+                                            </div>
                                         </div>
                                         <label class="create-emp-retired">
                                             <input type="checkbox" checked={newIsRetired} onchange={handleNewIsRetired} />

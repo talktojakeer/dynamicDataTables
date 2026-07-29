@@ -394,6 +394,20 @@
     background: #f3f3f3; color: #514f4d;
     border-color: #e5e5e5; cursor: default;
 }
+.sig-input--name { font-weight: 700; color: #181818; }
+
+/* Certification statements (FAQP-150) */
+.cert-box {
+    margin: 8px 20px 0; padding: 14px 16px;
+    background: #f7fbff; border: 1px solid #d6e6f5; border-radius: 8px;
+    display: flex; flex-direction: column; gap: 10px;
+}
+.cert-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13px; color: #181818; cursor: pointer; line-height: 1.4;
+}
+.cert-item input[type="checkbox"] { margin-top: 2px; flex: 0 0 auto; }
+.cert-text { flex: 1 1 auto; }
 .required-star { color: #c23934; margin-left: 2px; }
 
 /* Stack columns on narrow viewports */

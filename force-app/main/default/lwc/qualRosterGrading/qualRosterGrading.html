@@ -310,7 +310,7 @@
                                 <div class="sig-fields">
                                     <div class="sig-field">
                                         <label class="sig-field-label">Instructor Name</label>
-                                        <input type="text" class="sig-input sig-input--readonly" value={instructorNameForSignature} readonly />
+                                        <input type="text" class="sig-input sig-input--readonly sig-input--name" value={instructorNameForSignature} readonly />
                                     </div>
                                     <div class="sig-field">
                                         <label class="sig-field-label">Date</label>
@@ -337,6 +337,17 @@
                                     <c-signature-pad data-pad="witness" signer-name={witnessName}></c-signature-pad>
                                 </div>
                             </template>
+                        </div>
+
+                        <div class="cert-box">
+                            <label class="cert-item">
+                                <input type="checkbox" checked={certifyAccurate} onchange={handleCertifyAccurate} />
+                                <span class="cert-text">I certify that the qualification results entered are accurate and complete.</span>
+                            </label>
+                            <label class="cert-item">
+                                <input type="checkbox" checked={certifyProficiency} onchange={handleCertifyProficiency} />
+                                <span class="cert-text">I certify that each individual demonstrated proficiency in the care and cleaning of their assigned weapon(s) and was verified prior to completing the qualification.</span>
+                            </label>
                         </div>
 
                         <template if:true={signatureError}>

@@ -133,8 +133,9 @@ public with sharing class QualRosterGradingController {
         }
 
         Set<Id> formIds = new Set<Id>();
-        Map<Id, String>  formToMember     = new Map<Id, String>();
-        Map<Id, Boolean> formToInstructor = new Map<Id, Boolean>();
+        Map<Id, String>  formToMember      = new Map<Id, String>();
+        Map<Id, Boolean> formToInstructor  = new Map<Id, Boolean>();
+        Map<Id, Boolean> formToRosterInstr = new Map<Id, Boolean>();
         for (FIR_Qualification_Form__c f : forms) {
             formIds.add(f.Id);
             String memberName = f.ContactName__r != null ? f.ContactName__r.Name : '';
@@ -143,6 +144,15 @@ public with sharing class QualRosterGradingController {
                               && f.ContactName__r.Account != null
                               && f.ContactName__r.Account.Is_Firearms_Instructor__pc == true;
             formToInstructor.put(f.Id, isInstr);
+
+            // Witness is required only when the roster's OWN certifying instructor
+            // (Firearms_Instrutor__c) is one of the graded members - not merely
+            // because some graded member happens to be a firearms instructor.
+            String rosterInstrName = f.Firearms_Instrutor__r != null ? f.Firearms_Instrutor__r.Name : '';
+            Boolean isRosterInstr = String.isNotBlank(memberName)
+                                    && String.isNotBlank(rosterInstrName)
+                                    && memberName.trim().equalsIgnoreCase(rosterInstrName.trim());
+            formToRosterInstr.put(f.Id, isRosterInstr);
         }
 
         List<FIR_Weapon_Qualification_Detail__c> details = [
@@ -176,6 +186,7 @@ public with sharing class QualRosterGradingController {
             row.firFormId           = d.FIR_Qualification_Form__c;
             row.memberName          = formToMember.get(d.FIR_Qualification_Form__c);
             row.isFirearmsInstructor = formToInstructor.get(d.FIR_Qualification_Form__c) == true;
+            row.isRosterInstructor   = formToRosterInstr.get(d.FIR_Qualification_Form__c) == true;
             row.weaponType          = weaponType;
             row.manufacturer        = d.Manufacturer__c;
             row.model               = d.Model__c;
@@ -627,6 +638,7 @@ public with sharing class QualRosterGradingController {
         @AuraEnabled public String firFormId;
         @AuraEnabled public String memberName;
         @AuraEnabled public Boolean isFirearmsInstructor;
+        @AuraEnabled public Boolean isRosterInstructor;
         @AuraEnabled public String weaponType;
         @AuraEnabled public String manufacturer;
         @AuraEnabled public String model;

@@ -598,17 +598,26 @@ export default class QualRosterGrading extends LightningElement {
     @track witnessName        = '';
     @track signatureError     = '';
 
+    // Certification statements (Jira FAQP-150) - both must be checked to save.
+    @track certifyAccurate    = false;
+    @track certifyProficiency = false;
+
+    get certifyStatementsChecked() {
+        return this.certifyAccurate && this.certifyProficiency;
+    }
+
     get instructorNameForSignature() {
         return this.gradingData ? (this.gradingData.instructorName || '') : '';
     }
 
-    // A witness signature is required whenever the firearm instructor
-    // themselves shows up as one of the graded members on this roster
-    // (row.isFirearmsInstructor is set server-side in getRosterGradingData).
+    // A witness signature is required only when the roster's OWN certifying
+    // instructor is one of the graded members on this roster (row.isRosterInstructor,
+    // set server-side by matching the member to Firearms_Instrutor__c). A member
+    // who merely happens to be a firearms instructor does NOT trigger a witness.
     get needsWitnessSignature() {
         if (!this.hasGradingData) return false;
         return this.gradingData.weaponSections.some(section =>
-            section.rows.some(row => row.isFirearmsInstructor === true)
+            section.rows.some(row => row.isRosterInstructor === true)
         );
     }
 
@@ -631,9 +640,21 @@ export default class QualRosterGrading extends LightningElement {
         this.signatureError = '';
     }
 
+    handleCertifyAccurate(event) {
+        this.certifyAccurate = event.target.checked;
+        this.signatureError  = '';
+    }
+
+    handleCertifyProficiency(event) {
+        this.certifyProficiency = event.target.checked;
+        this.signatureError     = '';
+    }
+
     openSignatureModal() {
         this.witnessName        = '';
         this.signatureError     = '';
+        this.certifyAccurate    = false;
+        this.certifyProficiency = false;
         this.showSignatureModal = true;
     }
 
@@ -645,6 +666,11 @@ export default class QualRosterGrading extends LightningElement {
     }
 
     handleSignatureSave() {
+        if (!this.certifyStatementsChecked) {
+            this.signatureError = 'Please confirm both certification statements before signing.';
+            return;
+        }
+
         const fiPad = this.template.querySelector('[data-pad="instructor"]');
         if (!fiPad || !fiPad.hasSignature) {
             this.signatureError = 'Firearm instructor signature is required.';

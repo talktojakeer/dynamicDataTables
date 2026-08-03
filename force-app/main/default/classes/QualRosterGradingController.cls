@@ -345,7 +345,7 @@ public with sharing class QualRosterGradingController {
     }
 
     // Person Account record type used for employees.
-    private static final String EMPLOYEE_RT = 'DPS_Employee';
+    private static final String EMPLOYEE_RT = 'PersonAccount';
 
     // -----------------------------------------------------------------------
     // Return ALL Person Account employees for the "Add to Roster" picker,

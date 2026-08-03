@@ -475,28 +475,25 @@
 
                             <!-- Weapon types + details -->
                             <div class="add-col add-col--weapons">
-                                <label class="add-section-label">Weapon Types</label>
+                                <label class="add-section-label">Weapon Type</label>
                                 <p class="add-hint">A weapon an employee already has is skipped automatically.</p>
-                                <div class="wt-list">
-                                    <template for:each={weaponTypeOptions} for:item="wt">
-                                        <label key={wt.value} class="wt-item">
-                                            <input type="checkbox" value={wt.value} checked={wt.checked}
-                                                   onchange={handleWeaponTypeToggle} />
-                                            <span class="wt-label">{wt.label}</span>
-                                        </label>
-                                    </template>
-                                </div>
+                                <lightning-combobox class="add-detail-field" label="Weapon Type" value={addWeaponType}
+                                    placeholder="-- Select --" options={weaponTypeSelectOptions} onchange={handleAddWeaponType}
+                                    variant="label-hidden"></lightning-combobox>
 
                                 <label class="add-section-label add-details-label">Weapon Details (optional)</label>
                                 <p class="add-hint">Applied to every new row added.</p>
                                 <lightning-combobox class="add-detail-field" label="Manufacturer" value={addManufacturer}
                                     placeholder="-- None --" options={manufacturerOptions} onchange={handleAddManufacturer}
+                                    disabled={isManufacturerDisabled}
                                     variant="label-stacked"></lightning-combobox>
                                 <lightning-combobox class="add-detail-field" label="Model" value={addModel}
                                     placeholder="-- None --" options={modelOptions} onchange={handleAddModel}
+                                    disabled={isModelDisabled}
                                     variant="label-stacked"></lightning-combobox>
                                 <lightning-combobox class="add-detail-field" label="Sight Type" value={addSightType}
                                     placeholder="-- None --" options={sightTypeOptions} onchange={handleAddSightType}
+                                    disabled={isSightTypeDisabled}
                                     variant="label-stacked"></lightning-combobox>
                             </div>
                         </div>

@@ -461,9 +461,9 @@
 
 .add-body {
     display: flex; gap: 24px; padding: 16px 20px;
-    overflow: hidden; flex: 1 1 auto; min-height: 0;
+    overflow: visible; flex: 1 1 auto; min-height: 0;
 }
-.add-col { display: flex; flex-direction: column; min-height: 0; }
+.add-col { display: flex; flex-direction: column; min-height: 0; overflow: visible; }
 .add-col--employees { flex: 1 1 60%; }
 .add-col--weapons   { flex: 1 1 40%; border-left: 1px dashed #dddbda; padding-left: 24px; }
 

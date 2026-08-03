@@ -9,6 +9,35 @@ import getAvailableEmployees       from '@salesforce/apex/QualRosterGradingContr
 import addToRoster                 from '@salesforce/apex/QualRosterGradingController.addToRoster';
 import createEmployee              from '@salesforce/apex/QualRosterGradingController.createEmployee';
 
+// Dependent-picklist maps - mirrors createQualRoster so the weapon details
+// in "Add to Roster" cascade the same way (weapon -> manufacturer -> model,
+// and weapon -> sight type).
+const MANUFACTURER_BY_WEAPON = {
+    'Pistol 1'         : ['Sig Sauer'],
+    'Pistol 2'         : ['Sig Sauer'],
+    'Shotgun'          : ['Mossberg', 'Remington'],
+    'Rifle'            : ['Daniel Defense', 'FN Herstal', 'Heckler Koch', 'Hodge Defense'],
+    'Automatic Weapon' : ['Daniel Defense'],
+    'Precision Rifle'  : ['Hodge Defense']
+};
+const MODEL_BY_MANUFACTURER = {
+    'Sig Sauer'       : ['P320', 'P365', 'P226', 'P229'],
+    'Daniel Defense'  : ['DDM4V7', 'DDM4 V7 RIS 3'],
+    'Hodge Defense'   : ['Mod 1', 'Mod 2'],
+    'FN Herstal'      : ['P90'],
+    'Heckler Koch'    : ['416', '762 A1'],
+    'Mossberg'        : ['590A1'],
+    'Remington'       : ['870', '1187']
+};
+const SIGHT_BY_WEAPON = {
+    'Pistol 1'         : ['Iron Sight', 'Optic'],
+    'Pistol 2'         : ['Iron Sight', 'Optic'],
+    'Shotgun'          : ['Iron Sight', 'Optic'],
+    'Rifle'            : ['Iron Sight', 'Optic', 'Magnified Optic'],
+    'Automatic Weapon' : ['Iron Sight', 'Optic', 'Magnified Optic'],
+    'Precision Rifle'  : ['Scope']
+};
+
 export default class QualRosterGrading extends LightningElement {
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -210,7 +239,7 @@ export default class QualRosterGrading extends LightningElement {
     @track addError           = '';
     _availableEmployees       = [];   // full list from Apex (with existingWeaponTypes)
     @track availableEmployees = [];   // filtered + decorated view
-    @track weaponTypeOptions  = [];   // { value, label, checked }
+    @track addWeaponType      = '';   // single selected weapon type (dropdown)
 
     // Optional weapon details applied to all newly created rows
     @track addManufacturer = '';
@@ -228,17 +257,30 @@ export default class QualRosterGrading extends LightningElement {
     @track newRetiredType     = '';
     @track isCreatingEmployee = false;
 
-    // Static picklist option sets (mirror the field metadata)
-    _manufacturerValues = ['Sig Sauer', 'Daniel Defense', 'Hodge Defense', 'FN Herstal', 'Heckler Koch', 'Mossberg', 'Remington'];
-    _modelValues        = ['P320', 'P365', 'P226', 'P229', 'DDM4V7', 'DDM4 V7 RIS 3', 'Mod 1', 'Mod 2', 'P90', '416', '762 A1', '590A1', '870', '1187'];
-    _sightTypeValues    = ['Iron Sight', 'Optic', 'Magnified Optic', 'Scope'];
-
     _allWeaponTypes = ['Pistol 1', 'Pistol 2', 'Shotgun', 'Rifle', 'Automatic Weapon', 'Precision Rifle', 'Other'];
 
-    get manufacturerOptions() { return this._toOptions(this._manufacturerValues); }
-    get modelOptions()        { return this._toOptions(this._modelValues); }
-    get sightTypeOptions()    { return this._toOptions(this._sightTypeValues); }
-    _toOptions(vals) { return vals.map(v => ({ label: v, value: v })); }
+    // Single Weapon Type dropdown (mirrors createQualRoster mass-apply).
+    get weaponTypeSelectOptions() { return this._toOptions(this._allWeaponTypes); }
+    get isOtherWeaponType()       { return this.addWeaponType === 'Other'; }
+
+    // Manufacturer/Sight depend on the selected weapon type; Model depends on Manufacturer.
+    get manufacturerOptions() {
+        return (!this.addWeaponType || this.isOtherWeaponType)
+            ? [] : this._toOptions(MANUFACTURER_BY_WEAPON[this.addWeaponType] || []);
+    }
+    get modelOptions() {
+        return this.addManufacturer ? this._toOptions(MODEL_BY_MANUFACTURER[this.addManufacturer] || []) : [];
+    }
+    get sightTypeOptions() {
+        return (!this.addWeaponType || this.isOtherWeaponType)
+            ? [] : this._toOptions(SIGHT_BY_WEAPON[this.addWeaponType] || []);
+    }
+
+    get isManufacturerDisabled() { return !this.addWeaponType || this.isOtherWeaponType; }
+    get isModelDisabled()        { return !this.addManufacturer; }
+    get isSightTypeDisabled()    { return !this.addWeaponType || this.isOtherWeaponType; }
+
+    _toOptions(vals) { return (vals || []).map(v => ({ label: v, value: v })); }
 
     get selectedEmployeeCount() {
         return this._availableEmployees.filter(e => e.selected).length;
@@ -266,24 +308,12 @@ export default class QualRosterGrading extends LightningElement {
         this.newFirstName        = '';
         this.newLastName         = '';
         this.newIsRetired        = false;
-        this._initWeaponTypeOptions();
+        this.addWeaponType       = '';
         this._fetchAvailableEmployees();
     }
 
     closeAddEmployeeModal() {
         this.showAddModal = false;
-    }
-
-    _initWeaponTypeOptions() {
-        // Pre-check the weapon types already present on this roster.
-        const onRoster = new Set(
-            this.hasGradingData ? this.gradingData.weaponSections.map(s => s.weaponType) : []
-        );
-        this.weaponTypeOptions = this._allWeaponTypes.map(wt => ({
-            value  : wt,
-            label  : wt,
-            checked: onRoster.has(wt)
-        }));
     }
 
     _fetchAvailableEmployees(selectContactId) {
@@ -334,24 +364,25 @@ export default class QualRosterGrading extends LightningElement {
         }
     }
 
-    handleWeaponTypeToggle(event) {
-        const value = event.target.value;
-        this.weaponTypeOptions = this.weaponTypeOptions.map(opt =>
-            opt.value === value ? { ...opt, checked: event.target.checked } : opt
-        );
+    handleAddWeaponType(event) {
+        this.addWeaponType   = event.detail.value;
+        // Weapon type drives the dependent details - reset them.
+        this.addManufacturer = '';
+        this.addModel        = '';
+        this.addSightType    = '';
         this.addError = '';
     }
 
-    handleAddManufacturer(event) { this.addManufacturer = event.detail.value; }
+    handleAddManufacturer(event) { this.addManufacturer = event.detail.value; this.addModel = ''; }
     handleAddModel(event)        { this.addModel        = event.detail.value; }
     handleAddSightType(event)    { this.addSightType    = event.detail.value; }
 
     handleAddEmployees() {
         const contactIds  = this._availableEmployees.filter(e => e.selected).map(e => e.contactId);
-        const weaponTypes = this.weaponTypeOptions.filter(o => o.checked).map(o => o.value);
+        const weaponTypes = this.addWeaponType ? [this.addWeaponType] : [];
 
         if (contactIds.length === 0) { this.addError = 'Select at least one employee.'; return; }
-        if (weaponTypes.length === 0) { this.addError = 'Select at least one weapon type.'; return; }
+        if (weaponTypes.length === 0) { this.addError = 'Select a weapon type.'; return; }
 
         this.addError          = '';
         this.isAddingEmployees = true;
@@ -603,9 +634,17 @@ export default class QualRosterGrading extends LightningElement {
 
     handleSaveAll() {
         if (!this.hasGradingData) return;
-        // Always require a signature to certify the roster, even when no row
-        // edits are pending (e.g. the roster was already fully graded).
-        // Nothing is committed until the modal is signed and saved.
+        // Only open the signature/certify modal when there are actual grading
+        // edits to save. If nothing changed in the table, there is nothing to
+        // certify - inform the user and do not open the popup.
+        if (!this.hasUnsavedChanges) {
+            this.dispatchEvent(new ShowToastEvent({
+                title  : 'No Changes',
+                message: 'There are no changes to save.',
+                variant: 'info'
+            }));
+            return;
+        }
         this.openSignatureModal();
     }
 

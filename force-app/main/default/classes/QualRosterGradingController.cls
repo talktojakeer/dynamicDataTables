@@ -281,7 +281,8 @@ public with sharing class QualRosterGradingController {
         String rosterLabel,
         String instructorSignature,
         String witnessName,
-        String witnessSignature
+        String witnessSignature,
+        String witnessSignatureDate
     ) {
         if (String.isBlank(rosterLabel)) {
             throw new AuraHandledException('Roster label is required.');
@@ -298,10 +299,18 @@ public with sharing class QualRosterGradingController {
 
         Boolean hasWitnessSignature = String.isNotBlank(witnessSignature);
         String  witnessHtml         = null;
+        Date    witnessDate         = null;
         if (hasWitnessSignature) {
             witnessHtml = toSignatureImg(witnessSignature, 'Witness Signature');
             if (witnessHtml != null && witnessHtml.length() > RICH_TEXT_MAX) {
                 throw new AuraHandledException('Witness signature image is too large to store. Please try a simpler signature.');
+            }
+            // Expect ISO 'yyyy-MM-dd' from the client; fall back to today.
+            try {
+                witnessDate = String.isNotBlank(witnessSignatureDate)
+                              ? Date.valueOf(witnessSignatureDate) : Date.today();
+            } catch (Exception e) {
+                witnessDate = Date.today();
             }
         }
 
@@ -319,6 +328,7 @@ public with sharing class QualRosterGradingController {
                 if (hasWitnessSignature) {
                     f.Witness_Signature__c = witnessHtml;
                     f.Witness_Name__c      = witnessName;
+                    f.Witness_Signature_Date__c = witnessDate;
                 }
             }
             update forms;

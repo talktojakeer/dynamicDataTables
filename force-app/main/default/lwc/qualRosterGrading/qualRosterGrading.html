@@ -331,7 +331,7 @@
                                         </div>
                                         <div class="sig-field">
                                             <label class="sig-field-label">Date</label>
-                                            <input type="text" class="sig-input sig-input--readonly" value={certificationDate} readonly />
+                                            <input type="date" class="sig-input" value={witnessDate} onchange={handleWitnessDateInput} />
                                         </div>
                                     </div>
                                     <c-signature-pad data-pad="witness" signer-name={witnessName}></c-signature-pad>

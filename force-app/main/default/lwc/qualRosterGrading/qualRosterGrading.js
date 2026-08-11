@@ -651,6 +651,7 @@ export default class QualRosterGrading extends LightningElement {
     // ── Signature capture ───────────────────────────────────────────────────
     @track showSignatureModal = false;
     @track witnessName        = '';
+    @track witnessDate        = '';
     @track signatureError     = '';
 
     // Certification statements (FAQP-150) - both required to save.
@@ -688,8 +689,21 @@ export default class QualRosterGrading extends LightningElement {
         return `${mm}/${dd}/${d.getFullYear()}`;
     }
 
+    // ISO (yyyy-MM-dd) form of today's date, sent to Apex for the witness date.
+    get certificationDateIso() {
+        const d = new Date();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${d.getFullYear()}-${mm}-${dd}`;
+    }
+
     handleWitnessNameInput(event) {
         this.witnessName    = event.target.value;
+        this.signatureError = '';
+    }
+
+    handleWitnessDateInput(event) {
+        this.witnessDate    = event.target.value;
         this.signatureError = '';
     }
 
@@ -704,6 +718,7 @@ export default class QualRosterGrading extends LightningElement {
 
     openSignatureModal() {
         this.witnessName        = '';
+        this.witnessDate        = this.certificationDateIso; // default to today, editable
         this.signatureError     = '';
         this.certifyAccurate    = false;
         this.certifyProficiency = false;
@@ -777,10 +792,11 @@ export default class QualRosterGrading extends LightningElement {
             .then(() => {
                 // 2) Only after grading saves, save the signature(s)
                 return saveSignatures({
-                    rosterLabel         : this.selectedLabel,
-                    instructorSignature : fiCapture.dataUrl,
-                    witnessName         : this.needsWitnessSignature ? this.witnessName.trim() : null,
-                    witnessSignature    : witnessDataUrl
+                    rosterLabel          : this.selectedLabel,
+                    instructorSignature  : fiCapture.dataUrl,
+                    witnessName          : this.needsWitnessSignature ? this.witnessName.trim() : null,
+                    witnessSignature     : witnessDataUrl,
+                    witnessSignatureDate : this.needsWitnessSignature ? (this.witnessDate || this.certificationDateIso) : null
                 });
             })
             .then(() => {

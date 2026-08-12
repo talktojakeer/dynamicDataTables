@@ -29,7 +29,7 @@
             <tr>
               
                <td style="width:50%; vertical-align: top; padding-right: 20px;">
-                <apex:outputPanel>
+                <apex:outputPanel >
                     <br/>
                     <strong>Full Legal Name: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.Full_Name__c}"/>
                     <br/>
@@ -109,12 +109,12 @@
         <table class="detailTable" cellpadding="9" cellspacing="0">
             <apex:outputPanel >
                 <br/>
-                <strong>Firearms Instructor Name: </strong> <apex:outputField value="{!Fir_Qualification_Form__c.Firearms_Instrutor__r.Name}"/>
+                <strong>Firearms Instructor Name: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.Firearms_Instrutor__r.Name}"/>
             </apex:outputPanel>
             
             <apex:outputPanel rendered="{NOT!FIR_Qualification_Form__c.Witness_Name__c}">
                 <br/>
-                <strong>Witness Name: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.witness_Name__c}"/>
+                <strong>Witness Name: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.Witness_Name__c}"/>
             </apex:outputPanel>
             
             <br/> <br/>

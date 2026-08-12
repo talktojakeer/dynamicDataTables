@@ -422,7 +422,17 @@ export default class QualRosterGrading extends LightningElement {
     handleNewMiddleName(event)  { this.newMiddleName  = event.target.value; }
     handleNewDob(event)         { this.newDob         = event.target.value; }
     handleNewYearRetired(event) { this.newYearRetired = event.target.value; }
-    handleNewRetiredType(event) { this.newRetiredType = event.target.value; }
+    handleNewRetiredType(event) { this.newRetiredType = event.detail.value; }
+
+    // Picklist values for FAQP_Retired_Peace_Officer_Type__c
+    get retiredTypeOptions() {
+        return [
+            { label: 'Retired Peace Officer/Non-DPS', value: 'Retired Peace Officer/Non-DPS' },
+            { label: 'Retired DPS Trooper',           value: 'Retired DPS Trooper' },
+            { label: 'Special Ranger',                value: 'Special Ranger' },
+            { label: 'Special Texas Ranger',          value: 'Special Texas Ranger' }
+        ];
+    }
 
     handleCreateEmployee() {
         if (!this.newLastName || !this.newLastName.trim()) {

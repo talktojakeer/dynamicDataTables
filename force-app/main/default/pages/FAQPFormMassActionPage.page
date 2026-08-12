@@ -1,0 +1,33 @@
+<apex:page standardController="FIR_Qualification_Form__c"
+           extensions="FAQPFormPDFExtension"
+           recordSetVar="forms"
+           sidebar="false"
+           showHeader="true"
+           action="{!generateAndAttachPDFs}">
+    <!-- Auto-run the action on page load -->
+
+    <apex:form >
+        <apex:pageBlock title="Generating PDFs for Selected Firearms Forms">
+            <apex:pageMessages /> <!-- Shows success/errors -->
+
+            <apex:pageBlockSection >
+                <p>Processing selected Firearms Forms... Please wait or refresh the Firearms Form records to see attached Files.</p>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockButtons location="bottom">
+                <apex:commandButton value="Backto List"
+                                    action="{!cancel}"
+                                    rendered="{!NOT(ISBLANK($CurrentPage.parameters.retURL)) == false}" />
+
+                <!-- New button that goes back to the record when coming from detail page -->
+
+                <apex:commandButton value="Back to Record"
+                                    action="{!cancel}"
+                                    rendered="{!NOT(ISBLANK($CurrentPage.parameters.retURL))}"
+                                    immediate="true" />
+            </apex:pageBlockButtons>
+
+        </apex:pageBlock>
+    </apex:form>
+
+</apex:page>

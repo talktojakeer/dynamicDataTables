@@ -417,8 +417,10 @@
                                         <div class="create-emp-fields">
                                             <div class="create-emp-labeled">
                                                 <label class="create-emp-flabel">Type of Retired Peace Officer</label>
-                                                <input type="text" class="add-search-input" placeholder="Type of retired peace officer"
-                                                       value={newRetiredType} oninput={handleNewRetiredType} />
+                                                <lightning-combobox class="add-detail-field" label="Type of Retired Peace Officer"
+                                                    variant="label-hidden" placeholder="-- Select --"
+                                                    value={newRetiredType} options={retiredTypeOptions}
+                                                    onchange={handleNewRetiredType}></lightning-combobox>
                                             </div>
                                         </div>
                                         <label class="create-emp-retired">

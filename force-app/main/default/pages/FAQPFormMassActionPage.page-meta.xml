@@ -3,5 +3,5 @@
     <apiVersion>67.0</apiVersion>
     <availableInTouch>false</availableInTouch>
     <confirmationTokenRequired>false</confirmationTokenRequired>
-    <label>FAQPFormPage</label>
+    <label>Generate Form PDFS</label>
 </ApexPage>

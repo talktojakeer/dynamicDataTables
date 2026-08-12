@@ -606,7 +606,7 @@ public with sharing class QualRosterGradingController {
             try { acc.put('Year_Retired__pc', Integer.valueOf(yearRetired)); }
             catch (Exception e) { trySet(acc, 'Year_Retired__pc', yearRetired); }
         }
-        trySet(acc, 'Type_of_Retired_Peace_Officer__pc', String.isNotBlank(retiredType) ? (Object) retiredType.trim() : null);
+        trySet(acc, 'FAQP_Retired_Peace_Officer_Type__c', String.isNotBlank(retiredType) ? (Object) retiredType.trim() : null);
 
         try {
             insert acc;

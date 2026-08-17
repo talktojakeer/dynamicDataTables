@@ -443,6 +443,10 @@
                                            value={employeeSearchKey} oninput={handleEmployeeSearch} />
                                 </div>
 
+                                <template if:true={employeeCountHint}>
+                                    <p class="emp-count-hint">{employeeCountHint}</p>
+                                </template>
+
                                 <template if:true={isLoadingEmployees}>
                                     <div class="add-loading">
                                         <lightning-spinner size="small" alternative-text="Loading..."></lightning-spinner>
@@ -461,7 +465,13 @@
                                                         <template if:true={emp.isFirearmsInstructor}>
                                                             <span class="emp-fi-badge">FI</span>
                                                         </template>
+                                                        <template if:true={emp.isRetiredOfficer}>
+                                                            <span class="emp-retired-badge">Retired</span>
+                                                        </template>
                                                     </span>
+                                                    <template if:true={emp.hasRetiredInfo}>
+                                                        <span class="emp-retired-info">{emp.retiredLabel}</span>
+                                                    </template>
                                                     <template if:true={emp.hasExisting}>
                                                         <span class="emp-existing">{emp.existingLabel}</span>
                                                     </template>

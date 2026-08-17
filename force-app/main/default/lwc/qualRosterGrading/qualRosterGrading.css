@@ -550,3 +550,10 @@
 
 .add-details-label { display: block; margin-top: 18px; }
 .add-detail-field { display: block; margin-top: 6px; }
+.emp-count-hint { margin: 0 0 6px; font-size: 11px; color: #8a8a8a; font-style: italic; }
+
+.emp-retired-info { font-size: 11px; color: #6a6a6a; }
+.emp-retired-badge {
+    background: #514f4d; color: #fff; font-size: 9px; font-weight: 700;
+    padding: 1px 6px; border-radius: 10px; letter-spacing: 0.03em; margin-left: 4px;
+}

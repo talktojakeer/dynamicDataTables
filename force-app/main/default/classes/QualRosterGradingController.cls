@@ -389,11 +389,12 @@ public with sharing class QualRosterGradingController {
 
         List<AvailableEmployee> result = new List<AvailableEmployee>();
         for (Account a : [
-            SELECT Id, Name, PersonContactId, Is_Firearms_Instructor__pc
+            SELECT Id, Name, PersonContactId, Is_Firearms_Instructor__pc,
+                   PersonBirthdate, FAQP_Is_Retired_Officer__pc, FAQP_Year_Retired__pc
             FROM   Account
             WHERE  IsPersonAccount = true
             AND    PersonContactId != null
-            ORDER BY Name ASC
+            ORDER BY CreatedDate DESC
             LIMIT  2000
         ]) {
             AvailableEmployee e    = new AvailableEmployee();
@@ -401,6 +402,9 @@ public with sharing class QualRosterGradingController {
             e.contactId            = a.PersonContactId;
             e.name                 = a.Name;
             e.isFirearmsInstructor = a.Is_Firearms_Instructor__pc == true;
+            e.isRetiredOfficer     = a.FAQP_Is_Retired_Officer__pc == true;
+            e.dateOfBirth          = a.PersonBirthdate != null ? String.valueOf(a.PersonBirthdate) : null;
+            e.yearRetired          = a.FAQP_Year_Retired__pc != null ? String.valueOf(a.FAQP_Year_Retired__pc) : null;
             Set<String> existing   = contactToWeaponTypes.get(a.PersonContactId);
             e.existingWeaponTypes  = existing != null
                                      ? new List<String>(existing)
@@ -598,15 +602,17 @@ public with sharing class QualRosterGradingController {
             Active__c    = (isRetired == true) ? 'No' : 'Yes'
         );
 
+        // Retired-officer Person Account fields (all __pc):
+        trySet(acc, 'FAQP_Is_Retired_Officer__pc', isRetired == true);
         trySet(acc, 'MiddleName', String.isNotBlank(middleName) ? (Object) middleName.trim() : null);
         if (String.isNotBlank(dateOfBirth)) {
             try { acc.put('PersonBirthdate', Date.valueOf(dateOfBirth)); } catch (Exception e) {}
         }
         if (String.isNotBlank(yearRetired)) {
-            try { acc.put('Year_Retired__pc', Integer.valueOf(yearRetired)); }
-            catch (Exception e) { trySet(acc, 'Year_Retired__pc', yearRetired); }
+            try { acc.put('FAQP_Year_Retired__pc', Integer.valueOf(yearRetired)); }
+            catch (Exception e) { trySet(acc, 'FAQP_Year_Retired__pc', yearRetired); }
         }
-        trySet(acc, 'FAQP_Retired_Peace_Officer_Type__c', String.isNotBlank(retiredType) ? (Object) retiredType.trim() : null);
+        trySet(acc, 'FAQP_Retired_Peace_Officer_Type__pc', String.isNotBlank(retiredType) ? (Object) retiredType.trim() : null);
 
         try {
             insert acc;
@@ -642,6 +648,9 @@ public with sharing class QualRosterGradingController {
         @AuraEnabled public String       contactId;
         @AuraEnabled public String       name;
         @AuraEnabled public Boolean      isFirearmsInstructor;
+        @AuraEnabled public Boolean      isRetiredOfficer;
+        @AuraEnabled public String       dateOfBirth;
+        @AuraEnabled public String       yearRetired;
         @AuraEnabled public List<String> existingWeaponTypes = new List<String>();
     }
 

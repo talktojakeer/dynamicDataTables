@@ -341,17 +341,40 @@ export default class QualRosterGrading extends LightningElement {
 
     _applyEmployeeFilter() {
         const key = this.employeeSearchKey.trim().toLowerCase();
-        this.availableEmployees = this._availableEmployees
-            .filter(e => !key || (e.name && e.name.toLowerCase().includes(key)))
-            .map(e => {
-                const existing = e.existingWeaponTypes || [];
-                return {
-                    ...e,
-                    rowClass       : e.selected ? 'emp-row emp-row--selected' : 'emp-row',
-                    hasExisting    : existing.length > 0,
-                    existingLabel  : existing.length > 0 ? `On roster: ${existing.join(', ')}` : ''
-                };
-            });
+        const matched = this._availableEmployees
+            .filter(e => !key || (e.name && e.name.toLowerCase().includes(key)));
+
+        // Always keep any selected employees visible, then fill up to 15.
+        const selected = matched.filter(e => e.selected);
+        const rest     = matched.filter(e => !e.selected).slice(0, Math.max(0, 15 - selected.length));
+        const shown    = [...selected, ...rest];
+
+        this._matchedCount = matched.length;
+        this.availableEmployees = shown.map(e => {
+            const existing = e.existingWeaponTypes || [];
+            let retiredLabel = '';
+            if (e.isRetiredOfficer) {
+                const parts = [];
+                if (e.dateOfBirth) parts.push(`DOB: ${e.dateOfBirth}`);
+                if (e.yearRetired) parts.push(`Retired: ${e.yearRetired}`);
+                retiredLabel = parts.join('  \u00b7  ');
+            }
+            return {
+                ...e,
+                rowClass       : e.selected ? 'emp-row emp-row--selected' : 'emp-row',
+                hasExisting    : existing.length > 0,
+                existingLabel  : existing.length > 0 ? `On roster: ${existing.join(', ')}` : '',
+                hasRetiredInfo : retiredLabel !== '',
+                retiredLabel   : retiredLabel
+            };
+        });
+    }
+
+    @track _matchedCount = 0;
+    get employeeCountHint() {
+        return this._matchedCount > 15
+            ? `Showing 15 of ${this._matchedCount} — search to narrow`
+            : '';
     }
 
     handleEmployeeToggle(event) {

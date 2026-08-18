@@ -184,10 +184,10 @@ export default class RecruitClassNewButton extends LightningElement {
             this.showToast('Error', 'This Recruit Class name already exists.', 'error');
             return false;
         }
-        if (!NAME_PATTERN.test(this.recruitClassName)) {
+        /*if (!NAME_PATTERN.test(this.recruitClassName)) {
             this.showToast('Error', 'Name must be in format A2026 (letter + 4-digit year).', 'error');
             return false;
-        }
+        }*/
         return true;
     }
 

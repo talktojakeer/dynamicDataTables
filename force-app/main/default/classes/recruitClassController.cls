@@ -146,7 +146,7 @@ public with sharing class recruitClassController {
     @AuraEnabled(cacheable=true)
     public static List<Account> getRecruitClasses() {
         return [
-            SELECT Id, Name, FAQP_Recruit_model__c
+            SELECT Id, Name, FAQP_Recruit_model__c, FAQP_Group_Type__c
             FROM   Account
             WHERE  RecordType.DeveloperName = :FAQP_ACCOUNT_RT
             ORDER BY CreatedDate DESC

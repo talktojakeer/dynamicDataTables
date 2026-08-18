@@ -1,17 +1,12 @@
 <template>
-     <!--lightning-flow
-            flow-api-name="Recruit_Class_Tab">
-        </lightning-flow-->
-        <lightning-card style="width: 80%">
+    <lightning-card style="width: 80%">
 
         <!-- HEADER -->
         <div class="slds-page-header slds-page-header_joined">
             <div class="slds-page-header__row">
-
                 <div class="slds-page-header__col-title">
-                    <h1 class="slds-text-heading_medium">Recruit Classes</h1>
+                    <h1 class="slds-text-heading_medium">Create Groups</h1>
                 </div>
-
                 <div class="slds-page-header__col-actions">
                     <lightning-button
                         label="New"
@@ -19,63 +14,86 @@
                         icon-name="utility:add"
                         onclick={openModal}>
                     </lightning-button>
-
                     <lightning-button
                         label="Refresh"
                         class="slds-m-left_small"
                         onclick={refreshTable}>
                     </lightning-button>
                 </div>
-
             </div>
         </div>
 
-        <!-- TABLE -->
-        <!--div style="width: 100%; display: block; overflow: hidden;">
-            <lightning-datatable
-                key-field="Id"
-                data={records}
-                columns={columns}>
-            </lightning-datatable>
-        </div-->
-
-        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_fixed-layout" role="grid">
-            <thead>
-                <tr class="slds-line-height_reset">
-                    <th class="slds-text-title_caps" scope="col">
-                        <div class="slds-truncate">Recruit Class</div>
-                    </th>
-                    <th scope="col" style="width: 80px;"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <template for:each={records} for:item="row">
-                    <tr key={row.Id} class="slds-hint-parent">
-                        <td>
-                            <a href={row.recordLink} target="_self">{row.Name}</a>
-                        </td>
-                        <td class="slds-cell-action">
-                            <lightning-button-menu
-                                alternative-text="Actions"
-                                variant="border-filled"
-                                icon-size="x-small"
-                                data-id={row.Id}
-                                data-name={row.Name}
-                                onselect={handleRowAction}>
-                                <lightning-menu-item value="edit" label="Edit"></lightning-menu-item>
-                                <lightning-menu-item value="delete" label="Delete"></lightning-menu-item>
-                            </lightning-button-menu>
-                        </td>
+        <!-- ============ SECTION 1: RECRUIT CLASS ============ -->
+        <div class="section-header" onclick={toggleRecruit}>
+            <lightning-icon icon-name={recruitCaret} size="x-small" class="slds-m-right_x-small"></lightning-icon>
+            <span class="section-title">Recruit Class</span>
+            <span class="section-count">({recruitCount})</span>
+        </div>
+        <template if:true={showRecruit}>
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_fixed-layout" role="grid">
+                <thead>
+                    <tr class="slds-line-height_reset">
+                        <th class="slds-text-title_caps" scope="col"><div class="slds-truncate">Recruit Class</div></th>
+                        <th scope="col" style="width: 80px;"></th>
                     </tr>
-                </template>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <template for:each={recruitClasses} for:item="row">
+                        <tr key={row.Id} class="slds-hint-parent">
+                            <td><a href={row.recordLink} target="_self">{row.Name}</a></td>
+                            <td class="slds-cell-action">
+                                <lightning-button-menu alternative-text="Actions" variant="border-filled"
+                                    icon-size="x-small" data-id={row.Id} data-name={row.Name} onselect={handleRowAction}>
+                                    <lightning-menu-item value="edit" label="Edit"></lightning-menu-item>
+                                    <lightning-menu-item value="delete" label="Delete"></lightning-menu-item>
+                                </lightning-button-menu>
+                            </td>
+                        </tr>
+                    </template>
+                    <template if:false={recruitCount}>
+                        <tr><td colspan="2" class="empty-cell">No recruit classes.</td></tr>
+                    </template>
+                </tbody>
+            </table>
+        </template>
+
+        <!-- ============ SECTION 2: FTU GROUPS ============ -->
+        <div class="section-header slds-m-top_medium" onclick={toggleFtu}>
+            <lightning-icon icon-name={ftuCaret} size="x-small" class="slds-m-right_x-small"></lightning-icon>
+            <span class="section-title">FTU Groups</span>
+            <span class="section-count">({ftuCount})</span>
+        </div>
+        <template if:true={showFtu}>
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_fixed-layout" role="grid">
+                <thead>
+                    <tr class="slds-line-height_reset">
+                        <th class="slds-text-title_caps" scope="col"><div class="slds-truncate">FTU Group</div></th>
+                        <th scope="col" style="width: 80px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={ftuGroups} for:item="row">
+                        <tr key={row.Id} class="slds-hint-parent">
+                            <td><a href={row.recordLink} target="_self">{row.Name}</a></td>
+                            <td class="slds-cell-action">
+                                <lightning-button-menu alternative-text="Actions" variant="border-filled"
+                                    icon-size="x-small" data-id={row.Id} data-name={row.Name} onselect={handleRowAction}>
+                                    <lightning-menu-item value="edit" label="Edit"></lightning-menu-item>
+                                    <lightning-menu-item value="delete" label="Delete"></lightning-menu-item>
+                                </lightning-button-menu>
+                            </td>
+                        </tr>
+                    </template>
+                    <template if:false={ftuCount}>
+                        <tr><td colspan="2" class="empty-cell">No FTU groups.</td></tr>
+                    </template>
+                </tbody>
+            </table>
+        </template>
 
         <!-- MODAL -->
         <template if:true={showModal}>
-            <c-recruit-class-new-button 
-                    onclose={closeModal}
-                    onrefresh={refreshTable}>
+            <c-recruit-class-new-button onclose={closeModal} onrefresh={refreshTable}>
             </c-recruit-class-new-button>
         </template>
 

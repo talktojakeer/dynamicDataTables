@@ -7,3 +7,12 @@ table {
     width: 100%;
     table-layout: fixed;
 }
+.section-header {
+    display: flex; align-items: center; cursor: pointer;
+    padding: 10px 12px; background: #f3f3f3;
+    border-radius: 4px; user-select: none; margin-bottom: 4px;
+}
+.section-header:hover { background: #ececec; }
+.section-title { font-size: 14px; font-weight: 700; color: #032d60; }
+.section-count { font-size: 13px; color: #706e6b; margin-left: 6px; }
+.empty-cell    { color: #969696; font-style: italic; padding: 12px; }

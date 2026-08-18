@@ -17,8 +17,16 @@ export default class RecruitClassTab extends NavigationMixin(LightningElement) {
         });
     }*/
    @track showModal = false;
+    @track showRecruit = true;   // collapse state for Recruit Class section
+    @track showFtu     = true;   // collapse state for FTU Groups section
     wiredResult;
-    records = [];
+    recruitClasses = [];
+    ftuGroups      = [];
+
+    get recruitCount() { return this.recruitClasses.length; }
+    get ftuCount()     { return this.ftuGroups.length; }
+    get recruitCaret() { return this.showRecruit ? 'utility:chevrondown' : 'utility:chevronright'; }
+    get ftuCaret()     { return this.showFtu ? 'utility:chevrondown' : 'utility:chevronright'; }
 
     columns = [
         { label: 'Recruit Class', 
@@ -46,15 +54,32 @@ export default class RecruitClassTab extends NavigationMixin(LightningElement) {
     }    
 
     prepareRecords(data) {
-        const baseUrl = window.location.origin; 
+        const baseUrl = window.location.origin;
 
-        this.records = data.map(row => {
+        const all = data.map(row => {
             return {
                 ...row,
-                recordLink: `${baseUrl}/lightning/r/Account/${row.Id}/view`
+                recordLink: `${baseUrl}/lightning/r/Account/${row.Id}/view`,
+                groupType : this.resolveGroupType(row)
             };
-        });      
+        });
+
+        this.recruitClasses = all.filter(r => r.groupType === 'Recruit Class');
+        this.ftuGroups      = all.filter(r => r.groupType === 'FTU Group');
     }
+
+    // Prefer the FAQP_Group_Type__c picklist. Fall back to the name rule for
+    // records created before the field existed: a name containing a 20xx year
+    // (e.g. "A-2026") is a Recruit Class; anything else is an FTU Group.
+    resolveGroupType(row) {
+        if (row.FAQP_Group_Type__c) {
+            return row.FAQP_Group_Type__c;
+        }
+        return /20\d{2}/.test(row.Name || '') ? 'Recruit Class' : 'FTU Group';
+    }
+
+    toggleRecruit() { this.showRecruit = !this.showRecruit; }
+    toggleFtu()     { this.showFtu     = !this.showFtu; }
 
     handleRowAction(event){
         const actionValue = event.detail.value;

@@ -15,9 +15,8 @@
             </apex:pageBlockSection>
 
             <apex:pageBlockButtons location="bottom">
-                <apex:commandButton value="Backto List"
-                                    action="{!cancel}"
-                                    rendered="{!NOT(ISBLANK($CurrentPage.parameters.retURL)) == false}" />
+                <apex:commandButton value="Backto List" action="{!cancel}" rendered="
+                                    {!NOT(ISBLANK($CurrentPage.parameters.retURL)) == false}" />
 
                 <!-- New button that goes back to the record when coming from detail page -->
 

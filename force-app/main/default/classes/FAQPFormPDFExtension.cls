@@ -1,115 +1,84 @@
 public class FAQPFormPDFExtension {
 
     public ApexPages.StandardSetController setCon { get; set; }
-
-    public FAQPFormPDFExtension(ApexPages.StandardSetController controller) {
+   
+    public FAQPFormPDFExtension (ApexPages.StandardSetController controller) {
         setCon = controller;
-        // Needed for the Classic getSelected() fallback path
-        setCon.addFields(new List<String>{ 'Name', 'Test_Date__c' });
+       
+          setCon.addFields(new List<String>{ 'Name' });
+   //       setCon.addFields(new List<String>{ 'Firearms_Instructor__c' });
+   //       setCon.addFields(new List<String>{ 'Light_Condition__c' });
+   //       setCon.addFields(new List<String>{ 'Location__c' });
+   //       setCon.addFields(new List<String>{ 'Test_Date__c' });
+   //       setCon.addFields(new List<String>{ 'Qualification_Attempt__c' });
+      //    setCon.addFields(new List<String>{ 'RecordTypeId' });
+       
+        // Add fields needed (minimal for attachment; the single PDF page queries its own fields)
+       // setCon.addFields(new List<String>{ 'FIR_Qualification_FormNumber' });
     }
-
-    // Action to generate and attach a PDF to each selected FIR Qualification Form.
+   
+    // Action to generate and attach PDFs (called from VF page)
     public PageReference generateAndAttachPDFs() {
-
-        // 1) Resolve which forms to process.
-        // Primary (Lightning-safe): comma-separated Ids from the ?ids= URL param.
-        // Fallback (Classic list button): StandardSetController getSelected(),
-        // which does NOT work from a Lightning list view.
-        List<FIR_Qualification_Form__c> selectedForms;
-        String idsParam = ApexPages.currentPage().getParameters().get('ids');
-
-        if (String.isNotBlank(idsParam)) {
-            Set<Id> ids = new Set<Id>();
-            for (String s : idsParam.split(',')) {
-                if (String.isNotBlank(s)) {
-                    try { ids.add((Id) s.trim()); } catch (Exception ignore) {}
-                }
-            }
-            selectedForms = [
-                SELECT Id, Name, Test_Date__c
-                FROM   FIR_Qualification_Form__c
-                WHERE  Id IN :ids
-            ];
-        } else {
-            selectedForms = (List<FIR_Qualification_Form__c>) setCon.getSelected();
-        }
-
-        if (selectedForms == null || selectedForms.isEmpty()) {
-            ApexPages.addMessage(new ApexPages.Message(
-                ApexPages.Severity.ERROR,
-                'No Fire Arms Qualification Forms selected. Please select at least one Fire Arms Qualification Form.'));
+        List<FIR_Qualification_Form__c> selectedForms = (List<FIR_Qualification_Form__c>) setCon.getSelected();
+       
+        if (selectedForms.isEmpty()) {
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No Fire Arms Qualification Forms selected. Please select at least one Fire Arms Qualification Form.'));
             return null;
         }
-
-        // 2) Generate a PDF per form. Track the form Id alongside each
-        // ContentVersion so a failed PDF (which hits 'continue') can't shift
-        // the file-to-record alignment.
+       
+        // List to hold new Files
         List<ContentVersion> filesToInsert = new List<ContentVersion>();
-        List<Id>             fileFormIds   = new List<Id>();
-
+       
         for (FIR_Qualification_Form__c c : selectedForms) {
+            // Render single PDF for this FIR_Qualification_Form
             PageReference pdfPage = Page.FAQPFormPage;
             pdfPage.getParameters().put('id', c.Id);
-
+           
             Blob pdfBlob;
             try {
-                pdfBlob = !Test.isRunningTest()
-                    ? pdfPage.getContentAsPDF()
-                    : Blob.valueOf('Test PDF');
+                pdfBlob = !Test.isRunningTest() ? pdfPage.getContentAsPDF() : Blob.valueOf('Test PDF'); // Handle test context
             } catch (Exception e) {
-                ApexPages.addMessage(new ApexPages.Message(
-                    ApexPages.Severity.ERROR,
-                    'Error generating PDF for FireArms Qualification Form ' + c.Name + ': ' + e.getMessage()));
-                continue;
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error generating PDF for Fire Arms Qualification Forms' + c.Test_Date__c+ ': ' + e.getMessage()));
+                continue; // Skip this one, proceed to next
             }
-
+           
+            // Create ContentVersion (the File)
             ContentVersion cv = new ContentVersion();
-            cv.Title          = 'FIR_Qualification_Form Report - ' + c.Name;
-            cv.PathOnClient   = 'FIR_Qualification_Form_Report_' + c.Name + '.pdf';
-            cv.VersionData    = pdfBlob;
-            cv.IsMajorVersion = true;
+            cv.Title = 'FIR_Qualification_Form Report - ' + c.Name;
+            cv.PathOnClient = 'FIR_Qualification_Form_Report_' + c.Name + '.pdf'; // Name as seen in Files
+            cv.VersionData = pdfBlob;
+            cv.IsMajorVersion = true; // Makes it visible immediately
             filesToInsert.add(cv);
-            fileFormIds.add(c.Id);
         }
-
-        if (filesToInsert.isEmpty()) {
-            return null; // errors already added above
-        }
-
-        // 3) Insert files and link each to its form.
-        try {
-            insert filesToInsert;
-
-            // One bulk query instead of a SOQL per iteration
-            Map<Id, Id> cvToDoc = new Map<Id, Id>();
-            for (ContentVersion cvx : [
-                SELECT Id, ContentDocumentId
-                FROM   ContentVersion
-                WHERE  Id IN :filesToInsert
-            ]) {
-                cvToDoc.put(cvx.Id, cvx.ContentDocumentId);
+       
+        if (!filesToInsert.isEmpty()) {
+            try {
+                insert filesToInsert;
+               
+                // Now link each File to its FIR_Qualification_Form via ContentDocumentLink
+                List<ContentDocumentLink> linksToInsert = new List<ContentDocumentLink>();
+                for (Integer i = 0; i < selectedForms.size(); i++) {
+                    FIR_Qualification_Form__c c = selectedForms[i];
+                    ContentVersion cv = filesToInsert[i]; // Matches order
+                   
+                    ContentDocumentLink cdl = new ContentDocumentLink();
+                    cdl.LinkedEntityId = c.Id; // Attach to this FIR_Qualification_Form
+                    cdl.ContentDocumentId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id LIMIT 1].ContentDocumentId;
+                    cdl.ShareType = 'V'; // Viewer permission
+                    cdl.Visibility = 'AllUsers'; // Visible to all (adjust if needed, e.g., 'InternalUsers')
+                    linksToInsert.add(cdl);
+                }
+               
+                insert linksToInsert;
+               
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'PDFs generated and attached successfully to ' + selectedForms.size() + ' FIR_Qualification_Form(s).'));
+            } catch (Exception e) {
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error attaching PDFs: ' + e.getMessage()));
             }
-
-            List<ContentDocumentLink> linksToInsert = new List<ContentDocumentLink>();
-            for (Integer i = 0; i < filesToInsert.size(); i++) {
-                ContentDocumentLink cdl = new ContentDocumentLink();
-                cdl.LinkedEntityId    = fileFormIds[i];               // correct form, even after failures
-                cdl.ContentDocumentId = cvToDoc.get(filesToInsert[i].Id);
-                cdl.ShareType         = 'V';
-                cdl.Visibility        = 'AllUsers';
-                linksToInsert.add(cdl);
-            }
-            insert linksToInsert;
-
-            ApexPages.addMessage(new ApexPages.Message(
-                ApexPages.Severity.CONFIRM,
-                'PDFs generated and attached successfully to ' + filesToInsert.size() + ' FIR Qualification Form(s).'));
-
-        } catch (Exception e) {
-            ApexPages.addMessage(new ApexPages.Message(
-                ApexPages.Severity.ERROR, 'Error attaching PDFs: ' + e.getMessage()));
         }
-
-        return null;
+       
+        return null; // Stay on page to show messages
     }
+   
+
 }

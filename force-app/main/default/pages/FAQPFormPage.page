@@ -59,7 +59,7 @@
                         <br/>
                         <strong>Active Employee</strong>
                         <br/>
-                        <!--strong>TINS Numner: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.TINS__c}"/-->
+                        <strong>TINS Numner: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.TINS_NUMBER__c}"/>
                         <br/>
                         <strong>Division: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Division__c}"/>
                         <br/>

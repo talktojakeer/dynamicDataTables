@@ -355,9 +355,9 @@ export default class QualRosterGrading extends LightningElement {
             let retiredLabel = '';
             if (e.isRetiredOfficer) {
                 const parts = [];
-                if (e.dateOfBirth) parts.push(`DOB: ${e.dateOfBirth}`);
-                if (e.yearRetired) parts.push(`Retired: ${e.yearRetired}`);
-                retiredLabel = parts.join('  \u00b7  ');
+                if (e.dateOfBirth) parts.push(`DOB: ${this._fmtDate(e.dateOfBirth)}`);
+                if (e.yearRetired) parts.push(`Retirement: ${this._fmtDate(e.yearRetired)}`);
+                retiredLabel = parts.join('   ');
             }
             return {
                 ...e,
@@ -375,6 +375,13 @@ export default class QualRosterGrading extends LightningElement {
         return this._matchedCount > 15
             ? `Showing 15 of ${this._matchedCount} — search to narrow`
             : '';
+    }
+
+    // Format an ISO date string (yyyy-MM-dd...) as MM/DD/YYYY for display.
+    _fmtDate(iso) {
+        if (!iso) return '';
+        const p = String(iso).substring(0, 10).split('-');
+        return p.length === 3 ? `${p[1]}/${p[2]}/${p[0]}` : iso;
     }
 
     handleEmployeeToggle(event) {

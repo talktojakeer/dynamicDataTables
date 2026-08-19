@@ -609,8 +609,9 @@ public with sharing class QualRosterGradingController {
             try { acc.put('PersonBirthdate', Date.valueOf(dateOfBirth)); } catch (Exception e) {}
         }
         if (String.isNotBlank(yearRetired)) {
-            try { acc.put('FAQP_Year_Retired__pc', Integer.valueOf(yearRetired)); }
-            catch (Exception e) { trySet(acc, 'FAQP_Year_Retired__pc', yearRetired); }
+            // FAQP_Year_Retired__pc is a Date field; expect ISO yyyy-MM-dd from the client.
+            try { acc.put('FAQP_Year_Retired__pc', Date.valueOf(yearRetired)); }
+            catch (Exception e) {}
         }
         trySet(acc, 'FAQP_Retired_Peace_Officer_Type__pc', String.isNotBlank(retiredType) ? (Object) retiredType.trim() : null);
 

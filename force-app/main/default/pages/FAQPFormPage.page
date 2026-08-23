@@ -1,132 +1,169 @@
 <apex:page standardController="FIR_Qualification_Form__c"
            extensions="FIRQualificationFormControllerExt"
-           sidebar="false"
-           showHeader="false"
-           renderAs="pdf"
-           applyBodyTag="false"
-           applyHtmlTag="false">
-    <style type="text/css">
-        @page {
-        size: A4 portrait;   /* change to landacpe if you need more room */
-        margin: 1.3cm;
-        }
-        
-        body, td, th {
-        font-family: Arial, sans-serif;
-        font-size: 9px;
-        line-height: 1.2;
-        }
-        
-    </style>
-    
-    <body>
-        <!-- Header with dynamic Case Number -->
-        <h2 style="text-align: center;">Texas Department of Public Safety</h2>
-        <h2 style="text-align: center;">Firearm Qualifcation Report</h2>
-        
-        <!--Two-column layout -->
-        <table style="width:100%; border-collapse;">            
-            <tr>
-              
-               <td style="width:50%; vertical-align: top; padding-right: 20px;">
-                <apex:outputPanel >
-                    <br/>
-                    <strong>Full Legal Name: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.Full_Name__c}"/>
-                    <br/>
-                    <strong>Test Date: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.Test_Date__c}"/>
-                    <br/>
-                    <strong>Light Condition: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.Light_Condition__c}"/>
-                    <strong>Is Firearms Instructor: </strong>
-					<apex:outputText value="{!IF(FIR_Qualification_Form__c.ContactName__r.Is_Firearms_Instructor__c, 'Yes', 'No')}"/>
-                </apex:outputPanel>
+           sidebar="false" showHeader="false" renderAs="{!$CurrentPage.parameters.html == '1' ? '' : 'pdf'}"
+           applyBodyTag="false" applyHtmlTag="false">
+<head>
+<style type="text/css">
+    @page { size: A4 portrait; margin: 1.0cm; }
+    body, td, th { font-family: Arial, Helvetica, sans-serif; font-size: 8px; line-height: 1.15; color:#000; }
+    h1 { font-size: 13px; text-align:center; margin:0; }
+    h2 { font-size: 11px; text-align:center; margin:0 0 6px; }
+    table.grid { width:100%; border-collapse:collapse; }
+    table.grid th, table.grid td { border:1px solid #000; padding:2px 3px; vertical-align:top; }
+    .sectionbox { border:1px solid #000; padding:3px 5px; }
+    .sectitle { font-weight:bold; text-align:center; background:#e5e5e5; border:1px solid #000; padding:1px; }
+    .cb { display:inline-block; width:7px; height:7px; border:1px solid #000; text-align:center; line-height:7px; font-size:7px; margin-right:2px; }
+    .lbl { font-weight:bold; }
+    .nb { border:none; }
+    .center { text-align:center; }
+    .legend { font-size:6.5px; }
+    .sigcell { height:26px; border-bottom:1px solid #000; }
+</style>
+</head>
+<body>
+
+    <h1>TEXAS DEPARTMENT OF PUBLIC SAFETY</h1>
+    <h2>FIREARMS QUALIFICATION FORM</h2>
+
+    <!-- Full legal name -->
+    <div style="margin-bottom:3px;">
+        <span class="lbl">Full Legal Name: </span>
+        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.Full_Name__c}"/>
+        <span style="color:#555;"> (Last Name, First Name, Middle Name)</span>
+    </div>
+
+    <!-- Active Employee | Retired Peace Officer -->
+    <table style="width:100%; border-collapse:collapse; margin-bottom:4px;">
+        <tr>
+            <td style="width:50%; vertical-align:top; padding-right:4px;" class="nb">
+                <div class="sectitle">Active Employee</div>
+                <div class="sectionbox">
+                    <div><span class="lbl">Employee TINS #:</span>
+                        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.TINS_NUMBER__c}"/></div>
+                    <div><span class="lbl">Division:</span>
+                        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Division__c}"/>
+                        &nbsp;&nbsp;<span class="lbl">Region:</span>
+                        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Region__c}"/></div>
+                    <div><span class="lbl">Firearms Instructor:</span>
+                        <span class="cb">{!IF(FIR_Qualification_Form__c.ContactName__r.Is_Firearms_Instructor__c,'X','')}</span> Yes
+                    </div>
+                </div>
             </td>
-                <!-- Right Column -->
-                <td style="width:50%; vertical-align: top; padding-left: 20px;">
-                    <apex:outputPanel rendered="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Retired_Peace_Officer__c}">
-                        <br/>
-                        <strong>Retired Peace Officer</strong>
-                        <br/>
-                        <strong>Year Retired: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Year_Retired__c}"/>
-                        <br/>
-                        <strong>Date of Birth: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.BirthDate}"/>
-                        <br/>
-                        <strong>Peace Officer Type: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.Retired_Peace_Officer_Type__c}"/>
-                        <br/>
-                        
-                    </apex:outputPanel>
-                    
-                    <apex:outputPanel rendered=" {!NOT(FIR_Qualification_Form__c.ContactName__r.FAQP_Retired_Peace_Officer__c)}">
-                        <br/>
-                        <strong>Active Employee</strong>
-                        <br/>
-                        <strong>TINS Numner: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.TINS_NUMBER__c}"/>
-                        <br/>
-                        <strong>Division: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Division__c}"/>
-                        <br/>
-                        <strong>Region: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Region__c}"/>
-                    </apex:outputPanel>
-                    
-                    
-                </td>
+            <td style="width:50%; vertical-align:top; padding-left:4px;" class="nb">
+                <div class="sectitle">Retired Peace Officer</div>
+                <div class="sectionbox">
+                    <div>
+                        <span class="lbl">Year Retired:</span>
+                        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Year_Retired__c}"/>
+                        &nbsp;&nbsp;<span class="lbl">DOB:</span>
+                        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.BirthDate}"/>
+                    </div>
+                    <apex:variable var="rpt" value="{!FIR_Qualification_Form__c.ContactName__r.Retired_Peace_Officer_Type__c}"/>
+                    <div>
+                        <span class="cb">{!IF(rpt=='Retired Peace Officer/Non-DPS','X','')}</span> Retired Peace Officer/Non-DPS
+                        &nbsp;<span class="cb">{!IF(rpt=='Special Ranger','X','')}</span> Special Ranger
+                    </div>
+                    <div>
+                        <span class="cb">{!IF(rpt=='Retired DPS Trooper','X','')}</span> Retired DPS Trooper
+                        &nbsp;<span class="cb">{!IF(rpt=='Special Texas Ranger','X','')}</span> Special Texas Ranger
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Light condition -->
+    <apex:variable var="lc" value="{!FIR_Qualification_Form__c.Light_Condition__c}"/>
+    <div style="margin-bottom:4px;">
+        <span class="lbl">Light Condition:</span>
+        <span class="cb">{!IF(CONTAINS(lc,'Day'),'X','')}</span> Daytime/Normal Lighting
+        &nbsp;&nbsp;<span class="cb">{!IF(CONTAINS(lc,'Night'),'X','')}</span> Nighttime/reduced light
+    </div>
+
+    <!-- Weapon grid: fixed official rows -->
+    <table class="grid">
+        <thead>
+            <tr style="background:#e5e5e5;">
+                <th style="width:11%;">Weapon</th>
+                <th style="width:17%;">Sight Type</th>
+                <th style="width:18%;">Manufacturer &amp; Model</th>
+                <th style="width:9%;">Weapon Code</th>
+                <th style="width:13%;">Qualified</th>
+                <th style="width:14%;">Qualified at 90%</th>
+                <th style="width:11%;">Date</th>
             </tr>
-        </table>
-        
-        <br/>
-        <br/>
-        
-        <apex:pageBlock title="Weapons Test">
-            <table class="detailTable" cellpadding="9" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th style="width:10%;">Weapon</th>
-                        <th style="width:14%;">Sight</th>
-                        <th style="width:14%;">Manufacturer</th>
-                        <th style="width:10%;">Model</th>
-                        <th style="width:12%;">Weapon Code</th>
-                        <th style="width:10%;">Qualified</th>
-                        <th style="width:12%;">Qualified at 90%</th>
-                        <th style="width:12%;">Qualification Attempt</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <apex:repeat value="{!FIR_Qualification_Form__c.Weapon_Qualifications__r}" var="detail">
-                        <tr>
-                            <td>{!detail.Weapon_Type__c}</td>
-                            <td>{!detail.Sight_Type__c}</td>
-                            <td>{!detail.Manufacturer__c}</td>
-                            <td>{!detail.Model__c}</td>
-                            <td>{!detail.Weapon_Code__c}</td>
-                            <td>{!detail.Qualified__c}</td>
-                            <td>{!detail.Qualification_Attempt__c}</td>
-                            <td>{!detail.Qualified_at_90__c}</td>
-                        </tr>
-                    </apex:repeat>
-                </tbody>
-            </table>
-        </apex:pageBlock>
-        
-        <br/>
-        <table class="detailTable" cellpadding="9" cellspacing="0">
-            <apex:outputPanel >
-                <br/>
-                <strong>Firearms Instructor Name: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.Firearms_Instrutor__r.Name}"/>
-            </apex:outputPanel>
-            
-            <apex:outputPanel rendered="{NOT!FIR_Qualification_Form__c.Witness_Name__c}">
-                <br/>
-                <strong>Witness Name: </strong> <apex:outputField value="{!FIR_Qualification_Form__c.Witness_Name__c}"/>
-            </apex:outputPanel>
-            
-            <br/> <br/>
-        </table>
-        <!-- Footer with generation timestamp -->
-        <br/>
-        <div class="footer">
-            
-            <br/>
-            <p>Report Genrated on: {!currentCentralDateTime}</p>
-            <br/>
-            
-        </div>
-    </body>
+        </thead>
+        <tbody>
+            <apex:repeat value="{!WeaponByType}" var="wt">
+                <apex:variable var="d" value="{!WeaponByType[wt]}"/>
+                <tr>
+                    <td class="lbl">{!wt}</td>
+                    <td>
+                        <span class="cb">{!IF(d.Sight_Type__c=='Iron Sight','X','')}</span> Iron Sight<br/>
+                        <span class="cb">{!IF(d.Sight_Type__c=='Optic','X','')}</span> Optic<br/>
+                        <span class="cb">{!IF(OR(d.Sight_Type__c=='Magnified Optic',d.Sight_Type__c=='Scope'),'X','')}</span>
+                        {!IF(wt=='Precision Rifle','Scope**','Magnified Optic*')}
+                    </td>
+                    <td>{!d.Manufacturer__c} {!d.Model__c}</td>
+                    <td class="center">{!d.Weapon_Code__c}</td>
+                    <td class="center">
+                        <span class="cb">{!IF(d.Qualified__c=='Yes','X','')}</span>Yes
+                        &nbsp;<span class="cb">{!IF(d.Qualified__c=='No','X','')}</span>No
+                    </td>
+                    <td class="center">
+                        <span class="cb">{!IF(d.Qualified_at_90__c=='Yes','X','')}</span>Yes
+                        &nbsp;<span class="cb">{!IF(d.Qualified_at_90__c=='No','X','')}</span>No
+                    </td>
+                    <td class="center">
+                        <apex:outputText value="{0,date,MM/dd/yyyy}">
+                            <apex:param value="{!d.Attempt_Date__c}"/>
+                        </apex:outputText>
+                    </td>
+                </tr>
+            </apex:repeat>
+        </tbody>
+    </table>
+
+    <!-- Weapon code legend -->
+    <div class="legend" style="margin:3px 0 6px;">
+        <span class="lbl">Weapon Code:</span>
+        DI &ndash; Department Issue &nbsp;&nbsp; IAT &ndash; In Addition To &nbsp;&nbsp;
+        ILO &ndash; In Lieu Of &nbsp;&nbsp; *Magnified Optic: 5x Power or Less &nbsp;&nbsp;
+        **Scope: Greater than 5x Power
+    </div>
+
+    <!-- Certification + signatures -->
+    <div style="margin-top:4px;">
+        I certify that the above listed person achieved the minimum qualification score with their weapon(s).
+    </div>
+    <table style="width:100%; border-collapse:collapse; margin-top:6px;">
+        <tr>
+            <td style="width:50%; padding-right:8px;" class="nb">
+                <div class="lbl">Printed Name of Certified Firearms Instructor</div>
+                <div class="sigcell"><apex:outputField value="{!FIR_Qualification_Form__c.Firearms_Instrutor__r.Name}"/></div>
+                <div class="lbl" style="margin-top:4px;">Signature of Certified Firearms Instructor</div>
+                <div class="sigcell"><apex:outputText escape="false" value="{!FIR_Qualification_Form__c.Firearms_Instructor_Signature__c}"/></div>
+                <div class="lbl" style="margin-top:4px;">Date</div>
+                <div class="sigcell">
+                    <apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!FIR_Qualification_Form__c.Test_Date__c}"/></apex:outputText>
+                </div>
+            </td>
+            <td style="width:50%; padding-left:8px;" class="nb">
+                <div class="lbl">Printed Name of Witness (for Firearms Instructors Only)</div>
+                <div class="sigcell"><apex:outputField value="{!FIR_Qualification_Form__c.Witness_Name__c}"/></div>
+                <div class="lbl" style="margin-top:4px;">Signature of Witness (for Firearms Instructors Only)</div>
+                <div class="sigcell"><apex:outputText escape="false" value="{!FIR_Qualification_Form__c.Witness_Signature__c}"/></div>
+                <div class="lbl" style="margin-top:4px;">Date</div>
+                <div class="sigcell">
+                    <apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!FIR_Qualification_Form__c.Witness_Signature_Date__c}"/></apex:outputText>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div style="margin-top:8px; font-size:7px; color:#555;">
+        Report Generated on: {!currentCentralDateTime}
+    </div>
+
+</body>
 </apex:page>

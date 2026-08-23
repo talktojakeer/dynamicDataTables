@@ -84,7 +84,9 @@ export default class RecruitClassNewButton extends LightningElement {
 
     // --- Duplicate check on name change --------------------------------------
     async handleNameChange(event) {
-        this.recruitClassName = event.target.value.toUpperCase();
+        // Keep the name as typed (FTU names may be mixed case). The recruit-class
+        // format/uppercase is applied only when it matches the letter+4-digit rule.
+        this.recruitClassName = event.target.value;
         const formatted = this.formatClassName(this.recruitClassName);
         try {
             const isDuplicate = await checkRecruitClassDuplicate({ recruitClassName: formatted });
@@ -133,22 +135,33 @@ export default class RecruitClassNewButton extends LightningElement {
 
     // --- Create Recruit Class Account ----------------------------------------
     handleCreateRecruitClass() {
+        const isRecruit = this.isRecruitClassName(this.recruitClassName);
         const fields = {
             [CLASS_NAME.fieldApiName]    : this.formatClassName(this.recruitClassName),
-            [RECORD_TYPE_ID.fieldApiName]: this.recordTypeId
+            [RECORD_TYPE_ID.fieldApiName]: this.recordTypeId,
+            FAQP_Group_Type__c           : isRecruit ? 'Recruit Class' : 'FTU Group'
         };
         return createRecord({ apiName: RECRUIT_CLASS.objectApiName, fields })
             .then(record => { this.newAccountId = record.id; })
             .catch(error => { throw error; });
     }
 
+    // Recruit Class = exactly ONE letter followed by FOUR digits (e.g. A2026).
+    // Anything else is an FTU Group and is kept exactly as the user typed it.
+    isRecruitClassName(value) {
+        const clean = (value || '').replace(/[^a-zA-Z0-9]/g, '');
+        return /^[A-Za-z]\d{4}$/.test(clean);
+    }
+
     formatClassName(value) {
         if (!value) return value;
-        const clean = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-        if (clean.length >= 5) {
+        // Only reformat when it matches the recruit-class pattern (letter + 4 digits).
+        if (this.isRecruitClassName(value)) {
+            const clean = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
             return clean.substring(0, 1) + '-' + clean.substring(1, 5);
         }
-        return clean;
+        // FTU group: keep the name as entered (no length cap, no forced format).
+        return value.trim();
     }
 
     // --- Submit --------------------------------------------------------------

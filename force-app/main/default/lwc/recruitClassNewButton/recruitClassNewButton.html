@@ -12,17 +12,17 @@
                         onclick={handleClose}>
                         <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
                     </button>
-                    <h2 class="slds-text-heading_medium">Create Recruit Class</h2>
+                    <h2 class="slds-text-heading_medium">Create Groups</h2>
                 </header>
 
                 <lightning-card title="">
 
                     <template if:true={showScreenOne}>
                         <lightning-input
-                            label="Recruit Class Name"
+                            label="Recruit Class / FTU Group Name"
                             type="text"
                             value={recruitClassName}
-                            maxlength="5"
+                            maxlength="80"
                             onchange={handleNameChange}
                             style="width: 50%; padding-left: 25px;"
                             required>
@@ -149,7 +149,7 @@
                                     </lightning-button>
                                     <lightning-button
                                         variant="brand"
-                                        label="Submit Recruit Class"
+                                        label="Submit"
                                         onclick={handleSubmit}
                                         class="slds-m-left_x-small">
                                     </lightning-button>

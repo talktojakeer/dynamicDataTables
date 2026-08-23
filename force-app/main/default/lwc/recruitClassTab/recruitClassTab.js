@@ -69,13 +69,15 @@ export default class RecruitClassTab extends NavigationMixin(LightningElement) {
     }
 
     // Prefer the FAQP_Group_Type__c picklist. Fall back to the name rule for
-    // records created before the field existed: a name containing a 20xx year
-    // (e.g. "A-2026") is a Recruit Class; anything else is an FTU Group.
+    // records created before the field existed: a name that is exactly ONE
+    // letter followed by FOUR digits (e.g. "A2026" / "A-2026") is a Recruit
+    // Class; anything else is an FTU Group.
     resolveGroupType(row) {
         if (row.FAQP_Group_Type__c) {
             return row.FAQP_Group_Type__c;
         }
-        return /20\d{2}/.test(row.Name || '') ? 'Recruit Class' : 'FTU Group';
+        const clean = (row.Name || '').replace(/[^a-zA-Z0-9]/g, '');
+        return /^[A-Za-z]\d{4}$/.test(clean) ? 'Recruit Class' : 'FTU Group';
     }
 
     toggleRecruit() { this.showRecruit = !this.showRecruit; }

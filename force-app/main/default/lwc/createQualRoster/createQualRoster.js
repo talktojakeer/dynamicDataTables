@@ -55,6 +55,8 @@ export default class CreateQualRoster extends LightningElement {
     @track lookupSearchKey    = '';
     @track showLookupDropdown = false;
     @track isLookupSearching  = false;
+    // Wait this long after the user stops typing before calling Apex (ms).
+    searchDebounceMs = 1000;
 
     @track _rcResults  = [];
     @track _conResults = [];
@@ -159,18 +161,25 @@ export default class CreateQualRoster extends LightningElement {
     handleInstructorSearch(event) {
         this.instructorSearchKey = event.target.value;
         clearTimeout(this.instructorSearchTimeout);
-        if (!this.instructorSearchKey || this.instructorSearchKey.trim().length < 1) {
+        const key = (this.instructorSearchKey || '').trim();
+        if (key.length < 1) {
+            this.isInstructorSearching  = false;
             this.showInstructorDropdown = false;
             this.instructorResults      = [];
             return;
         }
-        this.isInstructorSearching  = true;
         this.showInstructorDropdown = true;
+        const searchFor = key;
         this.instructorSearchTimeout = setTimeout(() => {
-            searchUsers({ searchKey: this.instructorSearchKey })
-                .then(result => { this.instructorResults = result || []; this.isInstructorSearching = false; })
+            this.isInstructorSearching = true;
+            searchUsers({ searchKey: searchFor })
+                .then(result => {
+                    this.isInstructorSearching = false;
+                    if ((this.instructorSearchKey || '').trim() !== searchFor) return;
+                    this.instructorResults = result || [];
+                })
                 .catch(error => { this.isInstructorSearching = false; this.showErrorToast('Instructor search failed: ' + this.reduceErrors(error)); });
-        }, 300);
+        }, this.searchDebounceMs);
     }
 
     handleInstructorFocus() {
@@ -301,24 +310,37 @@ export default class CreateQualRoster extends LightningElement {
     handleLookupSearch(event) {
         this.lookupSearchKey = event.target.value;
         clearTimeout(this.lookupSearchTimeout);
-        if (!this.lookupSearchKey || this.lookupSearchKey.trim().length < 1) {
-            this.showLookupDropdown = false; this._rcRaw = []; this._conRaw = []; this._rcResults = []; this._conResults = [];
+
+        const key = (this.lookupSearchKey || '').trim();
+        if (key.length < 1) {
+            // Cleared/empty: stop the spinner and reset results (fixes the
+            // spinner that kept spinning after erasing the search text).
+            this.isLookupSearching = false;
+            this.showLookupDropdown = false;
+            this._rcRaw = []; this._conRaw = []; this._rcResults = []; this._conResults = [];
             return;
         }
-        this.isLookupSearching = true; this.showLookupDropdown = true;
+
+        this.showLookupDropdown = true;
+        const searchFor = key; // capture for this debounce cycle (stale-guard)
+
+        // Wait until the user pauses typing before calling Apex.
         this.lookupSearchTimeout = setTimeout(() => {
-            searchRecruitClassAndContacts({ searchKey: this.lookupSearchKey })
+            this.isLookupSearching = true; // spinner only while the server call runs
+            searchRecruitClassAndContacts({ searchKey: searchFor })
                 .then(result => {
+                    this.isLookupSearching = false;
+                    // Ignore a stale response if the box changed since this fired.
+                    if ((this.lookupSearchKey || '').trim() !== searchFor) return;
                     this._rcRaw = result.recruitClasses || [];
                     const seen  = new Set();
                     this._conRaw = (result.contacts || [])
-                        .filter(c => { const key = (c.Name || '').toLowerCase().trim(); if (seen.has(key)) return false; seen.add(key); return true; })
+                        .filter(c => { const k = (c.Name || '').toLowerCase().trim(); if (seen.has(k)) return false; seen.add(k); return true; })
                         .map(c => ({ Id: c.Id, Name: c.Name, tins: c.TINS, personContactId: c.PersonContactId }));
-                    this.isLookupSearching = false;
                     this._refreshDropdownState();
                 })
                 .catch(error => { this.isLookupSearching = false; this.showErrorToast('Search failed: ' + this.reduceErrors(error)); });
-        }, 300);
+        }, this.searchDebounceMs);
     }
 
     handleLookupSelect(event) {

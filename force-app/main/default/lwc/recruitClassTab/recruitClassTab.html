@@ -38,7 +38,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template for:each={recruitClasses} for:item="row">
+                    <template for:each={pagedRecruitClasses} for:item="row">
                         <tr key={row.Id} class="slds-hint-parent">
                             <td><a href={row.recordLink} target="_self">{row.Name}</a></td>
                             <td class="slds-cell-action">
@@ -55,6 +55,15 @@
                     </template>
                 </tbody>
             </table>
+            <template if:true={showRecruitPager}>
+                <div class="pager">
+                    <lightning-button label="Previous" onclick={recruitPrev} disabled={recruitPrevDisabled}
+                        variant="neutral" class="slds-m-right_x-small"></lightning-button>
+                    <span class="pager-label">{recruitPageLabel}</span>
+                    <lightning-button label="Next" onclick={recruitNext} disabled={recruitNextDisabled}
+                        variant="neutral" class="slds-m-left_x-small"></lightning-button>
+                </div>
+            </template>
         </template>
 
         <!-- ============ SECTION 2: FTU GROUPS ============ -->
@@ -72,7 +81,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <template for:each={ftuGroups} for:item="row">
+                    <template for:each={pagedFtuGroups} for:item="row">
                         <tr key={row.Id} class="slds-hint-parent">
                             <td><a href={row.recordLink} target="_self">{row.Name}</a></td>
                             <td class="slds-cell-action">
@@ -89,6 +98,15 @@
                     </template>
                 </tbody>
             </table>
+            <template if:true={showFtuPager}>
+                <div class="pager">
+                    <lightning-button label="Previous" onclick={ftuPrev} disabled={ftuPrevDisabled}
+                        variant="neutral" class="slds-m-right_x-small"></lightning-button>
+                    <span class="pager-label">{ftuPageLabel}</span>
+                    <lightning-button label="Next" onclick={ftuNext} disabled={ftuNextDisabled}
+                        variant="neutral" class="slds-m-left_x-small"></lightning-button>
+                </div>
+            </template>
         </template>
 
         <!-- MODAL -->

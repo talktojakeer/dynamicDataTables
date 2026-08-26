@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report xmlns="http://soap.sforce.com/2006/04/metadata">
+    <columns><field>FIR_Qualification_Form__c$Name</field></columns>
+    <columns><field>FIR_Qualification_Form__c$Qual_Roster_Label__c</field></columns>
+    <columns><field>FIR_Qualification_Form__c$ContactName__c</field></columns>
+    <columns><field>FIR_Qualification_Form__c$Firearms_Instrutor__c</field></columns>
+    <columns><field>FIR_Qualification_Form__c$Test_Date__c</field></columns>
+    <format>Tabular</format>
+    <name>Forms Missing Instructor Signature</name>
+    <params><name>co</name><value>1</value></params>
+    <reportType>FAQP_Forms_Weapon_Details__c</reportType>
+    <scope>user</scope>
+    <showDetails>true</showDetails>
+    <showGrandTotal>true</showGrandTotal>
+    <showSubTotals>true</showSubTotals>
+</Report>

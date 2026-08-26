@@ -16,3 +16,5 @@ table {
 .section-title { font-size: 14px; font-weight: 700; color: #032d60; }
 .section-count { font-size: 13px; color: #706e6b; margin-left: 6px; }
 .empty-cell    { color: #969696; font-style: italic; padding: 12px; }
+.pager { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 8px 4px; }
+.pager-label { font-size: 12px; color: #514f4d; }

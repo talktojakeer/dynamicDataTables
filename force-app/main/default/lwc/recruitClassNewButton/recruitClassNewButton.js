@@ -24,6 +24,9 @@ export default class RecruitClassNewButton extends LightningElement {
     showDataTable       = false;
     newAccountId        = null;
     searchKey           = '';
+    // Wait this long after the user stops typing before calling Apex (ms).
+    searchDebounceMs    = 2000;
+    _searchTimeout;
 
     @track fileName          = '';
     @track fileIcon          = 'doctype:attachment';
@@ -231,12 +234,16 @@ export default class RecruitClassNewButton extends LightningElement {
     handleContactSearch(event) {
         const key = event.target.value;
         this.searchKey = key;
+        clearTimeout(this._searchTimeout);
         if (!key || key.length < 2) {
             this.employees = [];
             this.loadEmployees('', false);
             return;
         }
-        this.loadEmployees(key, true);
+        // Wait until typing pauses before hitting Apex.
+        this._searchTimeout = setTimeout(() => {
+            this.loadEmployees(key, true);
+        }, this.searchDebounceMs);
     }
 
     // --- Row selection -------------------------------------------------------

@@ -70,6 +70,25 @@ export default class QualRosterGrading extends LightningElement {
 
     get filteredRosterCount() { return this.filteredRosterRows.length; }
 
+    // ---- Roster list pagination (10 per page) ----------------------------
+    rosterPageSize = 10;
+    @track rosterListPage = 1;
+
+    get rosterListTotalPages() {
+        return Math.max(1, Math.ceil(this.filteredRosterCount / this.rosterPageSize));
+    }
+    get pagedRosterRows() {
+        const start = (this.rosterListPage - 1) * this.rosterPageSize;
+        return this.filteredRosterRows.slice(start, start + this.rosterPageSize);
+    }
+    get rosterListPrevDisabled() { return this.rosterListPage <= 1; }
+    get rosterListNextDisabled() { return this.rosterListPage >= this.rosterListTotalPages; }
+    get rosterListPageLabel()    { return `Page ${this.rosterListPage} of ${this.rosterListTotalPages}`; }
+    get showRosterListPager()    { return this.filteredRosterCount > this.rosterPageSize; }
+
+    rosterListPrev() { if (this.rosterListPage > 1) this.rosterListPage -= 1; }
+    rosterListNext() { if (this.rosterListPage < this.rosterListTotalPages) this.rosterListPage += 1; }
+
     // ═══════════════════════════════════════════════════════════════════════
     // Grading View state (existing)
     // ═══════════════════════════════════════════════════════════════════════
@@ -181,6 +200,10 @@ export default class QualRosterGrading extends LightningElement {
         getRosterLabelDetails()
             .then(rows => {
                 this.rosterRows    = rows || [];
+                // Clamp the page in case a reload shrank the list.
+                if (this.rosterListPage > this.rosterListTotalPages) {
+                    this.rosterListPage = this.rosterListTotalPages;
+                }
                 this.isLoadingList = false;
             })
             .catch(error => {
@@ -191,6 +214,7 @@ export default class QualRosterGrading extends LightningElement {
 
     handleListSearch(event) {
         this.listSearchKey = event.target.value;
+        this.rosterListPage = 1; // reset to first page on new search
     }
 
     handleRosterRowClick(event) {
@@ -852,6 +876,8 @@ export default class QualRosterGrading extends LightningElement {
                     message: msg,
                     variant: 'success'
                 }));
+                // Return to the Qual Roster list view after certifying/saving.
+                this.handleBackToList();
             })
             .catch(error => {
                 this.isSavingGrading = false;

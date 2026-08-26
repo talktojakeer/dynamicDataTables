@@ -23,8 +23,45 @@ export default class RecruitClassTab extends NavigationMixin(LightningElement) {
     recruitClasses = [];
     ftuGroups      = [];
 
+    // ---- Pagination (10 per section) -------------------------------------
+    pageSize = 10;
+    @track recruitPage = 1;
+    @track ftuPage     = 1;
+
     get recruitCount() { return this.recruitClasses.length; }
     get ftuCount()     { return this.ftuGroups.length; }
+
+    // Total pages (at least 1 so controls render sanely on empty lists)
+    get recruitTotalPages() { return Math.max(1, Math.ceil(this.recruitCount / this.pageSize)); }
+    get ftuTotalPages()     { return Math.max(1, Math.ceil(this.ftuCount / this.pageSize)); }
+
+    // Current page slice
+    get pagedRecruitClasses() {
+        const start = (this.recruitPage - 1) * this.pageSize;
+        return this.recruitClasses.slice(start, start + this.pageSize);
+    }
+    get pagedFtuGroups() {
+        const start = (this.ftuPage - 1) * this.pageSize;
+        return this.ftuGroups.slice(start, start + this.pageSize);
+    }
+
+    // Button disabled states
+    get recruitPrevDisabled() { return this.recruitPage <= 1; }
+    get recruitNextDisabled() { return this.recruitPage >= this.recruitTotalPages; }
+    get ftuPrevDisabled()     { return this.ftuPage <= 1; }
+    get ftuNextDisabled()     { return this.ftuPage >= this.ftuTotalPages; }
+
+    // "Page X of Y" labels; only show controls when more than one page
+    get recruitPageLabel()  { return `Page ${this.recruitPage} of ${this.recruitTotalPages}`; }
+    get ftuPageLabel()      { return `Page ${this.ftuPage} of ${this.ftuTotalPages}`; }
+    get showRecruitPager()  { return this.recruitCount > this.pageSize; }
+    get showFtuPager()      { return this.ftuCount > this.pageSize; }
+
+    recruitPrev() { if (this.recruitPage > 1) this.recruitPage -= 1; }
+    recruitNext() { if (this.recruitPage < this.recruitTotalPages) this.recruitPage += 1; }
+    ftuPrev()     { if (this.ftuPage > 1) this.ftuPage -= 1; }
+    ftuNext()     { if (this.ftuPage < this.ftuTotalPages) this.ftuPage += 1; }
+
     get recruitCaret() { return this.showRecruit ? 'utility:chevrondown' : 'utility:chevronright'; }
     get ftuCaret()     { return this.showFtu ? 'utility:chevrondown' : 'utility:chevronright'; }
 
@@ -66,6 +103,13 @@ export default class RecruitClassTab extends NavigationMixin(LightningElement) {
 
         this.recruitClasses = all.filter(r => r.groupType === 'Recruit Class');
         this.ftuGroups      = all.filter(r => r.groupType === 'FTU Group');
+
+        // Reset to first page on reload, and clamp if the current page no longer
+        // exists (e.g. after a delete removed the last row on a page).
+        this.recruitPage = Math.min(this.recruitPage, this.recruitTotalPages);
+        this.ftuPage     = Math.min(this.ftuPage, this.ftuTotalPages);
+        if (this.recruitPage < 1) this.recruitPage = 1;
+        if (this.ftuPage < 1) this.ftuPage = 1;
     }
 
     // Prefer the FAQP_Group_Type__c picklist. Fall back to the name rule for
@@ -125,6 +169,8 @@ export default class RecruitClassTab extends NavigationMixin(LightningElement) {
     }
 
     refreshTable() {
+        this.recruitPage = 1;
+        this.ftuPage     = 1;
         refreshApex(this.wiredResult);
     }
 }

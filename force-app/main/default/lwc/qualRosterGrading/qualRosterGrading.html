@@ -45,7 +45,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <template for:each={filteredRosterRows} for:item="row">
+                                        <template for:each={pagedRosterRows} for:item="row">
                                             <tr key={row.rosterLabel} class="list-row" data-label={row.rosterLabel} onclick={handleRosterRowClick}>
                                                 <td class="td-label">
                                                     <span class="label-link">{row.rosterLabel}</span>
@@ -62,6 +62,15 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <template if:true={showRosterListPager}>
+                                <div class="roster-pager">
+                                    <lightning-button label="Previous" onclick={rosterListPrev} disabled={rosterListPrevDisabled}
+                                        variant="neutral" class="slds-m-right_x-small"></lightning-button>
+                                    <span class="roster-pager-label">{rosterListPageLabel}</span>
+                                    <lightning-button label="Next" onclick={rosterListNext} disabled={rosterListNextDisabled}
+                                        variant="neutral" class="slds-m-left_x-small"></lightning-button>
+                                </div>
+                            </template>
                         </template>
                         <template if:false={hasRosterRows}>
                             <div class="empty-state">

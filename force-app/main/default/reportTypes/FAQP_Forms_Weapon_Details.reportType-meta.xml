@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ReportType xmlns="http://soap.sforce.com/2006/04/metadata">
+    <baseObject>FIR_Qualification_Form__c</baseObject>
+    <category>other</category>
+    <deployed>true</deployed>
+    <description>FIR Qualification Forms with their Weapon Qualification Details. Basis for all FAQP program reports.</description>
+    <join>
+        <outerJoin>true</outerJoin>
+        <relationship>Weapon_Qualifications__r</relationship>
+    </join>
+    <label>FAQP Forms with Weapon Details</label>
+    <sections>
+        <columns><checkedByDefault>true</checkedByDefault><field>Name</field><table>FIR_Qualification_Form__c</table></columns>
+        <columns><checkedByDefault>true</checkedByDefault><field>Qual_Roster_Label__c</field><table>FIR_Qualification_Form__c</table></columns>
+        <columns><checkedByDefault>true</checkedByDefault><field>ContactName__c</field><table>FIR_Qualification_Form__c</table></columns>
+        <columns><checkedByDefault>true</checkedByDefault><field>Firearms_Instrutor__c</field><table>FIR_Qualification_Form__c</table></columns>
+        <columns><checkedByDefault>true</checkedByDefault><field>Test_Date__c</field><table>FIR_Qualification_Form__c</table></columns>
+        <columns><checkedByDefault>true</checkedByDefault><field>Location__c</field><table>FIR_Qualification_Form__c</table></columns>
+        <columns><checkedByDefault>true</checkedByDefault><field>Light_Condition__c</field><table>FIR_Qualification_Form__c</table></columns>
+        <columns><field>Witness_Name__c</field><table>FIR_Qualification_Form__c</table></columns>
+        <columns><field>Witness_Signature_Date__c</field><table>FIR_Qualification_Form__c</table></columns>
+        <masterLabel>FIR Qualification Form</masterLabel>
+    </sections>
+    <sections>
+        <columns><checkedByDefault>true</checkedByDefault><field>Weapon_Type__c</field><table>FIR_Qualification_Form__c.Weapon_Qualifications__r</table></columns>
+        <columns><checkedByDefault>true</checkedByDefault><field>Qualified__c</field><table>FIR_Qualification_Form__c.Weapon_Qualifications__r</table></columns>
+        <columns><checkedByDefault>true</checkedByDefault><field>Qualified_at_90__c</field><table>FIR_Qualification_Form__c.Weapon_Qualifications__r</table></columns>
+        <columns><checkedByDefault>true</checkedByDefault><field>Qualification_Attempt__c</field><table>FIR_Qualification_Form__c.Weapon_Qualifications__r</table></columns>
+        <columns><field>Manufacturer__c</field><table>FIR_Qualification_Form__c.Weapon_Qualifications__r</table></columns>
+        <columns><field>Model__c</field><table>FIR_Qualification_Form__c.Weapon_Qualifications__r</table></columns>
+        <columns><field>Sight_Type__c</field><table>FIR_Qualification_Form__c.Weapon_Qualifications__r</table></columns>
+        <columns><field>Weapon_Code__c</field><table>FIR_Qualification_Form__c.Weapon_Qualifications__r</table></columns>
+        <columns><field>Attempt_Date__c</field><table>FIR_Qualification_Form__c.Weapon_Qualifications__r</table></columns>
+        <masterLabel>Weapon Qualification Details</masterLabel>
+    </sections>
+</ReportType>

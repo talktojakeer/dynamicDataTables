@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report xmlns="http://soap.sforce.com/2006/04/metadata">
+    <columns><field>FIR_Qualification_Form__c.Weapon_Qualifications__r$Weapon_Type__c</field></columns>
+    <format>Matrix</format>
+    <groupingsAcross>
+        <dateGranularity>Day</dateGranularity>
+        <field>FIR_Qualification_Form__c.Weapon_Qualifications__r$Qualified__c</field>
+        <sortOrder>Asc</sortOrder>
+    </groupingsAcross>
+    <groupingsDown>
+        <dateGranularity>Day</dateGranularity>
+        <field>FIR_Qualification_Form__c$Light_Condition__c</field>
+        <sortOrder>Asc</sortOrder>
+    </groupingsDown>
+    <name>Day vs Night Performance</name>
+    <params><name>co</name><value>1</value></params>
+    <reportType>FAQP_Forms_Weapon_Details__c</reportType>
+    <scope>user</scope>
+    <showDetails>false</showDetails>
+    <showGrandTotal>true</showGrandTotal>
+    <showSubTotals>true</showSubTotals>
+</Report>

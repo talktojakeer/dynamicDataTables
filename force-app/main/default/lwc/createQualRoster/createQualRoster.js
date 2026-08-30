@@ -335,7 +335,9 @@ export default class CreateQualRoster extends LightningElement {
                     this._rcRaw = result.recruitClasses || [];
                     const seen  = new Set();
                     this._conRaw = (result.contacts || [])
-                        .filter(c => { const k = (c.Name || '').toLowerCase().trim(); if (seen.has(k)) return false; seen.add(k); return true; })
+                        .filter(c => { const k = (c.Name || '').toLowerCase().trim(); 
+                            if (seen.has(k)) return false; 
+                            seen.add(k); return true; })
                         .map(c => ({ Id: c.Id, Name: c.Name, tins: c.TINS, personContactId: c.PersonContactId }));
                     this._refreshDropdownState();
                 })

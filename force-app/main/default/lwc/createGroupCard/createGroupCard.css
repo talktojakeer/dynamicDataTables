@@ -1,0 +1,9 @@
+:host { display: block; }
+.insight-tile {
+    border-radius: 8px; padding: 18px 16px; text-align: center;
+    border: 1px solid #e5e5e5;
+}
+.insight-tile_recruit { background: #eef4ff; border-color: #d8e6ff; }
+.insight-tile_ftu     { background: #f3f0ff; border-color: #e4dcff; }
+.insight-number { font-size: 34px; font-weight: 700; line-height: 1.1; color: #032d60; }
+.insight-label  { font-size: 13px; color: #514f4d; margin-top: 4px; }

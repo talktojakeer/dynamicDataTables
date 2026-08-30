@@ -1,4 +1,4 @@
-import { LightningElement, track, wire } from 'lwc';
+import { LightningElement, track, wire, api } from 'lwc';
 import searchEmployees             from '@salesforce/apex/recruitClassController.searchEmployees';
 import findEmployeesByTins         from '@salesforce/apex/recruitClassController.findEmployeesByTins';
 import linkEmployeesToRecruitClass from '@salesforce/apex/recruitClassController.linkEmployeesToRecruitClass';
@@ -17,6 +17,32 @@ export default class RecruitClassNewButton extends LightningElement {
 
     // --- State ---------------------------------------------------------------
     recruitClassName    = '';
+    @track groupType    = '';   // no default; user must choose
+     @api newAccountId   = null;   // exposed as a Flow output (created group's Id)
+    groupTypeOptions    = [
+        { label: 'Recruit Class', value: 'Recruit Class' },
+        { label: 'FTU Group',     value: 'FTU Group' }
+    ];
+
+    // Name field appears only after a Group Type is chosen.
+    get showNameField() {
+        return this.groupType === 'Recruit Class' || this.groupType === 'FTU Group';
+    }
+
+    get nameFieldLabel() {
+        return this.groupType === 'FTU Group' ? 'FTU Group Name' : 'Recruit Class Name';
+    }
+    get isRecruitClassType() {
+        return this.groupType === 'Recruit Class';
+    }
+
+    handleGroupTypeChange(event) {
+        this.groupType = event.detail.value;
+        // Re-run formatting/validation against the new type as the user switches.
+        if (this.recruitClassName) {
+            this.handleNameChange({ target: { value: this.recruitClassName } });
+        }
+    }
     selectedModel       = '';
     showFileUpload      = false;
     showManualSelection = false;
@@ -24,9 +50,6 @@ export default class RecruitClassNewButton extends LightningElement {
     showDataTable       = false;
     newAccountId        = null;
     searchKey           = '';
-    // Wait this long after the user stops typing before calling Apex (ms).
-    searchDebounceMs    = 2000;
-    _searchTimeout;
 
     @track fileName          = '';
     @track fileIcon          = 'doctype:attachment';
@@ -138,11 +161,10 @@ export default class RecruitClassNewButton extends LightningElement {
 
     // --- Create Recruit Class Account ----------------------------------------
     handleCreateRecruitClass() {
-        const isRecruit = this.isRecruitClassName(this.recruitClassName);
         const fields = {
             [CLASS_NAME.fieldApiName]    : this.formatClassName(this.recruitClassName),
             [RECORD_TYPE_ID.fieldApiName]: this.recordTypeId,
-            FAQP_Group_Type__c           : isRecruit ? 'Recruit Class' : 'FTU Group'
+            FAQP_Group_Type__c           : this.groupType
         };
         return createRecord({ apiName: RECRUIT_CLASS.objectApiName, fields })
             .then(record => { this.newAccountId = record.id; })
@@ -158,12 +180,12 @@ export default class RecruitClassNewButton extends LightningElement {
 
     formatClassName(value) {
         if (!value) return value;
-        // Only reformat when it matches the recruit-class pattern (letter + 4 digits).
-        if (this.isRecruitClassName(value)) {
+        // Only apply the X-XXXX format when the user chose Recruit Class AND the
+        // name matches the letter+4-digit rule. FTU groups keep the name as typed.
+        if (this.isRecruitClassType && this.isRecruitClassName(value)) {
             const clean = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
             return clean.substring(0, 1) + '-' + clean.substring(1, 5);
         }
-        // FTU group: keep the name as entered (no length cap, no forced format).
         return value.trim();
     }
 
@@ -188,8 +210,12 @@ export default class RecruitClassNewButton extends LightningElement {
 
     // --- Validation ----------------------------------------------------------
     validateScreenOne() {
+        if (!this.groupType) {
+            this.showToast('Error', 'Please select a Group Type.', 'error');
+            return false;
+        }
         if (!this.recruitClassName) {
-            this.showToast('Error', 'Please enter a Recruit Class name.', 'error');
+            this.showToast('Error', 'Please enter a ' + this.nameFieldLabel + '.', 'error');
             return false;
         }
         if (!this.selectedModel) {
@@ -197,13 +223,15 @@ export default class RecruitClassNewButton extends LightningElement {
             return false;
         }
         if (!this.isDuplicateClassName) {
-            this.showToast('Error', 'This Recruit Class name already exists.', 'error');
+            this.showToast('Error', 'This name already exists.', 'error');
             return false;
         }
-        /*if (!NAME_PATTERN.test(this.recruitClassName)) {
-            this.showToast('Error', 'Name must be in format A2026 (letter + 4-digit year).', 'error');
+        // Recruit Class must be a single letter followed by 4 digits (e.g. A2026).
+        // FTU Group allows any name, so this check is skipped for it.
+        if (this.isRecruitClassType && !this.isRecruitClassName(this.recruitClassName)) {
+            this.showToast('Error', 'Recruit Class name must be one letter followed by 4 digits (e.g. A2026).', 'error');
             return false;
-        }*/
+        }
         return true;
     }
 
@@ -234,16 +262,12 @@ export default class RecruitClassNewButton extends LightningElement {
     handleContactSearch(event) {
         const key = event.target.value;
         this.searchKey = key;
-        clearTimeout(this._searchTimeout);
         if (!key || key.length < 2) {
             this.employees = [];
             this.loadEmployees('', false);
             return;
         }
-        // Wait until typing pauses before hitting Apex.
-        this._searchTimeout = setTimeout(() => {
-            this.loadEmployees(key, true);
-        }, this.searchDebounceMs);
+        this.loadEmployees(key, true);
     }
 
     // --- Row selection -------------------------------------------------------

@@ -18,15 +18,30 @@
                 <lightning-card title="">
 
                     <template if:true={showScreenOne}>
-                        <lightning-input
-                            label="Recruit Class / FTU Group Name"
-                            type="text"
-                            value={recruitClassName}
-                            maxlength="80"
-                            onchange={handleNameChange}
-                            style="width: 50%; padding-left: 25px;"
-                            required>
-                        </lightning-input>
+                        <div class="slds-grid slds-gutters" style="padding-left: 25px; width: 90%;">
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-combobox
+                                    label="Group Type"
+                                    value={groupType}
+                                    placeholder="-- Select --"
+                                    options={groupTypeOptions}
+                                    onchange={handleGroupTypeChange}
+                                    required>
+                                </lightning-combobox>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <template if:true={showNameField}>
+                                    <lightning-input
+                                        label={nameFieldLabel}
+                                        type="text"
+                                        value={recruitClassName}
+                                        maxlength="80"
+                                        onchange={handleNameChange}
+                                        required>
+                                    </lightning-input>
+                                </template>
+                            </div>
+                        </div>
 
                         <fieldset class="slds-form-element">
                             <legend class="slds-form-element__legend slds-form-element__label"
@@ -149,7 +164,7 @@
                                     </lightning-button>
                                     <lightning-button
                                         variant="brand"
-                                        label="Submit"
+                                        label="Submit Recruit Class"
                                         onclick={handleSubmit}
                                         class="slds-m-left_x-small">
                                     </lightning-button>

@@ -10,19 +10,54 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>1</fullName>
-                <default>false</default>
-                <label>1</label>
+                <fullName>1st</fullName>
+                <default>true</default>
+                <label>1st</label>
             </value>
             <value>
-                <fullName>2</fullName>
+                <fullName>2nd</fullName>
                 <default>false</default>
-                <label>2</label>
+                <label>2nd</label>
             </value>
             <value>
-                <fullName>3</fullName>
+                <fullName>3rd</fullName>
                 <default>false</default>
-                <label>3</label>
+                <label>3rd</label>
+            </value>
+            <value>
+                <fullName>4th</fullName>
+                <default>false</default>
+                <label>4th</label>
+            </value>
+            <value>
+                <fullName>5th</fullName>
+                <default>false</default>
+                <label>5th</label>
+            </value>
+            <value>
+                <fullName>6th</fullName>
+                <default>false</default>
+                <label>6th</label>
+            </value>
+            <value>
+                <fullName>7th</fullName>
+                <default>false</default>
+                <label>7th</label>
+            </value>
+            <value>
+                <fullName>8th</fullName>
+                <default>false</default>
+                <label>8th</label>
+            </value>
+            <value>
+                <fullName>9th</fullName>
+                <default>false</default>
+                <label>9th</label>
+            </value>
+            <value>
+                <fullName>10th</fullName>
+                <default>false</default>
+                <label>10th</label>
             </value>
         </valueSetDefinition>
     </valueSet>

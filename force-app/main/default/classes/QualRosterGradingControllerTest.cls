@@ -243,6 +243,34 @@ private class QualRosterGradingControllerTest {
         Test.stopTest();
     }
 
+    @isTest
+    static void testPeriodHelpers() {
+        Test.startTest();
+        System.assertEquals(Date.newInstance(2026,1,1),   QualRosterGradingController.periodStart(Date.newInstance(2026,3,15)));
+        System.assertEquals(Date.newInstance(2026,6,30),  QualRosterGradingController.periodEnd(Date.newInstance(2026,3,15)));
+        System.assertEquals(Date.newInstance(2026,7,1),   QualRosterGradingController.periodStart(Date.newInstance(2026,9,10)));
+        System.assertEquals(Date.newInstance(2026,12,31), QualRosterGradingController.periodEnd(Date.newInstance(2026,9,10)));
+        System.assertEquals(3, QualRosterGradingController.attemptToInt('3rd'));
+        System.assertEquals('4th',  QualRosterGradingController.intToAttempt(4));
+        System.assertEquals('10th', QualRosterGradingController.intToAttempt(15));
+        Test.stopTest();
+    }
+
+    @isTest
+    static void testAddToRoster_firstAttemptIsFirst() {
+        Account np = TestDataFactory.createPersonAccount('Period', 'Person', 7000055555L);
+        Id c = TestDataFactory.personContactId(np.Id);
+        Test.startTest();
+        QualRosterGradingController.addToRoster(
+            ROSTER, new List<String>{ c }, new List<String>{ 'Rifle' }, null, null, null);
+        Test.stopTest();
+        FIR_Weapon_Qualification_Detail__c d1 = [
+            SELECT Qualification_Attempt__c FROM FIR_Weapon_Qualification_Detail__c
+            WHERE Weapon_Type__c = 'Rifle'
+            AND FIR_Qualification_Form__r.ContactName__c = :c LIMIT 1];
+        System.assertEquals('1st', d1.Qualification_Attempt__c, 'First attempt should be 1st');
+    }
+
     // ---- trySet utility ---------------------------------------------------
     @isTest
     static void testTrySet() {

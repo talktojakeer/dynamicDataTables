@@ -539,16 +539,17 @@ export default class QualRosterGrading extends LightningElement {
             let groupIndex = 0;
             enrichedRows.forEach(row => {
                 const instrCls = row.isFirearmsInstructor ? ' instructor-row' : '';
+                const hiCls    = row.isHighAttempt ? ' high-attempt' : '';
                 if (row.firFormId !== lastMember) {
                     row.showName   = true;
                     row.groupFirst = true;
-                    row.groupClass = 'grading-row group-first' + instrCls;
+                    row.groupClass = 'grading-row group-first' + instrCls + hiCls;
                     lastMember     = row.firFormId;
                     groupIndex++;
                 } else {
                     row.showName   = false;
                     row.groupFirst = false;
-                    row.groupClass = 'grading-row group-cont' + instrCls;
+                    row.groupClass = 'grading-row group-cont' + instrCls + hiCls;
                 }
                 row.groupEven = (groupIndex % 2 === 0);
             });
@@ -586,6 +587,16 @@ export default class QualRosterGrading extends LightningElement {
             selected: opt === weaponCode
         }));
 
+        // Attempt options 1st..10th with a selected flag for declarative binding.
+        const ATTEMPTS = ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th'];
+        const attemptOptionsForRow = ATTEMPTS.map(a => ({
+            value: a, selected: a === qualificationAttempt
+        }));
+
+        // 5th..10th attempt -> highlight the row in a light red.
+        const attemptNum   = ATTEMPTS.indexOf(qualificationAttempt) + 1; // 0 if none
+        const isHighAttempt = attemptNum >= 5;
+
         return {
             ...row,
             manufacturer,
@@ -596,16 +607,15 @@ export default class QualRosterGrading extends LightningElement {
             qualified,
             qualified90,
             weaponCodeOptionsForRow,
+            attemptOptionsForRow,
+            isHighAttempt,
+            rowHighlightClass  : isHighAttempt ? 'grading-row high-attempt' : 'grading-row',
             isOtherType        : (row.weaponType || '') === 'Other',
             qualifiedYes       : isQualified,
             qualifiedNo        : !isQualified,
             qualified90Yes     : isQualified90,
             qualified90No      : !isQualified90,
-            qualified90Disabled: !isQualified,
-            is1st              : qualificationAttempt === '1st',
-            is2nd              : qualificationAttempt === '2nd',
-            is3rd              : qualificationAttempt === '3rd',
-            is4th              : qualificationAttempt === '4th'
+            qualified90Disabled: !isQualified
         };
     }
 

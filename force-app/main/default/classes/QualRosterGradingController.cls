@@ -422,6 +422,74 @@ public with sharing class QualRosterGradingController {
     //    pre-filled with manufacturer / model / sight type.
     // Returns { employeesAffected, rowsAdded, rowsSkipped }.
     // -----------------------------------------------------------------------
+    // ===================================================================
+    // Qualification-period logic
+    // Two periods per year: Jan 1 - Jun 30 (H1) and Jul 1 - Dec 31 (H2).
+    // Attempts accumulate within a period and reset to 1st in a new period.
+    // ===================================================================
+    private static final List<String> ATTEMPT_ORDER = new List<String>{
+        '1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th'
+    };
+    public static final Integer MAX_ATTEMPTS = 10;
+
+    // Start date of the period that a given date falls in.
+    public static Date periodStart(Date d) {
+        if (d == null) d = Date.today();
+        return (d.month() <= 6) ? Date.newInstance(d.year(), 1, 1)
+                                : Date.newInstance(d.year(), 7, 1);
+    }
+    // End date of the period that a given date falls in.
+    public static Date periodEnd(Date d) {
+        if (d == null) d = Date.today();
+        return (d.month() <= 6) ? Date.newInstance(d.year(), 6, 30)
+                                : Date.newInstance(d.year(), 12, 31);
+    }
+    // '3rd' -> 3 ; unknown/blank -> 0
+    public static Integer attemptToInt(String a) {
+        if (String.isBlank(a)) return 0;
+        Integer idx = ATTEMPT_ORDER.indexOf(a);
+        return idx < 0 ? 0 : idx + 1;
+    }
+    // 4 -> '4th' ; clamps to the 1..10 range
+    public static String intToAttempt(Integer n) {
+        if (n < 1) n = 1;
+        if (n > MAX_ATTEMPTS) n = MAX_ATTEMPTS;
+        return ATTEMPT_ORDER.get(n - 1);
+    }
+
+    /**
+     * Highest attempt already recorded for each (contact, weaponType) within the
+     * CURRENT period, keyed "contactId|weaponType" -> max attempt int.
+     * Uses the weapon detail's Attempt_Date__c (falls back to the form Test_Date__c)
+     * to decide which period a past attempt belongs to.
+     */
+    public static Map<String, Integer> maxAttemptThisPeriod(Set<Id> contactIds, Date refDate) {
+        Map<String, Integer> result = new Map<String, Integer>();
+        if (contactIds == null || contactIds.isEmpty()) return result;
+        Date pStart = periodStart(refDate);
+        Date pEnd   = periodEnd(refDate);
+
+        for (FIR_Weapon_Qualification_Detail__c d : [
+            SELECT Weapon_Type__c, Qualification_Attempt__c, Attempt_Date__c,
+                   FIR_Qualification_Form__r.ContactName__c,
+                   FIR_Qualification_Form__r.Test_Date__c
+            FROM   FIR_Weapon_Qualification_Detail__c
+            WHERE  FIR_Qualification_Form__r.ContactName__c IN :contactIds
+            AND    Weapon_Type__c != null
+        ]) {
+            Date effective = d.Attempt_Date__c != null
+                             ? d.Attempt_Date__c
+                             : d.FIR_Qualification_Form__r.Test_Date__c;
+            if (effective == null || effective < pStart || effective > pEnd) continue;
+            String key = d.FIR_Qualification_Form__r.ContactName__c + '|' + d.Weapon_Type__c;
+            Integer a  = attemptToInt(d.Qualification_Attempt__c);
+            if (!result.containsKey(key) || a > result.get(key)) {
+                result.put(key, a);
+            }
+        }
+        return result;
+    }
+
     @AuraEnabled
     public static AddToRosterResult addToRoster(
         String rosterLabel,
@@ -487,6 +555,10 @@ public with sharing class QualRosterGradingController {
             contactNames.put(c.Id, c.Name);
         }
 
+        // Highest attempt already logged this period for these people+weapons.
+        Map<String, Integer> maxThisPeriod = maxAttemptThisPeriod(selectedContacts, ctx.Test_Date__c);
+        Date attemptDate = ctx.Test_Date__c != null ? ctx.Test_Date__c : Date.today();
+
         try {
             // 1) Create forms for employees not yet on the roster
             List<FIR_Qualification_Form__c> newForms = new List<FIR_Qualification_Form__c>();
@@ -531,10 +603,26 @@ public with sharing class QualRosterGradingController {
                         continue;
                     }
                     existingPairs.add(key); // guard against dup weapon types in the same request
+
+                    // Next attempt for this person+weapon THIS period (reset each period).
+                    String pkey       = cId + '|' + wt;
+                    Integer priorMax  = maxThisPeriod.containsKey(pkey) ? maxThisPeriod.get(pkey) : 0;
+                    Integer nextInt   = priorMax + 1;
+                    if (nextInt > MAX_ATTEMPTS) {
+                        throw new AuraHandledException(
+                            'Maximum attempts reached for ' +
+                            (contactNames.containsKey(cId) ? contactNames.get(cId) : 'this employee') +
+                            ' on ' + wt + ' this period.');
+                    }
+
                     FIR_Weapon_Qualification_Detail__c det = new FIR_Weapon_Qualification_Detail__c(
                         FIR_Qualification_Form__c = formId,
-                        Weapon_Type__c            = wt
+                        Weapon_Type__c            = wt,
+                        Qualification_Attempt__c  = intToAttempt(nextInt),
+                        Attempt_Date__c           = attemptDate
                     );
+                    // Advance the in-memory max so multiple rows in one request increment.
+                    maxThisPeriod.put(pkey, nextInt);
                     if (String.isNotBlank(manufacturer)) det.Manufacturer__c = manufacturer;
                     if (String.isNotBlank(model))        det.Model__c        = model;
                     if (String.isNotBlank(sightType))    det.Sight_Type__c   = sightType;

@@ -559,3 +559,6 @@
 }
 .roster-pager { display:flex; align-items:center; justify-content:flex-end; gap:8px; padding:10px 4px; }
 .roster-pager-label { font-size:12px; color:#514f4d; }
+/* 5th-10th qualification attempt: light red row highlight */
+tr.high-attempt > td { background-color: #fdecea; }
+tr.high-attempt:hover > td { background-color: #fbddd9; }

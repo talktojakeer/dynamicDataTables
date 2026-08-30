@@ -237,10 +237,9 @@
                                                     <td>
                                                         <select class="cell-select" data-detail-id={row.detailId} data-field="qualificationAttempt" onchange={handleSelectChange}>
                                                             <option value="">--</option>
-                                                            <option value="1st" selected={row.is1st}>1st</option>
-                                                            <option value="2nd" selected={row.is2nd}>2nd</option>
-                                                            <option value="3rd" selected={row.is3rd}>3rd</option>
-                                                            <option value="4th" selected={row.is4th}>4th</option>
+                                                            <template for:each={row.attemptOptionsForRow} for:item="opt">
+                                                                <option key={opt.value} value={opt.value} selected={opt.selected}>{opt.value}</option>
+                                                            </template>
                                                         </select>
                                                     </td>
                                                     <td class="td-toggle">

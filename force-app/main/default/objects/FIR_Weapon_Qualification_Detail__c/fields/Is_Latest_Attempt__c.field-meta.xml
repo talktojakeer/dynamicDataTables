@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Is_Latest_Attempt__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>True for the latest attempt for this member + weapon type within the current qualification period (Jan-Jun / Jul-Dec). Maintained by the FIR_Weapon_Latest_Attempt flow. Filter reports on this = true for current status.</description>
+    <externalId>false</externalId>
+    <label>Is Latest Attempt</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

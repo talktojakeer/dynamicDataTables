@@ -457,39 +457,6 @@ public with sharing class QualRosterGradingController {
         return ATTEMPT_ORDER.get(n - 1);
     }
 
-    /**
-     * Highest attempt already recorded for each (contact, weaponType) within the
-     * CURRENT period, keyed "contactId|weaponType" -> max attempt int.
-     * Uses the weapon detail's Attempt_Date__c (falls back to the form Test_Date__c)
-     * to decide which period a past attempt belongs to.
-     */
-    public static Map<String, Integer> maxAttemptThisPeriod(Set<Id> contactIds, Date refDate) {
-        Map<String, Integer> result = new Map<String, Integer>();
-        if (contactIds == null || contactIds.isEmpty()) return result;
-        Date pStart = periodStart(refDate);
-        Date pEnd   = periodEnd(refDate);
-
-        for (FIR_Weapon_Qualification_Detail__c d : [
-            SELECT Weapon_Type__c, Qualification_Attempt__c, Attempt_Date__c,
-                   FIR_Qualification_Form__r.ContactName__c,
-                   FIR_Qualification_Form__r.Test_Date__c
-            FROM   FIR_Weapon_Qualification_Detail__c
-            WHERE  FIR_Qualification_Form__r.ContactName__c IN :contactIds
-            AND    Weapon_Type__c != null
-        ]) {
-            Date effective = d.Attempt_Date__c != null
-                             ? d.Attempt_Date__c
-                             : d.FIR_Qualification_Form__r.Test_Date__c;
-            if (effective == null || effective < pStart || effective > pEnd) continue;
-            String key = d.FIR_Qualification_Form__r.ContactName__c + '|' + d.Weapon_Type__c;
-            Integer a  = attemptToInt(d.Qualification_Attempt__c);
-            if (!result.containsKey(key) || a > result.get(key)) {
-                result.put(key, a);
-            }
-        }
-        return result;
-    }
-
     @AuraEnabled
     public static AddToRosterResult addToRoster(
         String rosterLabel,
@@ -555,10 +522,6 @@ public with sharing class QualRosterGradingController {
             contactNames.put(c.Id, c.Name);
         }
 
-        // Highest attempt already logged this period for these people+weapons.
-        Map<String, Integer> maxThisPeriod = maxAttemptThisPeriod(selectedContacts, ctx.Test_Date__c);
-        Date attemptDate = ctx.Test_Date__c != null ? ctx.Test_Date__c : Date.today();
-
         try {
             // 1) Create forms for employees not yet on the roster
             List<FIR_Qualification_Form__c> newForms = new List<FIR_Qualification_Form__c>();
@@ -604,25 +567,10 @@ public with sharing class QualRosterGradingController {
                     }
                     existingPairs.add(key); // guard against dup weapon types in the same request
 
-                    // Next attempt for this person+weapon THIS period (reset each period).
-                    String pkey       = cId + '|' + wt;
-                    Integer priorMax  = maxThisPeriod.containsKey(pkey) ? maxThisPeriod.get(pkey) : 0;
-                    Integer nextInt   = priorMax + 1;
-                    if (nextInt > MAX_ATTEMPTS) {
-                        throw new AuraHandledException(
-                            'Maximum attempts reached for ' +
-                            (contactNames.containsKey(cId) ? contactNames.get(cId) : 'this employee') +
-                            ' on ' + wt + ' this period.');
-                    }
-
                     FIR_Weapon_Qualification_Detail__c det = new FIR_Weapon_Qualification_Detail__c(
                         FIR_Qualification_Form__c = formId,
-                        Weapon_Type__c            = wt,
-                        Qualification_Attempt__c  = intToAttempt(nextInt),
-                        Attempt_Date__c           = attemptDate
+                        Weapon_Type__c            = wt
                     );
-                    // Advance the in-memory max so multiple rows in one request increment.
-                    maxThisPeriod.put(pkey, nextInt);
                     if (String.isNotBlank(manufacturer)) det.Manufacturer__c = manufacturer;
                     if (String.isNotBlank(model))        det.Model__c        = model;
                     if (String.isNotBlank(sightType))    det.Sight_Type__c   = sightType;

@@ -218,6 +218,16 @@ public with sharing class QualRosterController {
         }
         insert firForms;
 
+        // ---- Qualification-attempt calculation ----------------------------
+        // Only Qualified = 'No' records count. For each contact+weapon, take the
+        // highest 'No' attempt IN THIS PERIOD (Jan-Jun or Jul-Dec) and add 1.
+        // Qualified = 'Yes' (and ungraded) records are ignored, so the next
+        // attempt = highest failed attempt + 1, or 1st if there are none.
+        Set<Id> contactIdSet = new Set<Id>();
+        for (MemberPayload mp : aligned) contactIdSet.add((Id) mp.contactId);
+        Map<String, Integer> failedMax = maxFailedAttemptThisPeriod(contactIdSet, testDate);
+        Date attemptDate = (testDate != null ? testDate : Date.today());
+
         // Build FIR Weapon Qualification Detail records from weaponEntries
         List<FIR_Weapon_Qualification_Detail__c> weapons =
             new List<FIR_Weapon_Qualification_Detail__c>();
@@ -235,6 +245,24 @@ public with sharing class QualRosterController {
                     if (String.isNotBlank(we.manufacturer)) det.Manufacturer__c  = we.manufacturer;
                     if (String.isNotBlank(we.model))        det.Model__c         = we.model;
                     if (String.isNotBlank(we.sightType))    det.Sight_Type__c    = we.sightType;
+
+                    // Determine the attempt for this person + weapon this period.
+                    if (String.isNotBlank(we.weaponType)) {
+                        String pkey = mp.contactId + '|' + we.weaponType;
+                        Integer nextInt = failedMax.containsKey(pkey)
+                                          ? failedMax.get(pkey) + 1
+                                          : 1;
+                        if (nextInt > QualRosterGradingController.MAX_ATTEMPTS) {
+                            String nm = contactMap.containsKey(mp.contactId)
+                                        ? contactMap.get(mp.contactId).Name : 'this employee';
+                            throw new AuraHandledException(
+                                'Maximum attempts reached for ' + nm + ' on ' + we.weaponType + ' this period.');
+                        }
+                        det.Qualification_Attempt__c = QualRosterGradingController.intToAttempt(nextInt);
+                        det.Attempt_Date__c          = attemptDate;
+                        // advance in-memory so multiple new rows increment correctly
+                        failedMax.put(pkey, nextInt);
+                    }
                     weapons.add(det);
                 }
             }
@@ -242,6 +270,40 @@ public with sharing class QualRosterController {
         if (!weapons.isEmpty()) insert weapons;
 
         return aligned.size();
+    }
+
+    /**
+     * Highest FAILED (Qualified = 'No') attempt for each contact+weapon within
+     * the same period as refDate. Qualified = 'Yes' and ungraded records are
+     * excluded. Keyed "contactId|weaponType" -> max failed attempt int.
+     */
+    private static Map<String, Integer> maxFailedAttemptThisPeriod(Set<Id> contactIds, Date refDate) {
+        Map<String, Integer> out = new Map<String, Integer>();
+        if (contactIds == null || contactIds.isEmpty()) return out;
+        Date pStart = QualRosterGradingController.periodStart(refDate);
+        Date pEnd   = QualRosterGradingController.periodEnd(refDate);
+
+        for (FIR_Weapon_Qualification_Detail__c d : [
+            SELECT Weapon_Type__c, Qualification_Attempt__c, Attempt_Date__c,
+                   FIR_Qualification_Form__r.ContactName__c,
+                   FIR_Qualification_Form__r.Test_Date__c
+            FROM   FIR_Weapon_Qualification_Detail__c
+            WHERE  FIR_Qualification_Form__r.ContactName__c IN :contactIds
+            AND    Weapon_Type__c != null
+            AND    Qualified__c = 'No'
+        ]) {
+            Date eff = d.Attempt_Date__c != null
+                       ? d.Attempt_Date__c
+                       : d.FIR_Qualification_Form__r.Test_Date__c;
+            if (eff == null || eff < pStart || eff > pEnd) continue;
+
+            String key = d.FIR_Qualification_Form__r.ContactName__c + '|' + d.Weapon_Type__c;
+            Integer a  = QualRosterGradingController.attemptToInt(d.Qualification_Attempt__c);
+            if (!out.containsKey(key) || a > out.get(key)) {
+                out.put(key, a);
+            }
+        }
+        return out;
     }
 
     // ═══════════════════════════════════════════════════════════════════════

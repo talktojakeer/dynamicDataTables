@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>59.0</apiVersion>
+    <description>Maintains Is_Latest_Attempt__c: within each member + weapon type + period (Jan-Jun / Jul-Dec), the HIGHEST attempt is flagged true and the rest false. After-save on create/update; entry formula excludes flag-only updates to avoid recursion.</description>
+    <environments>Default</environments>
+    <interviewLabel>FIR Weapon Latest Attempt {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>FIRWeaponLatestAttempt</label>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+
+    <!-- ===== assignments (all together) ===== -->
+    <assignments>
+        <name>Init_Counter</name>
+        <label>Init Counter</label>
+        <locationX>176</locationX>
+        <locationY>238</locationY>
+        <assignmentItems>
+            <assignToReference>Counter</assignToReference>
+            <operator>Assign</operator>
+            <value><numberValue>0.0</numberValue></value>
+        </assignmentItems>
+        <connector><targetReference>Loop_Siblings</targetReference></connector>
+    </assignments>
+    <assignments>
+        <name>Increment</name>
+        <label>Increment Counter</label>
+        <locationX>176</locationX>
+        <locationY>446</locationY>
+        <assignmentItems>
+            <assignToReference>Counter</assignToReference>
+            <operator>Add</operator>
+            <value><numberValue>1.0</numberValue></value>
+        </assignmentItems>
+        <connector><targetReference>Decide_First</targetReference></connector>
+    </assignments>
+    <assignments>
+        <name>Set_True</name>
+        <label>Latest = true</label>
+        <locationX>60</locationX>
+        <locationY>654</locationY>
+        <assignmentItems>
+            <assignToReference>Loop_Siblings.Is_Latest_Attempt__c</assignToReference>
+            <operator>Assign</operator>
+            <value><booleanValue>true</booleanValue></value>
+        </assignmentItems>
+        <connector><targetReference>Add_To_Update</targetReference></connector>
+    </assignments>
+    <assignments>
+        <name>Set_False</name>
+        <label>Latest = false</label>
+        <locationX>300</locationX>
+        <locationY>654</locationY>
+        <assignmentItems>
+            <assignToReference>Loop_Siblings.Is_Latest_Attempt__c</assignToReference>
+            <operator>Assign</operator>
+            <value><booleanValue>false</booleanValue></value>
+        </assignmentItems>
+        <connector><targetReference>Add_To_Update</targetReference></connector>
+    </assignments>
+    <assignments>
+        <name>Add_To_Update</name>
+        <label>Add to collection</label>
+        <locationX>176</locationX>
+        <locationY>758</locationY>
+        <assignmentItems>
+            <assignToReference>UpdateColl</assignToReference>
+            <operator>Add</operator>
+            <value><elementReference>Loop_Siblings</elementReference></value>
+        </assignmentItems>
+        <connector><targetReference>Loop_Siblings</targetReference></connector>
+    </assignments>
+
+    <!-- ===== decisions ===== -->
+    <decisions>
+        <name>Decide_First</name>
+        <label>Is highest attempt (first)?</label>
+        <locationX>176</locationX>
+        <locationY>550</locationY>
+        <defaultConnector><targetReference>Set_False</targetReference></defaultConnector>
+        <defaultConnectorLabel>No</defaultConnectorLabel>
+        <rules>
+            <name>Is_First</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Counter</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue><numberValue>1.0</numberValue></rightValue>
+            </conditions>
+            <connector><targetReference>Set_True</targetReference></connector>
+            <label>Yes</label>
+        </rules>
+    </decisions>
+
+    <!-- ===== loops ===== -->
+    <loops>
+        <name>Loop_Siblings</name>
+        <label>Loop Siblings</label>
+        <locationX>176</locationX>
+        <locationY>342</locationY>
+        <collectionReference>Get_Siblings</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector><targetReference>Increment</targetReference></nextValueConnector>
+        <noMoreValuesConnector><targetReference>Commit_Updates</targetReference></noMoreValuesConnector>
+    </loops>
+
+    <!-- ===== recordLookups ===== -->
+    <recordLookups>
+        <name>Get_Siblings</name>
+        <label>Get Siblings</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector><targetReference>Init_Counter</targetReference></connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Member_Contact__c</field>
+            <operator>EqualTo</operator>
+            <value><elementReference>$Record.Member_Contact__c</elementReference></value>
+        </filters>
+        <filters>
+            <field>Weapon_Type__c</field>
+            <operator>EqualTo</operator>
+            <value><elementReference>$Record.Weapon_Type__c</elementReference></value>
+        </filters>
+        <filters>
+            <field>Period_Start__c</field>
+            <operator>EqualTo</operator>
+            <value><elementReference>$Record.Period_Start__c</elementReference></value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>FIR_Weapon_Qualification_Detail__c</object>
+        <sortField>Qualification_Attempt__c</sortField>
+        <sortOrder>Desc</sortOrder>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+
+    <!-- ===== recordUpdates ===== -->
+    <recordUpdates>
+        <name>Commit_Updates</name>
+        <label>Commit Updates</label>
+        <locationX>176</locationX>
+        <locationY>878</locationY>
+        <inputReference>UpdateColl</inputReference>
+    </recordUpdates>
+
+    <!-- ===== start ===== -->
+    <start>
+        <locationX>176</locationX>
+        <locationY>0</locationY>
+        <connector><targetReference>Get_Siblings</targetReference></connector>
+        <doesRequireRecordChangedToMeetCriteria>false</doesRequireRecordChangedToMeetCriteria>
+        <filterFormula>OR( ISNEW(), ISCHANGED({!$Record.Qualification_Attempt__c}), ISCHANGED({!$Record.Weapon_Type__c}), ISCHANGED({!$Record.Attempt_Date__c}), ISCHANGED({!$Record.FIR_Qualification_Form__c}) )</filterFormula>
+        <object>FIR_Weapon_Qualification_Detail__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+
+    <!-- ===== variables ===== -->
+    <variables>
+        <name>Counter</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+    </variables>
+    <variables>
+        <name>UpdateColl</name>
+        <dataType>SObject</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>FIR_Weapon_Qualification_Detail__c</objectType>
+    </variables>
+</Flow>

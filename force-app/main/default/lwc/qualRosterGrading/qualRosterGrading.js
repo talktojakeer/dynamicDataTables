@@ -137,6 +137,16 @@ export default class QualRosterGrading extends LightningElement {
         return this.activeSection ? this.activeSection.rows : [];
     }
 
+    // Every row across all weapon sections (used to save defaults + edits).
+    get allGradingRows() {
+        if (!this.hasGradingData) return [];
+        const rows = [];
+        this.gradingData.weaponSections.forEach(s => {
+            (s.rows || []).forEach(r => rows.push(r));
+        });
+        return rows;
+    }
+
     get hasActiveRows() {
         return this.activeRows.length > 0;
     }
@@ -342,11 +352,16 @@ export default class QualRosterGrading extends LightningElement {
 
     _fetchAvailableEmployees(selectContactId) {
         this.isLoadingEmployees = true;
+        // Preserve whatever is currently checked so a reload doesn't lose it.
+        const keepSelected = new Set(
+            (this._availableEmployees || []).filter(e => e.selected).map(e => e.contactId)
+        );
+        if (selectContactId) keepSelected.add(selectContactId);
         getAvailableEmployees({ rosterLabel: this.selectedLabel })
             .then(list => {
                 this._availableEmployees = (list || []).map(e => ({
                     ...e,
-                    selected: selectContactId ? e.contactId === selectContactId : false
+                    selected: keepSelected.has(e.contactId)
                 }));
                 this._applyEmployeeFilter();
             })
@@ -449,7 +464,6 @@ export default class QualRosterGrading extends LightningElement {
             sightType   : this.addSightType || null
         })
             .then(res => {
-                this.showAddModal = false;
                 let msg = `${res.rowsAdded} row(s) added across ${res.employeesAffected} employee(s).`;
                 if (res.rowsSkipped > 0) {
                     msg += ` ${res.rowsSkipped} already existed and were skipped.`;
@@ -459,6 +473,19 @@ export default class QualRosterGrading extends LightningElement {
                     message: msg,
                     variant: res.rowsAdded > 0 ? 'success' : 'info'
                 }));
+
+                // Keep the popup OPEN so the user can add another weapon batch.
+                // Reset the weapon selection + details and clear checked employees,
+                // then refresh the picker so newly-added weapons show as "on roster".
+                this.addWeaponType   = '';
+                this.addManufacturer = '';
+                this.addModel        = '';
+                this.addSightType    = '';
+                // Keep the selected members checked (reload preserves selection),
+                // so the user can see who they picked earlier.
+                this._fetchAvailableEmployees();   // re-pull existing weapon types per employee
+
+                // Refresh the grading table underneath so it reflects the new rows.
                 this.loadGradingData(this.selectedLabel);
             })
             .catch(error => { this.addError = this.reduceError(error); })
@@ -708,17 +735,9 @@ export default class QualRosterGrading extends LightningElement {
 
     handleSaveAll() {
         if (!this.hasGradingData) return;
-        // Only open the signature/certify modal when there are actual grading
-        // edits to save. If nothing changed in the table, there is nothing to
-        // certify - inform the user and do not open the popup.
-        if (!this.hasUnsavedChanges) {
-            this.dispatchEvent(new ShowToastEvent({
-                title  : 'No Changes',
-                message: 'There are no changes to save.',
-                variant: 'info'
-            }));
-            return;
-        }
+        // Always allow saving - the displayed values (including defaults like
+        // "No" / "1st") are valid results to record and certify, even if the
+        // grader did not manually change anything.
         this.openSignatureModal();
     }
 
@@ -845,20 +864,25 @@ export default class QualRosterGrading extends LightningElement {
         this.signatureError  = '';
         this.isSavingGrading = true;
 
-        const detailIds = Object.keys(this._pendingChanges);
+        // Save EVERY visible row using its current value, overlaying any pending
+        // edits. This persists default selections (e.g. "No" / "1st") even when
+        // the grader did not manually change a field.
+        const rowsToSave = this.allGradingRows;
+        const detailIds  = rowsToSave.map(r => r.detailId);
 
-        // 1) Save all pending grading row edits
-        const gradingPromises = detailIds.map(detailId => {
-            const changes = this._pendingChanges[detailId];
+        const gradingPromises = rowsToSave.map(row => {
+            const changes = this._pendingChanges[row.detailId] || {};
+            const val = (field, fallback) =>
+                (changes[field] !== undefined ? changes[field] : (row[field] !== undefined ? row[field] : fallback));
             return saveGradingRow({
-                detailId            : detailId,
-                manufacturer        : changes.manufacturer        || '',
-                model               : changes.model               || '',
-                sightType           : changes.sightType           || '',
-                weaponCode          : changes.weaponCode          || '',
-                qualificationAttempt: changes.qualificationAttempt || '',
-                qualified           : changes.qualified            || 'Yes',
-                qualified90         : changes.qualified90          || ''
+                detailId            : row.detailId,
+                manufacturer        : val('manufacturer', '')        || '',
+                model               : val('model', '')               || '',
+                sightType           : val('sightType', '')           || '',
+                weaponCode          : val('weaponCode', '')          || '',
+                qualificationAttempt: val('qualificationAttempt', '') || '',
+                qualified           : val('qualified', 'No')          || 'No',
+                qualified90         : val('qualified90', 'No')        || 'No'
             });
         });
 

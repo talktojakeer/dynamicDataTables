@@ -1,6 +1,6 @@
 <apex:page standardController="FIR_Qualification_Form__c"
            extensions="FIRQualificationFormControllerExt"
-           sidebar="false" showHeader="false" renderAs="{!$CurrentPage.parameters.html == '1' ? '' : 'pdf'}"
+           sidebar="false" showHeader="false" renderAs="{!IF($CurrentPage.parameters.html == '1', '', 'pdf')}"
            applyBodyTag="false" applyHtmlTag="false">
 <head>
 <style type="text/css">
@@ -36,6 +36,7 @@
     <table style="width:100%; border-collapse:collapse; margin-bottom:4px;">
         <tr>
             <td style="width:50%; vertical-align:top; padding-right:4px;" class="nb">
+                <apex:outputPanel rendered="{!NOT(FIR_Qualification_Form__c.ContactName__r.FAQP_Is_Retired_Officer__c)}">
                 <div class="sectitle">Active Employee</div>
                 <div class="sectionbox">
                     <div><span class="lbl">Employee TINS #:</span>
@@ -48,8 +49,10 @@
                         <span class="cb">{!IF(FIR_Qualification_Form__c.ContactName__r.Is_Firearms_Instructor__c,'X','')}</span> Yes
                     </div>
                 </div>
+                </apex:outputPanel>
             </td>
             <td style="width:50%; vertical-align:top; padding-left:4px;" class="nb">
+                <apex:outputPanel rendered="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Is_Retired_Officer__c}">
                 <div class="sectitle">Retired Peace Officer</div>
                 <div class="sectionbox">
                     <div>
@@ -68,6 +71,7 @@
                         &nbsp;<span class="cb">{!IF(rpt=='Special Texas Ranger','X','')}</span> Special Texas Ranger
                     </div>
                 </div>
+                </apex:outputPanel>
             </td>
         </tr>
     </table>
@@ -149,6 +153,7 @@
                 </div>
             </td>
             <td style="width:50%; padding-left:8px;" class="nb">
+                <apex:outputPanel rendered="{!NOT(ISBLANK(FIR_Qualification_Form__c.Witness_Name__c))}">
                 <div class="lbl">Printed Name of Witness (for Firearms Instructors Only)</div>
                 <div class="sigcell"><apex:outputField value="{!FIR_Qualification_Form__c.Witness_Name__c}"/></div>
                 <div class="lbl" style="margin-top:4px;">Signature of Witness (for Firearms Instructors Only)</div>
@@ -157,6 +162,7 @@
                 <div class="sigcell">
                     <apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!FIR_Qualification_Form__c.Witness_Signature_Date__c}"/></apex:outputText>
                 </div>
+                </apex:outputPanel>
             </td>
         </tr>
     </table>

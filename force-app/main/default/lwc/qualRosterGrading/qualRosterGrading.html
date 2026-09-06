@@ -102,10 +102,18 @@
                         <p class="page-sub">Grade qualification results for this roster</p>
                     </div>
                     <template if:true={hasGradingData}>
-                        <button class="btn-add-employee" onclick={openAddEmployeeModal}>
-                            <lightning-icon icon-name="utility:adduser" size="xx-small" class="btn-add-icon"></lightning-icon>
-                            Add to Roster
-                        </button>
+                        <template if:false={hasSelectedRows}>
+                            <button class="btn-add-employee" onclick={openAddEmployeeModal}>
+                                <lightning-icon icon-name="utility:adduser" size="xx-small" class="btn-add-icon"></lightning-icon>
+                                Add to Roster
+                            </button>
+                        </template>
+                        <template if:true={hasSelectedRows}>
+                            <button class="btn-delete-rows" onclick={handleDeleteSelected}>
+                                <lightning-icon icon-name="utility:delete" size="xx-small" variant="inverse" class="btn-add-icon"></lightning-icon>
+                                {deleteButtonLabel}
+                            </button>
+                        </template>
                     </template>
                 </div>
             </div>
@@ -181,6 +189,9 @@
                                     <table class="grading-table">
                                         <thead>
                                             <tr class="grading-header-row">
+                                                <th class="th-select">
+                                                    <input type="checkbox" checked={allRowsSelected} onchange={handleSelectAllRows} title="Select all" />
+                                                </th>
                                                 <th class="th-name">Name</th>
                                                 <th>Manufacturer</th>
                                                 <th>Model</th>
@@ -194,6 +205,9 @@
                                         <tbody>
                                             <template for:each={activeRows} for:item="row">
                                                 <tr key={row.detailId} class={row.groupClass}>
+                                                    <td class="td-select">
+                                                        <input type="checkbox" checked={row.rowSelected} data-detail-id={row.detailId} onchange={handleRowSelect} />
+                                                    </td>
                                                     <td class="td-name-cell">
                                                         <template if:true={row.showName}>
                                                             <span class="member-name">{row.memberName}</span>

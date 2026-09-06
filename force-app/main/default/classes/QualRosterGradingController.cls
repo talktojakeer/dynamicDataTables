@@ -214,6 +214,21 @@ public with sharing class QualRosterGradingController {
     // Save a single grading row inline edit
     // -----------------------------------------------------------------------
     @AuraEnabled
+    public static void deleteGradingRows(List<Id> detailIds) {
+        if (detailIds == null || detailIds.isEmpty()) {
+            throw new AuraHandledException('No rows selected to delete.');
+        }
+        try {
+            List<FIR_Weapon_Qualification_Detail__c> toDelete = [
+                SELECT Id FROM FIR_Weapon_Qualification_Detail__c WHERE Id IN :detailIds
+            ];
+            if (!toDelete.isEmpty()) delete toDelete;
+        } catch (Exception e) {
+            throw new AuraHandledException('Delete failed: ' + e.getMessage());
+        }
+    }
+
+    @AuraEnabled
     public static void saveGradingRow(
         Id     detailId,
         String manufacturer,

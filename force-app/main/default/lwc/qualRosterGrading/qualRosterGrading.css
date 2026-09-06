@@ -562,3 +562,9 @@
 /* 5th-10th qualification attempt: light red row highlight */
 tr.high-attempt > td { background-color: #fdecea; }
 tr.high-attempt:hover > td { background-color: #fbddd9; }
+.btn-delete-rows {
+    display:inline-flex; align-items:center; gap:6px; background:#ba0517; color:#fff;
+    border:none; border-radius:6px; padding:8px 14px; font-size:13px; font-weight:600; cursor:pointer;
+}
+.btn-delete-rows:hover { background:#8e0000; }
+.th-select, .td-select { width:34px; text-align:center; }

@@ -3,6 +3,7 @@ import { ShowToastEvent }          from 'lightning/platformShowToastEvent';
 import getRosterLabelDetails       from '@salesforce/apex/QualRosterGradingController.getRosterLabelDetails';
 import getRosterGradingData        from '@salesforce/apex/QualRosterGradingController.getRosterGradingData';
 import saveGradingRow              from '@salesforce/apex/QualRosterGradingController.saveGradingRow';
+import deleteGradingRows           from '@salesforce/apex/QualRosterGradingController.deleteGradingRows';
 import getWeaponCodeOptions        from '@salesforce/apex/QualRosterGradingController.getWeaponCodeOptions';
 import saveSignatures              from '@salesforce/apex/QualRosterGradingController.saveSignatures';
 import getAvailableEmployees       from '@salesforce/apex/QualRosterGradingController.getAvailableEmployees';
@@ -648,6 +649,7 @@ export default class QualRosterGrading extends LightningElement {
 
     handleWeaponSelect(event) {
         this.selectedWeapon = event.currentTarget.dataset.weapon;
+        this._selectedRowIds = [];   // selection is per-weapon view
     }
 
     handleFieldBlur(event) {
@@ -732,6 +734,74 @@ export default class QualRosterGrading extends LightningElement {
     }
 
     @track isSavingGrading = false;
+
+    // ---- Row selection for mass delete -----------------------------------
+    @track _selectedRowIds = [];
+
+    get hasSelectedRows() { return this._selectedRowIds.length > 0; }
+    get selectedRowCount() { return this._selectedRowIds.length; }
+    get deleteButtonLabel() { return `Delete ${this._selectedRowIds.length} Selected`; }
+
+    // Whether the header "select all" is checked (all active rows selected)
+    get allRowsSelected() {
+        const rows = this.activeRows;
+        return rows.length > 0 && rows.every(r => this._selectedRowIds.includes(r.detailId));
+    }
+
+    handleRowSelect(event) {
+        const id = event.target.dataset.detailId;
+        const checked = event.target.checked;
+        const set = new Set(this._selectedRowIds);
+        if (checked) set.add(id); else set.delete(id);
+        this._selectedRowIds = Array.from(set);
+        this._applyRowSelection();
+    }
+
+    handleSelectAllRows(event) {
+        const checked = event.target.checked;
+        if (checked) {
+            this._selectedRowIds = this.activeRows.map(r => r.detailId);
+        } else {
+            this._selectedRowIds = [];
+        }
+        this._applyRowSelection();
+    }
+
+    // Re-stamp the `rowSelected` flag on the enriched rows so checkboxes reflect state.
+    _applyRowSelection() {
+        if (!this.hasGradingData) return;
+        const sel = new Set(this._selectedRowIds);
+        this.gradingData = {
+            ...this.gradingData,
+            weaponSections: this.gradingData.weaponSections.map(s => ({
+                ...s,
+                rows: s.rows.map(r => ({ ...r, rowSelected: sel.has(r.detailId) }))
+            }))
+        };
+    }
+
+    handleDeleteSelected() {
+        if (!this.hasSelectedRows) return;
+        // eslint-disable-next-line no-alert
+        deleteGradingRows({ detailIds: this._selectedRowIds })
+            .then(() => {
+                const n = this._selectedRowIds.length;
+                this._selectedRowIds = [];
+                this.dispatchEvent(new ShowToastEvent({
+                    title  : 'Deleted',
+                    message: `${n} row(s) deleted.`,
+                    variant: 'success'
+                }));
+                this.loadGradingData(this.selectedLabel);
+            })
+            .catch(error => {
+                this.dispatchEvent(new ShowToastEvent({
+                    title  : 'Delete failed',
+                    message: this.reduceError(error),
+                    variant: 'error'
+                }));
+            });
+    }
 
     handleSaveAll() {
         if (!this.hasGradingData) return;

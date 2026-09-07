@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ListView xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>All</fullName>
+    <fullName>My_Rosters</fullName>
     <columns>NAME</columns>
-    <columns>ContactName__c</columns>
-    <columns>CREATED_DATE</columns>
+    <columns>Qual_Roster_Label__c</columns>
     <columns>Firearms_Instrutor__c</columns>
     <columns>Light_Condition__c</columns>
     <columns>Location__c</columns>
-    <columns>Test_Date__c</columns>
-    <columns>Qual_Roster_Label__c</columns>
-    <filterScope>Everything</filterScope>
-    <label>All</label>
+    <columns>CREATED_DATE</columns>
+    <filterScope>Mine</filterScope>
+    <label>My Roster&apos;s</label>
 </ListView>

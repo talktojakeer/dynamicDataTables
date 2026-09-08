@@ -101,6 +101,7 @@ public with sharing class QualRosterGradingController {
                    Light_Condition__c,
                    Firearms_Instrutor__c,
                    Firearms_Instrutor__r.Name,
+                   Status__c,
                    Qual_Roster_Label__c
             FROM   FIR_Qualification_Form__c
             WHERE  Qual_Roster_Label__c = :rosterLabel
@@ -116,6 +117,9 @@ public with sharing class QualRosterGradingController {
         wrapper.lightCondition = first.Light_Condition__c != null ? first.Light_Condition__c : '';
         wrapper.instructorName = first.Firearms_Instrutor__r != null
                                  ? first.Firearms_Instrutor__r.Name : '';
+        // Roster is locked (read-only) once it reaches these statuses.
+        wrapper.status     = first.Status__c != null ? first.Status__c : '';
+        wrapper.isReadOnly = (wrapper.status == 'Ready for Pdf' || wrapper.status == 'Completed');
 
         // Derive recruit class name from first Contact's ACR
         if (first.ContactName__c != null) {
@@ -220,9 +224,38 @@ public with sharing class QualRosterGradingController {
         }
         try {
             List<FIR_Weapon_Qualification_Detail__c> toDelete = [
-                SELECT Id FROM FIR_Weapon_Qualification_Detail__c WHERE Id IN :detailIds
+                SELECT Id, FIR_Qualification_Form__c
+                FROM   FIR_Weapon_Qualification_Detail__c
+                WHERE  Id IN :detailIds
             ];
-            if (!toDelete.isEmpty()) delete toDelete;
+            if (toDelete.isEmpty()) return;
+
+            // Remember which parent forms are affected, then delete the details.
+            Set<Id> parentFormIds = new Set<Id>();
+            for (FIR_Weapon_Qualification_Detail__c d : toDelete) {
+                if (d.FIR_Qualification_Form__c != null) parentFormIds.add(d.FIR_Qualification_Form__c);
+            }
+            delete toDelete;
+
+            // Any parent form that now has ZERO weapon details is an empty roster
+            // entry - delete it so it no longer appears in the roster list.
+            if (!parentFormIds.isEmpty()) {
+                Set<Id> stillHaveChildren = new Set<Id>();
+                for (FIR_Weapon_Qualification_Detail__c d : [
+                    SELECT FIR_Qualification_Form__c
+                    FROM   FIR_Weapon_Qualification_Detail__c
+                    WHERE  FIR_Qualification_Form__c IN :parentFormIds
+                ]) {
+                    stillHaveChildren.add(d.FIR_Qualification_Form__c);
+                }
+                List<FIR_Qualification_Form__c> emptyForms = new List<FIR_Qualification_Form__c>();
+                for (Id formId : parentFormIds) {
+                    if (!stillHaveChildren.contains(formId)) {
+                        emptyForms.add(new FIR_Qualification_Form__c(Id = formId));
+                    }
+                }
+                if (!emptyForms.isEmpty()) delete emptyForms;
+            }
         } catch (Exception e) {
             throw new AuraHandledException('Delete failed: ' + e.getMessage());
         }
@@ -331,7 +364,7 @@ public with sharing class QualRosterGradingController {
 
         try {
             List<FIR_Qualification_Form__c> forms = [
-                SELECT Id
+                SELECT Id, Status__c
                 FROM   FIR_Qualification_Form__c
                 WHERE  Qual_Roster_Label__c = :rosterLabel
             ];
@@ -344,6 +377,11 @@ public with sharing class QualRosterGradingController {
                     f.Witness_Signature__c = witnessHtml;
                     f.Witness_Name__c      = witnessName;
                     f.Witness_Signature_Date__c = witnessDate;
+                }
+                // Signatures captured -> roster is ready for PDF (locks the screen).
+                // Don't downgrade a roster that's already Completed.
+                if (f.Status__c != 'Completed') {
+                    f.Status__c = 'Ready for Pdf';
                 }
             }
             update forms;
@@ -722,6 +760,8 @@ public with sharing class QualRosterGradingController {
         @AuraEnabled public String              lightCondition   = '';
         @AuraEnabled public String              instructorName   = '';
         @AuraEnabled public String              recruitClassName = '';
+        @AuraEnabled public String              status           = '';
+        @AuraEnabled public Boolean             isReadOnly       = false;
         @AuraEnabled public List<WeaponSection> weaponSections   = new List<WeaponSection>();
     }
 

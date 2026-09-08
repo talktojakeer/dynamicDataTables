@@ -101,7 +101,7 @@
                         <h1 class="page-title">{selectedLabel}</h1>
                         <p class="page-sub">Grade qualification results for this roster</p>
                     </div>
-                    <template if:true={hasGradingData}>
+                    <template if:true={canEdit}>
                         <template if:false={hasSelectedRows}>
                             <button class="btn-add-employee" onclick={openAddEmployeeModal}>
                                 <lightning-icon icon-name="utility:adduser" size="xx-small" class="btn-add-icon"></lightning-icon>
@@ -115,8 +115,22 @@
                             </button>
                         </template>
                     </template>
+                    <template if:true={isReadOnly}>
+                        <span class="locked-pill">
+                            <lightning-icon icon-name="utility:lock" size="xx-small" class="btn-add-icon"></lightning-icon>
+                            {gradingData.status}
+                        </span>
+                    </template>
                 </div>
             </div>
+
+            <!-- Completion banner (read-only rosters) -->
+            <template if:true={isReadOnly}>
+                <div class="completion-banner">
+                    <lightning-icon icon-name="utility:success" size="small" variant="inverse" class="completion-icon"></lightning-icon>
+                    <span class="completion-text">{statusBanner}</span>
+                </div>
+            </template>
 
             <!-- Session header -->
             <template if:true={hasGradingData}>
@@ -190,7 +204,7 @@
                                         <thead>
                                             <tr class="grading-header-row">
                                                 <th class="th-select">
-                                                    <input type="checkbox" checked={allRowsSelected} onchange={handleSelectAllRows} title="Select all" />
+                                                    <input type="checkbox" checked={allRowsSelected} onchange={handleSelectAllRows} disabled={isReadOnly} title="Select all" />
                                                 </th>
                                                 <th class="th-name">Name</th>
                                                 <th>Manufacturer</th>
@@ -206,7 +220,7 @@
                                             <template for:each={activeRows} for:item="row">
                                                 <tr key={row.detailId} class={row.groupClass}>
                                                     <td class="td-select">
-                                                        <input type="checkbox" checked={row.rowSelected} data-detail-id={row.detailId} onchange={handleRowSelect} />
+                                                        <input type="checkbox" checked={row.rowSelected} data-detail-id={row.detailId} onchange={handleRowSelect} disabled={isReadOnly} />
                                                     </td>
                                                     <td class="td-name-cell">
                                                         <template if:true={row.showName}>
@@ -218,7 +232,7 @@
                                                     </td>
                                                     <td class="td-readonly">
                                                         <template if:true={row.isOtherType}>
-                                                            <input type="text" class="cell-input" value={row.manufacturer} maxlength="50" data-detail-id={row.detailId} data-field="manufacturer" onblur={handleFieldBlur} placeholder="Enter manufacturer" />
+                                                            <input type="text" class="cell-input" disabled={isReadOnly} value={row.manufacturer} maxlength="50" data-detail-id={row.detailId} data-field="manufacturer" onblur={handleFieldBlur} placeholder="Enter manufacturer" />
                                                         </template>
                                                         <template if:false={row.isOtherType}>
                                                             <template if:true={row.showName}>{row.manufacturer}</template>
@@ -226,7 +240,7 @@
                                                     </td>
                                                     <td class="td-readonly">
                                                         <template if:true={row.isOtherType}>
-                                                            <input type="text" class="cell-input" value={row.model} maxlength="50" data-detail-id={row.detailId} data-field="model" onblur={handleFieldBlur} placeholder="Enter model" />
+                                                            <input type="text" class="cell-input" disabled={isReadOnly} value={row.model} maxlength="50" data-detail-id={row.detailId} data-field="model" onblur={handleFieldBlur} placeholder="Enter model" />
                                                         </template>
                                                         <template if:false={row.isOtherType}>
                                                             <template if:true={row.showName}>{row.model}</template>
@@ -234,14 +248,14 @@
                                                     </td>
                                                     <td class="td-readonly">
                                                         <template if:true={row.isOtherType}>
-                                                            <input type="text" class="cell-input" value={row.sightType} maxlength="50" data-detail-id={row.detailId} data-field="sightType" onblur={handleFieldBlur} placeholder="Enter sight type" />
+                                                            <input type="text" class="cell-input" disabled={isReadOnly} value={row.sightType} maxlength="50" data-detail-id={row.detailId} data-field="sightType" onblur={handleFieldBlur} placeholder="Enter sight type" />
                                                         </template>
                                                         <template if:false={row.isOtherType}>
                                                             {row.sightType}
                                                         </template>
                                                     </td>
                                                     <td>
-                                                        <select class="cell-select" data-detail-id={row.detailId} data-field="weaponCode" onchange={handleSelectChange}>
+                                                        <select class="cell-select" disabled={isReadOnly} data-detail-id={row.detailId} data-field="weaponCode" onchange={handleSelectChange}>
                                                             <option value="">--</option>
                                                             <template for:each={row.weaponCodeOptionsForRow} for:item="opt">
                                                                 <option key={opt.value} value={opt.value} selected={opt.selected}>{opt.value}</option>
@@ -249,7 +263,7 @@
                                                         </select>
                                                     </td>
                                                     <td>
-                                                        <select class="cell-select" data-detail-id={row.detailId} data-field="qualificationAttempt" onchange={handleSelectChange}>
+                                                        <select class="cell-select" disabled={isReadOnly} data-detail-id={row.detailId} data-field="qualificationAttempt" onchange={handleSelectChange}>
                                                             <option value="">--</option>
                                                             <template for:each={row.attemptOptionsForRow} for:item="opt">
                                                                 <option key={opt.value} value={opt.value} selected={opt.selected}>{opt.value}</option>
@@ -258,15 +272,15 @@
                                                     </td>
                                                     <td class="td-toggle">
                                                         <div class="toggle-group">
-                                                            <button class="toggle-btn toggle-yes" data-detail-id={row.detailId} data-value="Yes" data-active={row.qualifiedYes} onclick={handleQualifiedToggle}>Yes</button>
-                                                            <button class="toggle-btn toggle-no" data-detail-id={row.detailId} data-value="No" data-active={row.qualifiedNo} onclick={handleQualifiedToggle}>No</button>
+                                                            <button class="toggle-btn toggle-yes" disabled={isReadOnly} data-detail-id={row.detailId} data-value="Yes" data-active={row.qualifiedYes} onclick={handleQualifiedToggle}>Yes</button>
+                                                            <button class="toggle-btn toggle-no" disabled={isReadOnly} data-detail-id={row.detailId} data-value="No" data-active={row.qualifiedNo} onclick={handleQualifiedToggle}>No</button>
                                                         </div>
                                                     </td>
                                                     <td class="td-toggle">
                                                         <template if:false={row.qualified90Disabled}>
                                                             <div class="toggle-group">
-                                                                <button class="toggle-btn toggle-yes" data-detail-id={row.detailId} data-value="Yes" data-active={row.qualified90Yes} onclick={handleQualified90Toggle}>Yes</button>
-                                                                <button class="toggle-btn toggle-no" data-detail-id={row.detailId} data-value="No" data-active={row.qualified90No} onclick={handleQualified90Toggle}>No</button>
+                                                                <button class="toggle-btn toggle-yes" disabled={isReadOnly} data-detail-id={row.detailId} data-value="Yes" data-active={row.qualified90Yes} onclick={handleQualified90Toggle}>Yes</button>
+                                                                <button class="toggle-btn toggle-no" disabled={isReadOnly} data-detail-id={row.detailId} data-value="No" data-active={row.qualified90No} onclick={handleQualified90Toggle}>No</button>
                                                             </div>
                                                         </template>
                                                         <template if:true={row.qualified90Disabled}>
@@ -287,7 +301,7 @@
                 </template>
 
                 <!-- Global Save Bar -->
-                <template if:true={hasGradingData}>
+                <template if:true={canEdit}>
                     <div class="grading-save-bar">
                         <button class="btn-save-grading" onclick={handleSaveAll} disabled={isSavingGrading}>
                             <template if:true={isSavingGrading}>

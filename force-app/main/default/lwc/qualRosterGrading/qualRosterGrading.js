@@ -106,6 +106,22 @@ export default class QualRosterGrading extends LightningElement {
                this.gradingData.weaponSections.length > 0;
     }
 
+    // Roster is locked once status is Ready for Pdf / Completed (from Apex).
+    get isReadOnly() {
+        return !!(this.gradingData && this.gradingData.isReadOnly);
+    }
+    get canEdit() {
+        return this.hasGradingData && !this.isReadOnly;
+    }
+    get statusBanner() {
+        if (!this.isReadOnly) return '';
+        const instr = (this.gradingData.instructorName || 'the Firearms Instructor');
+        const date  = (this.gradingData.testDate || '');
+        return date
+            ? `This form has been completed by ${instr} on ${date}.`
+            : `This form has been completed by ${instr}.`;
+    }
+
     get weaponNavItems() {
         if (!this.hasGradingData) return [];
         return this.gradingData.weaponSections.map(section => {
@@ -653,6 +669,7 @@ export default class QualRosterGrading extends LightningElement {
     }
 
     handleFieldBlur(event) {
+        if (this.isReadOnly) return;
         const detailId = event.target.dataset.detailId;
         const field    = event.target.dataset.field;
         const value    = event.target.value;
@@ -661,6 +678,7 @@ export default class QualRosterGrading extends LightningElement {
     }
 
     handleSelectChange(event) {
+        if (this.isReadOnly) return;
         const detailId = event.target.dataset.detailId;
         const field    = event.target.dataset.field;
         const value    = event.target.value;
@@ -669,6 +687,7 @@ export default class QualRosterGrading extends LightningElement {
     }
 
     handleQualifiedToggle(event) {
+        if (this.isReadOnly) return;
         const detailId = event.currentTarget.dataset.detailId;
         const value    = event.currentTarget.dataset.value;
         this.trackChange(detailId, 'qualified', value);
@@ -682,6 +701,7 @@ export default class QualRosterGrading extends LightningElement {
     }
 
     handleQualified90Toggle(event) {
+        if (this.isReadOnly) return;
         const detailId = event.currentTarget.dataset.detailId;
         const value    = event.currentTarget.dataset.value;
         this.trackChange(detailId, 'qualified90', value);
@@ -781,7 +801,7 @@ export default class QualRosterGrading extends LightningElement {
     }
 
     handleDeleteSelected() {
-        if (!this.hasSelectedRows) return;
+        if (!this.hasSelectedRows || this.isReadOnly) return;
         // eslint-disable-next-line no-alert
         deleteGradingRows({ detailIds: this._selectedRowIds })
             .then(() => {
@@ -804,7 +824,7 @@ export default class QualRosterGrading extends LightningElement {
     }
 
     handleSaveAll() {
-        if (!this.hasGradingData) return;
+        if (!this.hasGradingData || this.isReadOnly) return;
         // Always allow saving - the displayed values (including defaults like
         // "No" / "1st") are valid results to record and certify, even if the
         // grader did not manually change anything.

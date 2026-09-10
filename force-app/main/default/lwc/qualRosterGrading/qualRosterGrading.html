@@ -207,6 +207,7 @@
                                                     <input type="checkbox" checked={allRowsSelected} onchange={handleSelectAllRows} disabled={isReadOnly} title="Select all" />
                                                 </th>
                                                 <th class="th-name">Name</th>
+                                                <th>Weapon Type</th>
                                                 <th>Manufacturer</th>
                                                 <th>Model</th>
                                                 <th>Sight Type</th>
@@ -228,6 +229,14 @@
                                                             <template if:true={row.isFirearmsInstructor}>
                                                                 <span class="instructor-badge" title="Firearm Instructor">FI</span>
                                                             </template>
+                                                        </template>
+                                                    </td>
+                                                    <td class="td-weapon-type">
+                                                        <template if:true={row.isOtherType}>
+                                                            <input type="text" class="cell-input" disabled={isReadOnly} value={row.otherWeaponType} maxlength="255" data-detail-id={row.detailId} data-field="otherWeaponType" onblur={handleFieldBlur} placeholder="Enter weapon type" />
+                                                        </template>
+                                                        <template if:false={row.isOtherType}>
+                                                            <span class="wt-label">{row.weaponType}</span>
                                                         </template>
                                                     </td>
                                                     <td class="td-readonly">

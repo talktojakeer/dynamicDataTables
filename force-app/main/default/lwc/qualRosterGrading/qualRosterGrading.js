@@ -650,6 +650,7 @@ export default class QualRosterGrading extends LightningElement {
             qualificationAttempt,
             qualified,
             qualified90,
+            otherWeaponType    : row.otherWeaponType,
             weaponCodeOptionsForRow,
             attemptOptionsForRow,
             isHighAttempt,
@@ -972,7 +973,8 @@ export default class QualRosterGrading extends LightningElement {
                 weaponCode          : val('weaponCode', '')          || '',
                 qualificationAttempt: val('qualificationAttempt', '') || '',
                 qualified           : val('qualified', 'No')          || 'No',
-                qualified90         : val('qualified90', 'No')        || 'No'
+                qualified90         : val('qualified90', 'No')        || 'No',
+                otherWeaponType     : val('otherWeaponType', '')      || ''
             });
         });
 

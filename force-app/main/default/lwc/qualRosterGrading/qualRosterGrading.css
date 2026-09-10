@@ -591,3 +591,6 @@ tr.high-attempt:hover > td { background-color: #fbddd9; }
 }
 .completion-icon { --sds-c-icon-color-foreground-default:#2e7d32; color:#2e7d32; }
 .completion-text { line-height:1.3; }
+
+.td-weapon-type { min-width:120px; }
+.wt-label { font-size:13px; color:#3e3e3c; }

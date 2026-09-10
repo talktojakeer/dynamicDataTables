@@ -162,6 +162,7 @@ public with sharing class QualRosterGradingController {
             SELECT Id,
                    FIR_Qualification_Form__c,
                    Weapon_Type__c,
+                   Other_Weapon_Type__c,
                    Manufacturer__c,
                    Model__c,
                    Sight_Type__c,
@@ -191,6 +192,7 @@ public with sharing class QualRosterGradingController {
             row.isFirearmsInstructor = formToInstructor.get(d.FIR_Qualification_Form__c) == true;
             row.isRosterInstructor   = formToRosterInstr.get(d.FIR_Qualification_Form__c) == true;
             row.weaponType          = weaponType;
+            row.otherWeaponType     = d.Other_Weapon_Type__c;
             row.manufacturer        = d.Manufacturer__c;
             row.model               = d.Model__c;
             row.sightType           = d.Sight_Type__c;
@@ -270,11 +272,13 @@ public with sharing class QualRosterGradingController {
         String weaponCode,
         String qualificationAttempt,
         String qualified,
-        String qualified90
+        String qualified90,
+        String otherWeaponType
     ) {
         try {
             FIR_Weapon_Qualification_Detail__c detail =
                 new FIR_Weapon_Qualification_Detail__c(Id = detailId);
+            detail.Other_Weapon_Type__c     = otherWeaponType;
             detail.Manufacturer__c          = manufacturer;
             detail.Model__c                 = model;
             detail.Sight_Type__c            = sightType;
@@ -510,6 +514,17 @@ public with sharing class QualRosterGradingController {
         return ATTEMPT_ORDER.get(n - 1);
     }
 
+    // Uniqueness key for a roster row: form + weapon type + manufacturer + model
+    // + sight type (blanks normalized, case-insensitive) so the "same" weapon is
+    // only skipped when ALL of these match.
+    private static String dedupKey(Id formId, String wt, String mfr, String mdl, String sight) {
+        return String.valueOf(formId) + '|'
+             + (wt   == null ? '' : wt.trim().toLowerCase())  + '|'
+             + (mfr  == null ? '' : mfr.trim().toLowerCase()) + '|'
+             + (mdl  == null ? '' : mdl.trim().toLowerCase()) + '|'
+             + (sight== null ? '' : sight.trim().toLowerCase());
+    }
+
     @AuraEnabled
     public static AddToRosterResult addToRoster(
         String rosterLabel,
@@ -561,11 +576,13 @@ public with sharing class QualRosterGradingController {
         Set<String> existingPairs = new Set<String>();
         if (!contactToFormId.values().isEmpty()) {
             for (FIR_Weapon_Qualification_Detail__c d : [
-                SELECT FIR_Qualification_Form__c, Weapon_Type__c
+                SELECT FIR_Qualification_Form__c, Weapon_Type__c,
+                       Manufacturer__c, Model__c, Sight_Type__c
                 FROM   FIR_Weapon_Qualification_Detail__c
                 WHERE  FIR_Qualification_Form__c IN :contactToFormId.values()
             ]) {
-                existingPairs.add(d.FIR_Qualification_Form__c + '|' + d.Weapon_Type__c);
+                existingPairs.add(dedupKey(d.FIR_Qualification_Form__c, d.Weapon_Type__c,
+                    d.Manufacturer__c, d.Model__c, d.Sight_Type__c));
             }
         }
 
@@ -613,7 +630,7 @@ public with sharing class QualRosterGradingController {
                 if (formId == null) continue;
                 for (String wt : weaponTypes) {
                     if (String.isBlank(wt)) continue;
-                    String key = formId + '|' + wt;
+                    String key = dedupKey(formId, wt, manufacturer, model, sightType);
                     if (existingPairs.contains(key)) {
                         rowsSkipped++;
                         continue;
@@ -777,6 +794,7 @@ public with sharing class QualRosterGradingController {
         @AuraEnabled public Boolean isFirearmsInstructor;
         @AuraEnabled public Boolean isRosterInstructor;
         @AuraEnabled public String weaponType;
+        @AuraEnabled public String otherWeaponType;
         @AuraEnabled public String manufacturer;
         @AuraEnabled public String model;
         @AuraEnabled public String sightType;

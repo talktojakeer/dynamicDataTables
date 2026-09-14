@@ -12,12 +12,14 @@
     table.grid th, table.grid td { border:1px solid #000; padding:2px 3px; vertical-align:top; }
     .sectionbox { border:1px solid #000; padding:3px 5px; }
     .sectitle { font-weight:bold; text-align:center; background:#e5e5e5; border:1px solid #000; padding:1px; }
-    .cb { display:inline-block; width:7px; height:7px; border:1px solid #000; text-align:center; line-height:7px; font-size:7px; margin-right:2px; }
+    .cb { display:inline-block; width:8px; height:8px; border:1px solid #000; text-align:center; line-height:8px; font-size:8px; font-weight:bold; margin-right:2px; }
     .lbl { font-weight:bold; }
     .nb { border:none; }
     .center { text-align:center; }
     .legend { font-size:6.5px; }
-    .sigcell { height:26px; border-bottom:1px solid #000; }
+    .sigcell { height:26px; border-bottom:1px solid #000; overflow:hidden; }
+    .sig-img { height:40px; border-bottom:1px solid #000; overflow:hidden; }
+    .sig-img img { max-height:38px; max-width:100%; display:block; }
 </style>
 </head>
 <body>
@@ -28,7 +30,7 @@
     <!-- Full legal name -->
     <div style="margin-bottom:3px;">
         <span class="lbl">Full Legal Name: </span>
-        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.Full_Name__c}"/>
+        <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.Name}"/>
         <span style="color:#555;"> (Last Name, First Name, Middle Name)</span>
     </div>
 
@@ -46,7 +48,7 @@
                         &nbsp;&nbsp;<span class="lbl">Region:</span>
                         <apex:outputField value="{!FIR_Qualification_Form__c.ContactName__r.FAQP_Region__c}"/></div>
                     <div><span class="lbl">Firearms Instructor:</span>
-                        <span class="cb">{!IF(FIR_Qualification_Form__c.ContactName__r.Is_Firearms_Instructor__c,'X','')}</span> Yes
+                        <span class="cb">{!IF(FIR_Qualification_Form__c.ContactName__r.Is_Firearms_Instructor__c,'✓','')}</span> Yes
                     </div>
                 </div>
                 </apex:outputPanel>
@@ -63,12 +65,12 @@
                     </div>
                     <apex:variable var="rpt" value="{!FIR_Qualification_Form__c.ContactName__r.Retired_Peace_Officer_Type__c}"/>
                     <div>
-                        <span class="cb">{!IF(rpt=='Retired Peace Officer/Non-DPS','X','')}</span> Retired Peace Officer/Non-DPS
-                        &nbsp;<span class="cb">{!IF(rpt=='Special Ranger','X','')}</span> Special Ranger
+                        <span class="cb">{!IF(rpt=='Retired Peace Officer/Non-DPS','✓','')}</span> Retired Peace Officer/Non-DPS
+                        &nbsp;<span class="cb">{!IF(rpt=='Special Ranger','✓','')}</span> Special Ranger
                     </div>
                     <div>
-                        <span class="cb">{!IF(rpt=='Retired DPS Trooper','X','')}</span> Retired DPS Trooper
-                        &nbsp;<span class="cb">{!IF(rpt=='Special Texas Ranger','X','')}</span> Special Texas Ranger
+                        <span class="cb">{!IF(rpt=='Retired DPS Trooper','✓','')}</span> Retired DPS Trooper
+                        &nbsp;<span class="cb">{!IF(rpt=='Special Texas Ranger','✓','')}</span> Special Texas Ranger
                     </div>
                 </div>
                 </apex:outputPanel>
@@ -80,8 +82,8 @@
     <apex:variable var="lc" value="{!FIR_Qualification_Form__c.Light_Condition__c}"/>
     <div style="margin-bottom:4px;">
         <span class="lbl">Light Condition:</span>
-        <span class="cb">{!IF(CONTAINS(lc,'Day'),'X','')}</span> Daytime/Normal Lighting
-        &nbsp;&nbsp;<span class="cb">{!IF(CONTAINS(lc,'Night'),'X','')}</span> Nighttime/reduced light
+        <span class="cb">{!IF(CONTAINS(lc,'Day'),'✓','')}</span> Daytime/Normal Lighting
+        &nbsp;&nbsp;<span class="cb">{!IF(CONTAINS(lc,'Night'),'✓','')}</span> Nighttime/reduced light
     </div>
 
     <!-- Weapon grid: fixed official rows -->
@@ -98,31 +100,25 @@
             </tr>
         </thead>
         <tbody>
-            <apex:repeat value="{!WeaponByType}" var="wt">
-                <apex:variable var="d" value="{!WeaponByType[wt]}"/>
+            <apex:repeat value="{!WeaponRows}" var="r">
                 <tr>
-                    <td class="lbl">{!wt}</td>
+                    <td class="lbl">{!r.weaponLabel}</td>
                     <td>
-                        <span class="cb">{!IF(d.Sight_Type__c=='Iron Sight','X','')}</span> Iron Sight<br/>
-                        <span class="cb">{!IF(d.Sight_Type__c=='Optic','X','')}</span> Optic<br/>
-                        <span class="cb">{!IF(OR(d.Sight_Type__c=='Magnified Optic',d.Sight_Type__c=='Scope'),'X','')}</span>
-                        {!IF(wt=='Precision Rifle','Scope**','Magnified Optic*')}
+                        <span class="cb">{!r.sightIron}</span> Iron Sight<br/>
+                        <span class="cb">{!r.sightOptic}</span> Optic<br/>
+                        <span class="cb">{!r.sightMagnified}</span> {!r.sightThirdLabel}
                     </td>
-                    <td>{!d.Manufacturer__c} {!d.Model__c}</td>
-                    <td class="center">{!d.Weapon_Code__c}</td>
+                    <td>{!r.manufacturerModel}</td>
+                    <td class="center">{!r.weaponCode}</td>
                     <td class="center">
-                        <span class="cb">{!IF(d.Qualified__c=='Yes','X','')}</span>Yes
-                        &nbsp;<span class="cb">{!IF(d.Qualified__c=='No','X','')}</span>No
-                    </td>
-                    <td class="center">
-                        <span class="cb">{!IF(d.Qualified_at_90__c=='Yes','X','')}</span>Yes
-                        &nbsp;<span class="cb">{!IF(d.Qualified_at_90__c=='No','X','')}</span>No
+                        <span class="cb">{!r.qualifiedYes}</span>Yes
+                        &nbsp;<span class="cb">{!r.qualifiedNo}</span>No
                     </td>
                     <td class="center">
-                        <apex:outputText value="{0,date,MM/dd/yyyy}">
-                            <apex:param value="{!d.Attempt_Date__c}"/>
-                        </apex:outputText>
+                        <span class="cb">{!r.qualified90Yes}</span>Yes
+                        &nbsp;<span class="cb">{!r.qualified90No}</span>No
                     </td>
+                    <td class="center">{!r.attemptDate}</td>
                 </tr>
             </apex:repeat>
         </tbody>
@@ -146,7 +142,7 @@
                 <div class="lbl">Printed Name of Certified Firearms Instructor</div>
                 <div class="sigcell"><apex:outputField value="{!FIR_Qualification_Form__c.Firearms_Instrutor__r.Name}"/></div>
                 <div class="lbl" style="margin-top:4px;">Signature of Certified Firearms Instructor</div>
-                <div class="sigcell"><apex:outputText escape="false" value="{!FIR_Qualification_Form__c.Firearms_Instructor_Signature__c}"/></div>
+                <div class="sig-img"><apex:outputText escape="false" value="{!FIR_Qualification_Form__c.Firearms_Instructor_Signature__c}"/></div>
                 <div class="lbl" style="margin-top:4px;">Date</div>
                 <div class="sigcell">
                     <apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!FIR_Qualification_Form__c.Test_Date__c}"/></apex:outputText>
@@ -157,7 +153,7 @@
                 <div class="lbl">Printed Name of Witness (for Firearms Instructors Only)</div>
                 <div class="sigcell"><apex:outputField value="{!FIR_Qualification_Form__c.Witness_Name__c}"/></div>
                 <div class="lbl" style="margin-top:4px;">Signature of Witness (for Firearms Instructors Only)</div>
-                <div class="sigcell"><apex:outputText escape="false" value="{!FIR_Qualification_Form__c.Witness_Signature__c}"/></div>
+                <div class="sig-img"><apex:outputText escape="false" value="{!FIR_Qualification_Form__c.Witness_Signature__c}"/></div>
                 <div class="lbl" style="margin-top:4px;">Date</div>
                 <div class="sigcell">
                     <apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!FIR_Qualification_Form__c.Witness_Signature_Date__c}"/></apex:outputText>

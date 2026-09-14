@@ -80,7 +80,7 @@ export default class RecruitClassAddMember extends LightningElement {
 
     // --- Utility -------------------------------------------------------------
     showToast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant, mode: 'dismissable' }));
     }
 
     reduceError(error) {

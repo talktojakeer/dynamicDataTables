@@ -488,7 +488,7 @@ export default class QualRosterGrading extends LightningElement {
                 this.dispatchEvent(new ShowToastEvent({
                     title  : 'Added to Roster',
                     message: msg,
-                    variant: res.rowsAdded > 0 ? 'success' : 'info'
+                    variant: res.rowsAdded > 0 ? 'success' : 'info', mode: 'dismissable' 
                 }));
 
                 // Keep the popup OPEN so the user can add another weapon batch.
@@ -552,7 +552,7 @@ export default class QualRosterGrading extends LightningElement {
                 this.dispatchEvent(new ShowToastEvent({
                     title  : 'Employee Created',
                     message: `${emp.name} created and selected.`,
-                    variant: 'success'
+                    variant: 'success', mode: 'dismissable' 
                 }));
                 this.newFirstName       = '';
                 this.newLastName        = '';
@@ -811,15 +811,14 @@ export default class QualRosterGrading extends LightningElement {
                 this.dispatchEvent(new ShowToastEvent({
                     title  : 'Deleted',
                     message: `${n} row(s) deleted.`,
-                    variant: 'success'
-                }));
+                    variant: 'success', mode: 'dismissable' }));
                 this.loadGradingData(this.selectedLabel);
             })
             .catch(error => {
                 this.dispatchEvent(new ShowToastEvent({
                     title  : 'Delete failed',
                     message: this.reduceError(error),
-                    variant: 'error'
+                    variant: 'error', mode: 'dismissable' 
                 }));
             });
     }
@@ -1000,8 +999,7 @@ export default class QualRosterGrading extends LightningElement {
                 this.dispatchEvent(new ShowToastEvent({
                     title  : 'Saved',
                     message: msg,
-                    variant: 'success'
-                }));
+                    variant: 'success', mode: 'dismissable' }));
                 // Return to the Qual Roster list view after certifying/saving.
                 this.handleBackToList();
             })
@@ -1017,13 +1015,13 @@ export default class QualRosterGrading extends LightningElement {
         this.dispatchEvent(new ShowToastEvent({
             title  : 'Not Saved',
             message: 'Signature is required to save. Your changes have not been saved yet.',
-            variant: 'warning'
+            variant: 'warning', mode: 'dismissable' 
         }));
     }
 
     // ── Utilities ──────────────────────────────────────────────────────────
     showErrorToast(msg) {
-        this.dispatchEvent(new ShowToastEvent({ title: 'Error', message: msg, variant: 'error' }));
+        this.dispatchEvent(new ShowToastEvent({ title: 'Error', message: msg, variant: 'error', mode: 'dismissable' }));
     }
 
     reduceError(error) {

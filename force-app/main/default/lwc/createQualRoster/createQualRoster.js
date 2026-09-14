@@ -268,7 +268,7 @@ export default class CreateQualRoster extends LightningElement {
             }
         }, 0);
 
-        this.dispatchEvent(new ShowToastEvent({ title: 'Applied', message: `Weapon details applied to ${totalChecked} member(s).`, variant: 'success' }));
+        this.dispatchEvent(new ShowToastEvent({ title: 'Applied', message: `Weapon details applied to ${totalChecked} member(s).`, variant: 'success', mode: 'dismissable' }));
     }
 
     // ── Roster Label Modal ─────────────────────────────────────────────────
@@ -614,14 +614,14 @@ export default class CreateQualRoster extends LightningElement {
                 this.template.querySelectorAll('input[type="date"]').forEach(el => { el.value = ''; });
             }, 0);
 
-            this.dispatchEvent(new ShowToastEvent({ title: 'Roster Saved', message: `${count} FIR Qualification Form(s) created successfully.`, variant: 'success' }));
+            this.dispatchEvent(new ShowToastEvent({ title: 'Roster Saved', message: `${count} FIR Qualification Form(s) created successfully.`, variant: 'success', mode: 'dismissable' }));
         })
         .catch(error => { this.isSavingRoster = false; this.showErrorToast('Save failed: ' + this.reduceErrors(error)); });
     }
 
     // ── Utilities ──────────────────────────────────────────────────────────
     showErrorToast(msg) {
-        this.dispatchEvent(new ShowToastEvent({ title: 'Error', message: msg, variant: 'error' }));
+        this.dispatchEvent(new ShowToastEvent({ title: 'Error', message: msg, variant: 'error', mode: 'dismissable' }));
     }
 
     reduceErrors(error) {

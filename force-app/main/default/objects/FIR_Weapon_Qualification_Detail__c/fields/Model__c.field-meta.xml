@@ -78,7 +78,52 @@
             <value>
                 <fullName>1187</fullName>
                 <default>false</default>
-                <label>1187</label>
+                <label>11-87</label>
+            </value>
+            <value>
+                <fullName>AU-1</fullName>
+                <default>false</default>
+                <label>AU-1</label>
+            </value>
+            <value>
+                <fullName>LMG</fullName>
+                <default>false</default>
+                <label>LMG</label>
+            </value>
+            <value>
+                <fullName>MCX</fullName>
+                <default>false</default>
+                <label>MCX</label>
+            </value>
+            <value>
+                <fullName>P240</fullName>
+                <default>false</default>
+                <label>P240</label>
+            </value>
+            <value>
+                <fullName>P249</fullName>
+                <default>false</default>
+                <label>P249</label>
+            </value>
+            <value>
+                <fullName>MK18</fullName>
+                <default>false</default>
+                <label>MK18</label>
+            </value>
+            <value>
+                <fullName>OBR</fullName>
+                <default>false</default>
+                <label>OBR</label>
+            </value>
+            <value>
+                <fullName>AXMC</fullName>
+                <default>false</default>
+                <label>AXMC</label>
+            </value>
+            <value>
+                <fullName>700</fullName>
+                <default>false</default>
+                <label>700</label>
             </value>
         </valueSetDefinition>
         <valueSettings>
@@ -98,12 +143,24 @@
             <valueName>P229</valueName>
         </valueSettings>
         <valueSettings>
+            <controllingFieldValue>Sig Sauer</controllingFieldValue>
+            <valueName>LMG</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Sig Sauer</controllingFieldValue>
+            <valueName>MCX</valueName>
+        </valueSettings>
+        <valueSettings>
             <controllingFieldValue>Daniel Defense</controllingFieldValue>
             <valueName>DDM4V7</valueName>
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Daniel Defense</controllingFieldValue>
             <valueName>DDM4 V7 RIS 3</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Daniel Defense</controllingFieldValue>
+            <valueName>MK18</valueName>
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Hodge Defense</controllingFieldValue>
@@ -114,8 +171,20 @@
             <valueName>Mod 2</valueName>
         </valueSettings>
         <valueSettings>
+            <controllingFieldValue>Hodge Defense</controllingFieldValue>
+            <valueName>AU-1</valueName>
+        </valueSettings>
+        <valueSettings>
             <controllingFieldValue>FN Herstal</controllingFieldValue>
             <valueName>P90</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>FN Herstal</controllingFieldValue>
+            <valueName>P240</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>FN Herstal</controllingFieldValue>
+            <valueName>P249</valueName>
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Heckler Koch</controllingFieldValue>
@@ -136,6 +205,18 @@
         <valueSettings>
             <controllingFieldValue>Remington</controllingFieldValue>
             <valueName>1187</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Remington</controllingFieldValue>
+            <valueName>700</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Accuracy International</controllingFieldValue>
+            <valueName>AXMC</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>LaRue</controllingFieldValue>
+            <valueName>OBR</valueName>
         </valueSettings>
     </valueSet>
 </CustomField>

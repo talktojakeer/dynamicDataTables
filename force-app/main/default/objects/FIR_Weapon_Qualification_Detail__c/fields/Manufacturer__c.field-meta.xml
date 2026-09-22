@@ -27,7 +27,7 @@
             <value>
                 <fullName>FN Herstal</fullName>
                 <default>false</default>
-                <label>FN Herstal</label>
+                <label>FN</label>
             </value>
             <value>
                 <fullName>Heckler Koch</fullName>
@@ -44,6 +44,16 @@
                 <default>false</default>
                 <label>Remington</label>
             </value>
+            <value>
+                <fullName>Accuracy International</fullName>
+                <default>false</default>
+                <label>Accuracy International</label>
+            </value>
+            <value>
+                <fullName>LaRue</fullName>
+                <default>false</default>
+                <label>LaRue</label>
+            </value>
         </valueSetDefinition>
         <valueSettings>
             <controllingFieldValue>Shotgun</controllingFieldValue>
@@ -51,7 +61,15 @@
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Shotgun</controllingFieldValue>
+            <controllingFieldValue>Precision Rifle</controllingFieldValue>
             <valueName>Remington</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Rifle</controllingFieldValue>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
+            <controllingFieldValue>Pistol 1</controllingFieldValue>
+            <controllingFieldValue>Pistol 2</controllingFieldValue>
+            <valueName>Sig Sauer</valueName>
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Rifle</controllingFieldValue>
@@ -60,21 +78,26 @@
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Rifle</controllingFieldValue>
-            <controllingFieldValue>Precision Rifle</controllingFieldValue>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
             <valueName>Hodge Defense</valueName>
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Rifle</controllingFieldValue>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
             <valueName>FN Herstal</valueName>
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Rifle</controllingFieldValue>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
             <valueName>Heckler Koch</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Pistol 1</controllingFieldValue>
-            <controllingFieldValue>Pistol 2</controllingFieldValue>
-            <valueName>Sig Sauer</valueName>
+            <controllingFieldValue>Precision Rifle</controllingFieldValue>
+            <valueName>Accuracy International</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Precision Rifle</controllingFieldValue>
+            <valueName>LaRue</valueName>
         </valueSettings>
     </valueSet>
 </CustomField>

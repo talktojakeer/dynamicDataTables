@@ -10,7 +10,7 @@
             <sorted>false</sorted>
             <value>
                 <fullName>DI</fullName>
-                <default>false</default>
+                <default>true</default>
                 <label>DI</label>
             </value>
             <value>

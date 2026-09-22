@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ListView xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>This_Month</fullName>
+    <fullName>Ready_for_PDF</fullName>
     <columns>NAME</columns>
     <columns>Qual_Roster_Label__c</columns>
+    <columns>Test_Date__c</columns>
     <columns>Light_Condition__c</columns>
     <columns>Location__c</columns>
     <columns>Firearms_Instrutor__c</columns>
@@ -10,9 +11,9 @@
     <columns>CREATEDBY_USER</columns>
     <filterScope>Everything</filterScope>
     <filters>
-        <field>IS_THIS_MONTH__c</field>
+        <field>Status__c</field>
         <operation>equals</operation>
-        <value>1</value>
+        <value>Ready for Pdf</value>
     </filters>
-    <label>This Month</label>
+    <label>Ready for PDF</label>
 </ListView>

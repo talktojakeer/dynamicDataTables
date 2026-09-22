@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Other_Weapon_Type__c</fullName>
-    <description>Free-text weapon name used when Weapon_Type__c = &apos;Other&apos;.</description>
+    <fullName>contactId__c</fullName>
     <externalId>false</externalId>
-    <label>Other Weapon Type</label>
-    <length>255</length>
+    <formula>FIR_Qualification_Form__r.ContactName__r.Id</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>contactId</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Text</type>

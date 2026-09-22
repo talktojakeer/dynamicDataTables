@@ -4,8 +4,10 @@
     <description>Member (Contact) from the parent form, surfaced on the detail so the latest-attempt flow can filter siblings by member.</description>
     <externalId>false</externalId>
     <formula>FIR_Qualification_Form__r.ContactName__c</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Member Contact</label>
     <required>false</required>
+    <trackTrending>false</trackTrending>
     <type>Text</type>
-    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <unique>false</unique>
 </CustomField>

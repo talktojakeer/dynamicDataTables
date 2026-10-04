@@ -29,8 +29,17 @@
 </head>
 <body>
 
-    <h1>TEXAS DEPARTMENT OF PUBLIC SAFETY</h1>
-    <h2>FIREARMS QUALIFICATION FORM</h2>
+    <table style="width:100%; border-collapse:collapse; margin-bottom:6px;">
+        <tr>
+            <td style="width:60px; vertical-align:middle; border:none; padding:0;">
+                <img src="{!$Resource.FaqpDpsLogo}" alt="DPS" style="height:52px; width:auto;"/>
+            </td>
+            <td style="vertical-align:middle; border:none; padding:0;">
+                <h1 style="text-align:left; margin:0;">TEXAS DEPARTMENT OF PUBLIC SAFETY</h1>
+                <h2 style="text-align:left; margin:0;">FIREARMS QUALIFICATION FORM</h2>
+            </td>
+        </tr>
+    </table>
 
     <div style="margin-bottom:3px;">
         <span class="lbl">Full Legal Name:</span>

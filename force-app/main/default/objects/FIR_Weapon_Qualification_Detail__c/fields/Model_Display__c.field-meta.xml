@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Model_Display__c</fullName>
+    <description>Clean model name without the weapon-type suffix. Use this in reports/PDF instead of Model__c.</description>
+    <externalId>false</externalId>
+    <formula>IF(CONTAINS(TEXT(Model__c), " ("), LEFT(TEXT(Model__c), FIND(" (", TEXT(Model__c)) - 1), TEXT(Model__c))</formula>
+    <label>Model (Display)</label>
+    <required>false</required>
+    <type>Text</type>
+</CustomField>

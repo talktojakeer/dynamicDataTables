@@ -10,38 +10,12 @@ import getContactMembers                from '@salesforce/apex/QualRosterControl
 import addToRoster                      from '@salesforce/apex/QualRosterController.addToRoster';
 import checkRosterLabelExists           from '@salesforce/apex/QualRosterController.checkRosterLabelExists';
 import DPS_BADGE                        from '@salesforce/resourceUrl/FaqpDpsLogo';
-
-const WEAPON_TYPE_VALUES = [
-    'Pistol 1', 'Pistol 2', 'Shotgun', 'Rifle', 'Automatic Weapon', 'Precision Rifle', 'Other'
-];
-
-const MANUFACTURER_BY_WEAPON = {
-    'Pistol 1'         : ['Sig Sauer'],
-    'Pistol 2'         : ['Sig Sauer'],
-    'Shotgun'          : ['Mossberg', 'Remington'],
-    'Rifle'            : ['Daniel Defense', 'FN Herstal', 'Heckler Koch', 'Hodge Defense'],
-    'Automatic Weapon' : ['Daniel Defense'],
-    'Precision Rifle'  : ['Hodge Defense']
-};
-
-const MODEL_BY_MANUFACTURER = {
-    'Sig Sauer'       : ['P320', 'P365', 'P226', 'P229'],
-    'Daniel Defense'  : ['DDM4V7', 'DDM4 V7 RIS 3'],
-    'Hodge Defense'   : ['Mod 1', 'Mod 2'],
-    'FN Herstal'      : ['P90'],
-    'Heckler Koch'    : ['416', '762 A1'],
-    'Mossberg'        : ['590A1'],
-    'Remington'       : ['870', '1187']
-};
-
-const SIGHT_BY_WEAPON = {
-    'Pistol 1'         : ['Iron Sight', 'Optic'],
-    'Pistol 2'         : ['Iron Sight', 'Optic'],
-    'Shotgun'          : ['Iron Sight', 'Optic'],
-    'Rifle'            : ['Iron Sight', 'Optic', 'Magnified Optic'],
-    'Automatic Weapon' : ['Iron Sight', 'Optic', 'Magnified Optic'],
-    'Precision Rifle'  : ['Scope']
-};
+import { getObjectInfo, getPicklistValues } from 'lightning/uiObjectInfoApi';
+import WEAPON_OBJECT      from '@salesforce/schema/FIR_Weapon_Qualification_Detail__c';
+import WEAPON_TYPE_FIELD  from '@salesforce/schema/FIR_Weapon_Qualification_Detail__c.Weapon_Type__c';
+import SIGHT_FIELD        from '@salesforce/schema/FIR_Weapon_Qualification_Detail__c.Sight_Type__c';
+import MANUFACTURER_FIELD from '@salesforce/schema/FIR_Weapon_Qualification_Detail__c.Manufacturer__c';
+import MODEL_FIELD        from '@salesforce/schema/FIR_Weapon_Qualification_Detail__c.Model__c';
 
 export default class CreateQualRoster extends LightningElement {
 
@@ -209,13 +183,41 @@ export default class CreateQualRoster extends LightningElement {
     @track massModel        = '';
     @track massSightType    = '';
 
-    get weaponTypeOptions()        { return WEAPON_TYPE_VALUES; }
+    // ── Dynamic picklists (fetched from Salesforce, dependency-aware) ──────
+    @wire(getObjectInfo, { objectApiName: WEAPON_OBJECT })
+    weaponObjectInfo;
+    get _rtId() { return this.weaponObjectInfo && this.weaponObjectInfo.data
+        ? this.weaponObjectInfo.data.defaultRecordTypeId : undefined; }
+
+    @wire(getPicklistValues, { recordTypeId: '$_rtId', fieldApiName: WEAPON_TYPE_FIELD })
+    weaponTypePicklist;
+    @wire(getPicklistValues, { recordTypeId: '$_rtId', fieldApiName: SIGHT_FIELD })
+    sightPicklist;
+    @wire(getPicklistValues, { recordTypeId: '$_rtId', fieldApiName: MANUFACTURER_FIELD })
+    manufacturerPicklist;
+    @wire(getPicklistValues, { recordTypeId: '$_rtId', fieldApiName: MODEL_FIELD })
+    modelPicklist;
+
+    _dependentOptions(picklist, controllingValue) {
+        if (!picklist || !picklist.data || !controllingValue) return [];
+        const key = picklist.data.controllerValues[controllingValue];
+        if (key === undefined) return [];
+        return picklist.data.values
+            .filter(o => o.validFor.includes(key))
+            .map(o => ({ label: o.label, value: o.value }));
+    }
+
+    get weaponTypeOptions() {
+        const vals = (this.weaponTypePicklist && this.weaponTypePicklist.data)
+            ? this.weaponTypePicklist.data.values : [];
+        return vals.map(o => ({ label: o.label, value: o.value }));
+    }
     get isOtherWeaponType()        { return this.massWeaponType === 'Other'; }
-    get massManufacturerOptions()  { return !this.massWeaponType || this.isOtherWeaponType ? [] : (MANUFACTURER_BY_WEAPON[this.massWeaponType] || []); }
+    get massManufacturerOptions()  { return !this.massWeaponType || this.isOtherWeaponType ? [] : this._dependentOptions(this.manufacturerPicklist, this.massWeaponType); }
     get isMassManufacturerDisabled() { return !this.massWeaponType || this.isOtherWeaponType; }
-    get massModelOptions()         { return !this.massManufacturer ? [] : (MODEL_BY_MANUFACTURER[this.massManufacturer] || []); }
+    get massModelOptions()         { return !this.massManufacturer ? [] : this._dependentOptions(this.modelPicklist, this.massManufacturer); }
     get isMassModelDisabled()      { return !this.massManufacturer || this.isOtherWeaponType; }
-    get massSightTypeOptions()     { return !this.massWeaponType || this.isOtherWeaponType ? [] : (SIGHT_BY_WEAPON[this.massWeaponType] || []); }
+    get massSightTypeOptions()     { return !this.massWeaponType || this.isOtherWeaponType ? [] : this._dependentOptions(this.sightPicklist, this.massWeaponType); }
     get isMassSightTypeDisabled()  { return !this.massWeaponType || this.isOtherWeaponType; }
     get isMassApplyDisabled()      { return !this.massWeaponType || !this.hasCheckedRows; }
 

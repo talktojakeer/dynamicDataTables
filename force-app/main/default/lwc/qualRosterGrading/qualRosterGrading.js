@@ -1,4 +1,10 @@
-import { LightningElement, track } from 'lwc';
+import { LightningElement, track, wire } from 'lwc';
+import { getObjectInfo, getPicklistValues } from 'lightning/uiObjectInfoApi';
+import WEAPON_OBJECT       from '@salesforce/schema/FIR_Weapon_Qualification_Detail__c';
+import WEAPON_TYPE_FIELD   from '@salesforce/schema/FIR_Weapon_Qualification_Detail__c.Weapon_Type__c';
+import SIGHT_FIELD         from '@salesforce/schema/FIR_Weapon_Qualification_Detail__c.Sight_Type__c';
+import MANUFACTURER_FIELD  from '@salesforce/schema/FIR_Weapon_Qualification_Detail__c.Manufacturer__c';
+import MODEL_FIELD         from '@salesforce/schema/FIR_Weapon_Qualification_Detail__c.Model__c';
 import { ShowToastEvent }          from 'lightning/platformShowToastEvent';
 import getRosterLabelDetails       from '@salesforce/apex/QualRosterGradingController.getRosterLabelDetails';
 import getRosterGradingData        from '@salesforce/apex/QualRosterGradingController.getRosterGradingData';
@@ -9,35 +15,6 @@ import saveSignatures              from '@salesforce/apex/QualRosterGradingContr
 import getAvailableEmployees       from '@salesforce/apex/QualRosterGradingController.getAvailableEmployees';
 import addToRoster                 from '@salesforce/apex/QualRosterGradingController.addToRoster';
 import createEmployee              from '@salesforce/apex/QualRosterGradingController.createEmployee';
-
-// Dependent-picklist maps - mirrors createQualRoster so the weapon details
-// in "Add to Roster" cascade the same way (weapon -> manufacturer -> model,
-// and weapon -> sight type).
-const MANUFACTURER_BY_WEAPON = {
-    'Pistol 1'         : ['Sig Sauer'],
-    'Pistol 2'         : ['Sig Sauer'],
-    'Shotgun'          : ['Mossberg', 'Remington'],
-    'Rifle'            : ['Daniel Defense', 'FN Herstal', 'Heckler Koch', 'Hodge Defense'],
-    'Automatic Weapon' : ['Daniel Defense'],
-    'Precision Rifle'  : ['Hodge Defense']
-};
-const MODEL_BY_MANUFACTURER = {
-    'Sig Sauer'       : ['P320', 'P365', 'P226', 'P229'],
-    'Daniel Defense'  : ['DDM4V7', 'DDM4 V7 RIS 3'],
-    'Hodge Defense'   : ['Mod 1', 'Mod 2'],
-    'FN Herstal'      : ['P90'],
-    'Heckler Koch'    : ['416', '762 A1'],
-    'Mossberg'        : ['590A1'],
-    'Remington'       : ['870', '1187']
-};
-const SIGHT_BY_WEAPON = {
-    'Pistol 1'         : ['Iron Sight', 'Optic'],
-    'Pistol 2'         : ['Iron Sight', 'Optic'],
-    'Shotgun'          : ['Iron Sight', 'Optic'],
-    'Rifle'            : ['Iron Sight', 'Optic', 'Magnified Optic'],
-    'Automatic Weapon' : ['Iron Sight', 'Optic', 'Magnified Optic'],
-    'Precision Rifle'  : ['Scope']
-};
 
 export default class QualRosterGrading extends LightningElement {
 
@@ -308,23 +285,50 @@ export default class QualRosterGrading extends LightningElement {
     @track newRetiredType     = '';
     @track isCreatingEmployee = false;
 
-    _allWeaponTypes = ['Pistol 1', 'Pistol 2', 'Shotgun', 'Rifle', 'Automatic Weapon', 'Precision Rifle', 'Other'];
+    // ── Dynamic picklists (fetched from Salesforce, dependency-aware) ──────
+    @wire(getObjectInfo, { objectApiName: WEAPON_OBJECT })
+    weaponObjectInfo;
+    get _rtId() { return this.weaponObjectInfo && this.weaponObjectInfo.data
+        ? this.weaponObjectInfo.data.defaultRecordTypeId : undefined; }
 
-    // Single Weapon Type dropdown (mirrors createQualRoster mass-apply).
-    get weaponTypeSelectOptions() { return this._toOptions(this._allWeaponTypes); }
-    get isOtherWeaponType()       { return this.addWeaponType === 'Other'; }
+    @wire(getPicklistValues, { recordTypeId: '$_rtId', fieldApiName: WEAPON_TYPE_FIELD })
+    weaponTypePicklist;
+    @wire(getPicklistValues, { recordTypeId: '$_rtId', fieldApiName: SIGHT_FIELD })
+    sightPicklist;
+    @wire(getPicklistValues, { recordTypeId: '$_rtId', fieldApiName: MANUFACTURER_FIELD })
+    manufacturerPicklist;
+    @wire(getPicklistValues, { recordTypeId: '$_rtId', fieldApiName: MODEL_FIELD })
+    modelPicklist;
+
+    // Options valid for the given controlling value, using validFor mapping.
+    _dependentOptions(picklist, controllingValue) {
+        if (!picklist || !picklist.data || !controllingValue) return [];
+        const key = picklist.data.controllerValues[controllingValue];
+        if (key === undefined) return [];
+        return picklist.data.values
+            .filter(o => o.validFor.includes(key))
+            .map(o => ({ label: o.label, value: o.value }));
+    }
+
+    // Single Weapon Type dropdown (all active values, incl. Other).
+    get weaponTypeSelectOptions() {
+        const vals = (this.weaponTypePicklist && this.weaponTypePicklist.data)
+            ? this.weaponTypePicklist.data.values : [];
+        return vals.map(o => ({ label: o.label, value: o.value }));
+    }
+    get isOtherWeaponType() { return this.addWeaponType === 'Other'; }
 
     // Manufacturer/Sight depend on the selected weapon type; Model depends on Manufacturer.
     get manufacturerOptions() {
         return (!this.addWeaponType || this.isOtherWeaponType)
-            ? [] : this._toOptions(MANUFACTURER_BY_WEAPON[this.addWeaponType] || []);
+            ? [] : this._dependentOptions(this.manufacturerPicklist, this.addWeaponType);
     }
     get modelOptions() {
-        return this.addManufacturer ? this._toOptions(MODEL_BY_MANUFACTURER[this.addManufacturer] || []) : [];
+        return this.addManufacturer ? this._dependentOptions(this.modelPicklist, this.addManufacturer) : [];
     }
     get sightTypeOptions() {
         return (!this.addWeaponType || this.isOtherWeaponType)
-            ? [] : this._toOptions(SIGHT_BY_WEAPON[this.addWeaponType] || []);
+            ? [] : this._dependentOptions(this.sightPicklist, this.addWeaponType);
     }
 
     get isManufacturerDisabled() { return !this.addWeaponType || this.isOtherWeaponType; }

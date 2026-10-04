@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Model__c</fullName>
+    <externalId>false</externalId>
     <label>Model</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
@@ -11,212 +12,284 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>P320</fullName>
+                <fullName>11-87 (Shotgun)</fullName>
                 <default>false</default>
-                <label>P320</label>
+                <label>11-87 (Shotgun)</label>
             </value>
             <value>
-                <fullName>P365</fullName>
+                <fullName>416 (Automatic Weapon)</fullName>
                 <default>false</default>
-                <label>P365</label>
+                <label>416 (Automatic Weapon)</label>
             </value>
             <value>
-                <fullName>P226</fullName>
+                <fullName>416 (Rifle)</fullName>
                 <default>false</default>
-                <label>P226</label>
+                <label>416 (Rifle)</label>
             </value>
             <value>
-                <fullName>P229</fullName>
+                <fullName>590A1 (Shotgun)</fullName>
                 <default>false</default>
-                <label>P229</label>
+                <label>590A1 (Shotgun)</label>
             </value>
             <value>
-                <fullName>DDM4V7</fullName>
+                <fullName>700 (Precision Rifle)</fullName>
                 <default>false</default>
-                <label>DDM4V7</label>
+                <label>700 (Precision Rifle)</label>
             </value>
             <value>
-                <fullName>DDM4 V7 RIS 3</fullName>
+                <fullName>762 A1 (Rifle)</fullName>
                 <default>false</default>
-                <label>DDM4 V7 RIS 3</label>
+                <label>762 A1 (Rifle)</label>
             </value>
             <value>
-                <fullName>Mod 1</fullName>
+                <fullName>870 (Shotgun)</fullName>
                 <default>false</default>
-                <label>Mod 1</label>
+                <label>870 (Shotgun)</label>
             </value>
             <value>
-                <fullName>Mod 2</fullName>
+                <fullName>AU-1 (Rifle)</fullName>
                 <default>false</default>
-                <label>Mod 2</label>
+                <label>AU-1 (Rifle)</label>
             </value>
             <value>
-                <fullName>P90</fullName>
+                <fullName>AXMC (Precision Rifle)</fullName>
                 <default>false</default>
-                <label>P90</label>
+                <label>AXMC (Precision Rifle)</label>
             </value>
             <value>
-                <fullName>416</fullName>
+                <fullName>DDM4 V7 (Rifle)</fullName>
                 <default>false</default>
-                <label>416</label>
+                <label>DDM4 V7 (Rifle)</label>
             </value>
             <value>
-                <fullName>762 A1</fullName>
+                <fullName>DDM4 V7 RIS III (Automatic Weapon)</fullName>
                 <default>false</default>
-                <label>762 A1</label>
+                <label>DDM4 V7 RIS III (Automatic Weapon)</label>
             </value>
             <value>
-                <fullName>590A1</fullName>
+                <fullName>DDM4 V7 RIS III (Rifle)</fullName>
                 <default>false</default>
-                <label>590A1</label>
+                <label>DDM4 V7 RIS III (Rifle)</label>
             </value>
             <value>
-                <fullName>870</fullName>
+                <fullName>LMG (Automatic Weapon)</fullName>
                 <default>false</default>
-                <label>870</label>
+                <label>LMG (Automatic Weapon)</label>
             </value>
             <value>
-                <fullName>1187</fullName>
+                <fullName>MCX (Automatic Weapon)</fullName>
                 <default>false</default>
-                <label>11-87</label>
+                <label>MCX (Automatic Weapon)</label>
             </value>
             <value>
-                <fullName>AU-1</fullName>
+                <fullName>MCX (Rifle)</fullName>
                 <default>false</default>
-                <label>AU-1</label>
+                <label>MCX (Rifle)</label>
             </value>
             <value>
-                <fullName>LMG</fullName>
+                <fullName>MK18 (Automatic Weapon)</fullName>
                 <default>false</default>
-                <label>LMG</label>
+                <label>MK18 (Automatic Weapon)</label>
             </value>
             <value>
-                <fullName>MCX</fullName>
+                <fullName>MK18 (Rifle)</fullName>
                 <default>false</default>
-                <label>MCX</label>
+                <label>MK18 (Rifle)</label>
             </value>
             <value>
-                <fullName>P240</fullName>
+                <fullName>Mod 2 (Automatic Weapon)</fullName>
                 <default>false</default>
-                <label>P240</label>
+                <label>Mod 2 (Automatic Weapon)</label>
             </value>
             <value>
-                <fullName>P249</fullName>
+                <fullName>Mod 2 (Rifle)</fullName>
                 <default>false</default>
-                <label>P249</label>
+                <label>Mod 2 (Rifle)</label>
             </value>
             <value>
-                <fullName>MK18</fullName>
+                <fullName>OBR (Precision Rifle)</fullName>
                 <default>false</default>
-                <label>MK18</label>
+                <label>OBR (Precision Rifle)</label>
             </value>
             <value>
-                <fullName>OBR</fullName>
+                <fullName>P226 (Pistol 1)</fullName>
                 <default>false</default>
-                <label>OBR</label>
+                <label>P226 (Pistol 1)</label>
             </value>
             <value>
-                <fullName>AXMC</fullName>
+                <fullName>P226 (Pistol 2)</fullName>
                 <default>false</default>
-                <label>AXMC</label>
+                <label>P226 (Pistol 2)</label>
             </value>
             <value>
-                <fullName>700</fullName>
+                <fullName>P229 (Pistol 1)</fullName>
                 <default>false</default>
-                <label>700</label>
+                <label>P229 (Pistol 1)</label>
+            </value>
+            <value>
+                <fullName>P229 (Pistol 2)</fullName>
+                <default>false</default>
+                <label>P229 (Pistol 2)</label>
+            </value>
+            <value>
+                <fullName>P240 (Automatic Weapon)</fullName>
+                <default>false</default>
+                <label>P240 (Automatic Weapon)</label>
+            </value>
+            <value>
+                <fullName>P249 (Automatic Weapon)</fullName>
+                <default>false</default>
+                <label>P249 (Automatic Weapon)</label>
+            </value>
+            <value>
+                <fullName>P320 (Pistol 1)</fullName>
+                <default>false</default>
+                <label>P320 (Pistol 1)</label>
+            </value>
+            <value>
+                <fullName>P320 (Pistol 2)</fullName>
+                <default>false</default>
+                <label>P320 (Pistol 2)</label>
+            </value>
+            <value>
+                <fullName>P365 (Pistol 1)</fullName>
+                <default>false</default>
+                <label>P365 (Pistol 1)</label>
+            </value>
+            <value>
+                <fullName>P365 (Pistol 2)</fullName>
+                <default>false</default>
+                <label>P365 (Pistol 2)</label>
+            </value>
+            <value>
+                <fullName>P90 (Automatic Weapon)</fullName>
+                <default>false</default>
+                <label>P90 (Automatic Weapon)</label>
             </value>
         </valueSetDefinition>
         <valueSettings>
-            <controllingFieldValue>Sig Sauer</controllingFieldValue>
-            <valueName>P320</valueName>
+            <controllingFieldValue>Remington (Shotgun)</controllingFieldValue>
+            <valueName>11-87 (Shotgun)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Sig Sauer</controllingFieldValue>
-            <valueName>P365</valueName>
+            <controllingFieldValue>Heckler Koch (Automatic Weapon)</controllingFieldValue>
+            <valueName>416 (Automatic Weapon)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Sig Sauer</controllingFieldValue>
-            <valueName>P226</valueName>
+            <controllingFieldValue>Heckler Koch (Rifle)</controllingFieldValue>
+            <valueName>416 (Rifle)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Sig Sauer</controllingFieldValue>
-            <valueName>P229</valueName>
+            <controllingFieldValue>Mossberg (Shotgun)</controllingFieldValue>
+            <valueName>590A1 (Shotgun)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Sig Sauer</controllingFieldValue>
-            <valueName>LMG</valueName>
+            <controllingFieldValue>Remington (Precision Rifle)</controllingFieldValue>
+            <valueName>700 (Precision Rifle)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Sig Sauer</controllingFieldValue>
-            <valueName>MCX</valueName>
+            <controllingFieldValue>Heckler Koch (Rifle)</controllingFieldValue>
+            <valueName>762 A1 (Rifle)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Daniel Defense</controllingFieldValue>
-            <valueName>DDM4V7</valueName>
+            <controllingFieldValue>Remington (Shotgun)</controllingFieldValue>
+            <valueName>870 (Shotgun)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Daniel Defense</controllingFieldValue>
-            <valueName>DDM4 V7 RIS 3</valueName>
+            <controllingFieldValue>Hodge Defense (Rifle)</controllingFieldValue>
+            <valueName>AU-1 (Rifle)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Daniel Defense</controllingFieldValue>
-            <valueName>MK18</valueName>
+            <controllingFieldValue>Accuracy International (Precision Rifle)</controllingFieldValue>
+            <valueName>AXMC (Precision Rifle)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Hodge Defense</controllingFieldValue>
-            <valueName>Mod 1</valueName>
+            <controllingFieldValue>Daniel Defense (Rifle)</controllingFieldValue>
+            <valueName>DDM4 V7 (Rifle)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Hodge Defense</controllingFieldValue>
-            <valueName>Mod 2</valueName>
+            <controllingFieldValue>Daniel Defense (Automatic Weapon)</controllingFieldValue>
+            <valueName>DDM4 V7 RIS III (Automatic Weapon)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Hodge Defense</controllingFieldValue>
-            <valueName>AU-1</valueName>
+            <controllingFieldValue>Daniel Defense (Rifle)</controllingFieldValue>
+            <valueName>DDM4 V7 RIS III (Rifle)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>FN Herstal</controllingFieldValue>
-            <valueName>P90</valueName>
+            <controllingFieldValue>Sig Sauer (Automatic Weapon)</controllingFieldValue>
+            <valueName>LMG (Automatic Weapon)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>FN Herstal</controllingFieldValue>
-            <valueName>P240</valueName>
+            <controllingFieldValue>Sig Sauer (Automatic Weapon)</controllingFieldValue>
+            <valueName>MCX (Automatic Weapon)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>FN Herstal</controllingFieldValue>
-            <valueName>P249</valueName>
+            <controllingFieldValue>Sig Sauer (Rifle)</controllingFieldValue>
+            <valueName>MCX (Rifle)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Heckler Koch</controllingFieldValue>
-            <valueName>416</valueName>
+            <controllingFieldValue>Daniel Defense (Automatic Weapon)</controllingFieldValue>
+            <valueName>MK18 (Automatic Weapon)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Heckler Koch</controllingFieldValue>
-            <valueName>762 A1</valueName>
+            <controllingFieldValue>Daniel Defense (Rifle)</controllingFieldValue>
+            <valueName>MK18 (Rifle)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Mossberg</controllingFieldValue>
-            <valueName>590A1</valueName>
+            <controllingFieldValue>Hodge Defense (Automatic Weapon)</controllingFieldValue>
+            <valueName>Mod 2 (Automatic Weapon)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Remington</controllingFieldValue>
-            <valueName>870</valueName>
+            <controllingFieldValue>Hodge Defense (Rifle)</controllingFieldValue>
+            <valueName>Mod 2 (Rifle)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Remington</controllingFieldValue>
-            <valueName>1187</valueName>
+            <controllingFieldValue>LaRue (Precision Rifle)</controllingFieldValue>
+            <valueName>OBR (Precision Rifle)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Remington</controllingFieldValue>
-            <valueName>700</valueName>
+            <controllingFieldValue>Sig Sauer (Pistol 1)</controllingFieldValue>
+            <valueName>P226 (Pistol 1)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Accuracy International</controllingFieldValue>
-            <valueName>AXMC</valueName>
+            <controllingFieldValue>Sig Sauer (Pistol 2)</controllingFieldValue>
+            <valueName>P226 (Pistol 2)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>LaRue</controllingFieldValue>
-            <valueName>OBR</valueName>
+            <controllingFieldValue>Sig Sauer (Pistol 1)</controllingFieldValue>
+            <valueName>P229 (Pistol 1)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Sig Sauer (Pistol 2)</controllingFieldValue>
+            <valueName>P229 (Pistol 2)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>FN Herstal (Automatic Weapon)</controllingFieldValue>
+            <valueName>P240 (Automatic Weapon)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>FN Herstal (Automatic Weapon)</controllingFieldValue>
+            <valueName>P249 (Automatic Weapon)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Sig Sauer (Pistol 1)</controllingFieldValue>
+            <valueName>P320 (Pistol 1)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Sig Sauer (Pistol 2)</controllingFieldValue>
+            <valueName>P320 (Pistol 2)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Sig Sauer (Pistol 1)</controllingFieldValue>
+            <valueName>P365 (Pistol 1)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Sig Sauer (Pistol 2)</controllingFieldValue>
+            <valueName>P365 (Pistol 2)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>FN Herstal (Automatic Weapon)</controllingFieldValue>
+            <valueName>P90 (Automatic Weapon)</valueName>
         </valueSettings>
     </valueSet>
 </CustomField>

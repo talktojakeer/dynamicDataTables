@@ -1,103 +1,160 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Manufacturer__c</fullName>
+    <externalId>false</externalId>
     <label>Manufacturer</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
         <controllingField>Weapon_Type__c</controllingField>
+        <restricted>true</restricted>
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Sig Sauer</fullName>
+                <fullName>Accuracy International (Precision Rifle)</fullName>
                 <default>false</default>
-                <label>Sig Sauer</label>
+                <label>Accuracy International (Precision Rifle)</label>
             </value>
             <value>
-                <fullName>Daniel Defense</fullName>
+                <fullName>Daniel Defense (Automatic Weapon)</fullName>
                 <default>false</default>
-                <label>Daniel Defense</label>
+                <label>Daniel Defense (Automatic Weapon)</label>
             </value>
             <value>
-                <fullName>Hodge Defense</fullName>
+                <fullName>Daniel Defense (Rifle)</fullName>
                 <default>false</default>
-                <label>Hodge Defense</label>
+                <label>Daniel Defense (Rifle)</label>
             </value>
             <value>
-                <fullName>FN Herstal</fullName>
+                <fullName>FN Herstal (Automatic Weapon)</fullName>
                 <default>false</default>
-                <label>FN</label>
+                <label>FN Herstal (Automatic Weapon)</label>
             </value>
             <value>
-                <fullName>Heckler Koch</fullName>
+                <fullName>Heckler Koch (Automatic Weapon)</fullName>
                 <default>false</default>
-                <label>Heckler Koch</label>
+                <label>Heckler Koch (Automatic Weapon)</label>
             </value>
             <value>
-                <fullName>Mossberg</fullName>
+                <fullName>Heckler Koch (Rifle)</fullName>
                 <default>false</default>
-                <label>Mossberg</label>
+                <label>Heckler Koch (Rifle)</label>
             </value>
             <value>
-                <fullName>Remington</fullName>
+                <fullName>Hodge Defense (Automatic Weapon)</fullName>
                 <default>false</default>
-                <label>Remington</label>
+                <label>Hodge Defense (Automatic Weapon)</label>
             </value>
             <value>
-                <fullName>Accuracy International</fullName>
+                <fullName>Hodge Defense (Rifle)</fullName>
                 <default>false</default>
-                <label>Accuracy International</label>
+                <label>Hodge Defense (Rifle)</label>
             </value>
             <value>
-                <fullName>LaRue</fullName>
+                <fullName>LaRue (Precision Rifle)</fullName>
                 <default>false</default>
-                <label>LaRue</label>
+                <label>LaRue (Precision Rifle)</label>
+            </value>
+            <value>
+                <fullName>Mossberg (Shotgun)</fullName>
+                <default>false</default>
+                <label>Mossberg (Shotgun)</label>
+            </value>
+            <value>
+                <fullName>Remington (Precision Rifle)</fullName>
+                <default>false</default>
+                <label>Remington (Precision Rifle)</label>
+            </value>
+            <value>
+                <fullName>Remington (Shotgun)</fullName>
+                <default>false</default>
+                <label>Remington (Shotgun)</label>
+            </value>
+            <value>
+                <fullName>Sig Sauer (Automatic Weapon)</fullName>
+                <default>false</default>
+                <label>Sig Sauer (Automatic Weapon)</label>
+            </value>
+            <value>
+                <fullName>Sig Sauer (Pistol 1)</fullName>
+                <default>false</default>
+                <label>Sig Sauer (Pistol 1)</label>
+            </value>
+            <value>
+                <fullName>Sig Sauer (Pistol 2)</fullName>
+                <default>false</default>
+                <label>Sig Sauer (Pistol 2)</label>
+            </value>
+            <value>
+                <fullName>Sig Sauer (Rifle)</fullName>
+                <default>false</default>
+                <label>Sig Sauer (Rifle)</label>
             </value>
         </valueSetDefinition>
         <valueSettings>
-            <controllingFieldValue>Shotgun</controllingFieldValue>
-            <valueName>Mossberg</valueName>
+            <controllingFieldValue>Precision Rifle</controllingFieldValue>
+            <valueName>Accuracy International (Precision Rifle)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Shotgun</controllingFieldValue>
-            <controllingFieldValue>Precision Rifle</controllingFieldValue>
-            <valueName>Remington</valueName>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
+            <valueName>Daniel Defense (Automatic Weapon)</valueName>
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Rifle</controllingFieldValue>
+            <valueName>Daniel Defense (Rifle)</valueName>
+        </valueSettings>
+        <valueSettings>
             <controllingFieldValue>Automatic Weapon</controllingFieldValue>
+            <valueName>FN Herstal (Automatic Weapon)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
+            <valueName>Heckler Koch (Automatic Weapon)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Rifle</controllingFieldValue>
+            <valueName>Heckler Koch (Rifle)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
+            <valueName>Hodge Defense (Automatic Weapon)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Rifle</controllingFieldValue>
+            <valueName>Hodge Defense (Rifle)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Precision Rifle</controllingFieldValue>
+            <valueName>LaRue (Precision Rifle)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Shotgun</controllingFieldValue>
+            <valueName>Mossberg (Shotgun)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Precision Rifle</controllingFieldValue>
+            <valueName>Remington (Precision Rifle)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Shotgun</controllingFieldValue>
+            <valueName>Remington (Shotgun)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
+            <valueName>Sig Sauer (Automatic Weapon)</valueName>
+        </valueSettings>
+        <valueSettings>
             <controllingFieldValue>Pistol 1</controllingFieldValue>
+            <valueName>Sig Sauer (Pistol 1)</valueName>
+        </valueSettings>
+        <valueSettings>
             <controllingFieldValue>Pistol 2</controllingFieldValue>
-            <valueName>Sig Sauer</valueName>
+            <valueName>Sig Sauer (Pistol 2)</valueName>
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Rifle</controllingFieldValue>
-            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
-            <valueName>Daniel Defense</valueName>
-        </valueSettings>
-        <valueSettings>
-            <controllingFieldValue>Rifle</controllingFieldValue>
-            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
-            <valueName>Hodge Defense</valueName>
-        </valueSettings>
-        <valueSettings>
-            <controllingFieldValue>Rifle</controllingFieldValue>
-            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
-            <valueName>FN Herstal</valueName>
-        </valueSettings>
-        <valueSettings>
-            <controllingFieldValue>Rifle</controllingFieldValue>
-            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
-            <valueName>Heckler Koch</valueName>
-        </valueSettings>
-        <valueSettings>
-            <controllingFieldValue>Precision Rifle</controllingFieldValue>
-            <valueName>Accuracy International</valueName>
-        </valueSettings>
-        <valueSettings>
-            <controllingFieldValue>Precision Rifle</controllingFieldValue>
-            <valueName>LaRue</valueName>
+            <valueName>Sig Sauer (Rifle)</valueName>
         </valueSettings>
     </valueSet>
 </CustomField>

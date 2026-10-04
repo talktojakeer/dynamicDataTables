@@ -28,21 +28,51 @@ export default class RecruitClassTab extends NavigationMixin(LightningElement) {
     @track recruitPage = 1;
     @track ftuPage     = 1;
 
-    get recruitCount() { return this.recruitClasses.length; }
-    get ftuCount()     { return this.ftuGroups.length; }
+    // ---- Per-section search + FTU sort -----------------------------------
+    @track recruitSearchKey = '';
+    @track ftuSearchKey     = '';
+    @track ftuSortDir       = 'asc';   // 'asc' | 'desc'
+
+    handleRecruitSearch(event) { this.recruitSearchKey = event.target.value; this.recruitPage = 1; }
+    handleFtuSearch(event)     { this.ftuSearchKey     = event.target.value; this.ftuPage     = 1; }
+    toggleFtuSort()            { this.ftuSortDir = this.ftuSortDir === 'asc' ? 'desc' : 'asc'; this.ftuPage = 1; }
+
+    get ftuSortIcon()  { return this.ftuSortDir === 'asc' ? 'utility:arrowdown' : 'utility:arrowup'; }
+    get ftuSortLabel() { return this.ftuSortDir === 'asc' ? 'A\u2192Z / 0\u21929' : 'Z\u2192A / 9\u21920'; }
+
+    // Recruit Class: search only. FTU: search + alphanumeric sort.
+    get filteredRecruit() {
+        const k = this.recruitSearchKey.trim().toLowerCase();
+        return k
+            ? this.recruitClasses.filter(r => (r.Name || '').toLowerCase().includes(k))
+            : this.recruitClasses;
+    }
+    get filteredFtu() {
+        const k = this.ftuSearchKey.trim().toLowerCase();
+        const list = k
+            ? this.ftuGroups.filter(r => (r.Name || '').toLowerCase().includes(k))
+            : [...this.ftuGroups];
+        const dir = this.ftuSortDir === 'desc' ? -1 : 1;
+        // numeric:true gives natural alphanumeric order (e.g. "1-2345" vs "A56236").
+        return list.sort((a, b) =>
+            dir * (a.Name || '').localeCompare((b.Name || ''), undefined, { numeric: true, sensitivity: 'base' }));
+    }
+
+    get recruitCount() { return this.filteredRecruit.length; }
+    get ftuCount()     { return this.filteredFtu.length; }
 
     // Total pages (at least 1 so controls render sanely on empty lists)
     get recruitTotalPages() { return Math.max(1, Math.ceil(this.recruitCount / this.pageSize)); }
     get ftuTotalPages()     { return Math.max(1, Math.ceil(this.ftuCount / this.pageSize)); }
 
-    // Current page slice
+    // Current page slice (from the filtered/sorted lists)
     get pagedRecruitClasses() {
         const start = (this.recruitPage - 1) * this.pageSize;
-        return this.recruitClasses.slice(start, start + this.pageSize);
+        return this.filteredRecruit.slice(start, start + this.pageSize);
     }
     get pagedFtuGroups() {
         const start = (this.ftuPage - 1) * this.pageSize;
-        return this.ftuGroups.slice(start, start + this.pageSize);
+        return this.filteredFtu.slice(start, start + this.pageSize);
     }
 
     // Button disabled states

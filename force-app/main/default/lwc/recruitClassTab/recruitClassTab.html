@@ -24,10 +24,17 @@
         </div>
 
         <!-- ============ SECTION 1: RECRUIT CLASS ============ -->
-        <div class="section-header" onclick={toggleRecruit}>
-            <lightning-icon icon-name={recruitCaret} size="x-small" class="slds-m-right_x-small"></lightning-icon>
-            <span class="section-title">Recruit Class</span>
-            <span class="section-count">({recruitCount})</span>
+        <div class="section-header">
+            <span class="section-head-left" onclick={toggleRecruit}>
+                <lightning-icon icon-name={recruitCaret} size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                <span class="section-title">Recruit Class</span>
+                <span class="section-count">({recruitCount})</span>
+            </span>
+            <span class="section-head-right">
+                <lightning-input type="search" variant="label-hidden" placeholder="Search Recruit Class..."
+                    value={recruitSearchKey} onchange={handleRecruitSearch} oninput={handleRecruitSearch}
+                    class="section-search"></lightning-input>
+            </span>
         </div>
         <template if:true={showRecruit}>
             <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_fixed-layout" role="grid">
@@ -67,10 +74,20 @@
         </template>
 
         <!-- ============ SECTION 2: FTU GROUPS ============ -->
-        <div class="section-header slds-m-top_medium" onclick={toggleFtu}>
-            <lightning-icon icon-name={ftuCaret} size="x-small" class="slds-m-right_x-small"></lightning-icon>
-            <span class="section-title">FTU Groups</span>
-            <span class="section-count">({ftuCount})</span>
+        <div class="section-header slds-m-top_medium">
+            <span class="section-head-left" onclick={toggleFtu}>
+                <lightning-icon icon-name={ftuCaret} size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                <span class="section-title">FTU Groups</span>
+                <span class="section-count">({ftuCount})</span>
+            </span>
+            <span class="section-head-right">
+                <lightning-input type="search" variant="label-hidden" placeholder="Search FTU Group..."
+                    value={ftuSearchKey} onchange={handleFtuSearch} oninput={handleFtuSearch}
+                    class="section-search"></lightning-input>
+                <lightning-button-icon-stateful icon-name={ftuSortIcon} selected="false"
+                    alternative-text={ftuSortLabel} title={ftuSortLabel}
+                    onclick={toggleFtuSort} class="slds-m-left_x-small"></lightning-button-icon-stateful>
+            </span>
         </div>
         <template if:true={showFtu}>
             <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_fixed-layout" role="grid">

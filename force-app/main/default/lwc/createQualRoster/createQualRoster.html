@@ -156,7 +156,7 @@
                         <select class="field-input" value={massWeaponType} onchange={handleMassWeaponTypeChange}>
                             <option value="">-- Select --</option>
                             <template for:each={weaponTypeOptions} for:item="opt">
-                                <option key={opt} value={opt}>{opt}</option>
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
                             </template>
                         </select>
                     </div>
@@ -165,7 +165,7 @@
                         <select class="field-input" value={massManufacturer} onchange={handleMassManufacturerChange} disabled={isMassManufacturerDisabled}>
                             <option value="">-- Select --</option>
                             <template for:each={massManufacturerOptions} for:item="opt">
-                                <option key={opt} value={opt}>{opt}</option>
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
                             </template>
                         </select>
                     </div>
@@ -174,7 +174,7 @@
                         <select class="field-input" value={massModel} onchange={handleMassModelChange} disabled={isMassModelDisabled}>
                             <option value="">-- Select --</option>
                             <template for:each={massModelOptions} for:item="opt">
-                                <option key={opt} value={opt}>{opt}</option>
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
                             </template>
                         </select>
                     </div>
@@ -183,7 +183,7 @@
                         <select class="field-input" value={massSightType} onchange={handleMassSightTypeChange} disabled={isMassSightTypeDisabled}>
                             <option value="">-- Select --</option>
                             <template for:each={massSightTypeOptions} for:item="opt">
-                                <option key={opt} value={opt}>{opt}</option>
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
                             </template>
                         </select>
                     </div>

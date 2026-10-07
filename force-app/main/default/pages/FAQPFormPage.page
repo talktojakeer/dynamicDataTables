@@ -139,9 +139,7 @@
                         </div>
                         <div class="lbl" style="margin-top:5px;">Signature of Certified Firearms Instructor</div>
                         <div class="signature-image">
-                            <apex:outputPanel rendered="{!NOT(ISBLANK(instructorSignatureUrl))}" layout="block">
-                                <img src="{!instructorSignatureUrl}" alt="Instructor Signature"/>
-                            </apex:outputPanel>
+                            <apex:outputField value="{!FIR_Qualification_Form__c.Firearms_Instructor_Signature__c}"/>
                         </div>
                         <div class="lbl" style="margin-top:4px;">Date</div>
                         <div class="date-line">

@@ -133,7 +133,7 @@
         <tr>
             <td style="width:100%; border:none; padding:0;">
 
-                <apex:outputPanel rendered="{!NOT(FIR_Qualification_Form__c.ContactName__r.Is_Firearms_Instructor__c)}" layout="block">
+                <apex:outputPanel rendered="{!OR(NOT(FIR_Qualification_Form__c.ContactName__r.Is_Firearms_Instructor__c), ISBLANK(witnessSignatureUrl))}" layout="block">
                     <div style="width:56%;">
                         <div class="name-inline">
                             <span class="lbl">Printed Name of Certified Firearms Instructor:</span>
@@ -150,7 +150,7 @@
                     </div>
                 </apex:outputPanel>
 
-                <apex:outputPanel rendered="{!FIR_Qualification_Form__c.ContactName__r.Is_Firearms_Instructor__c}" layout="block">
+                <apex:outputPanel rendered="{!AND(FIR_Qualification_Form__c.ContactName__r.Is_Firearms_Instructor__c, NOT(ISBLANK(witnessSignatureUrl)))}" layout="block">
                     <div style="width:56%;">
                         <div class="name-inline">
                             <span class="lbl">Printed Name of Witness:</span>

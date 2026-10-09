@@ -101,10 +101,11 @@
         <thead>
             <tr style="background:#e5e5e5;">
                 <th style="width:11%;">Weapon</th>
-                <th style="width:17%;">Sight Type</th>
+                <th style="width:15%;">Sight Type</th>
                 <th style="width:18%;">Manufacturer &amp; Model</th>
-                <th style="width:9%;">Weapon Code</th>
-                <th style="width:14%;">Qualified</th>
+                <th style="width:8%;">Weapon Code</th>
+                <th style="width:10%;">Qual Attempt</th>
+                <th style="width:13%;">Qualified</th>
                 <th style="width:14%;">Qualified at 90%</th>
                 <th style="width:11%;">Date</th>
             </tr>
@@ -116,6 +117,7 @@
                     <td>{!row.sightType}</td>
                     <td>{!row.manufacturerModel}</td>
                     <td class="center">{!row.weaponCode}</td>
+                    <td class="center">{!row.qualAttempt}</td>
                     <td class="center">{!row.qualified}</td>
                     <td class="center">{!row.qualifiedAt90}</td>
                     <td class="center">{!row.attemptDate}</td>

@@ -79,6 +79,7 @@ public class FIRQualificationFormControllerExt {
         public String weaponCode        { get; set; }
         public String qualified         { get; set; }
         public String qualifiedAt90     { get; set; }
+        public String qualAttempt       { get; set; }
         public String attemptDate       { get; set; }
     }
 
@@ -145,6 +146,7 @@ public class FIRQualificationFormControllerExt {
         row.weaponCode    = detail.Weapon_Code__c;
         row.qualified     = detail.Qualified__c;
         row.qualifiedAt90 = detail.Qualified_at_90__c;
+        row.qualAttempt   = detail.Qualification_Attempt__c;
         row.attemptDate   = (detail.Attempt_Date__c != null) ? detail.Attempt_Date__c.format() : '';
 
         return row;

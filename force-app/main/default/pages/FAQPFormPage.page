@@ -158,9 +158,7 @@
                         </div>
                         <div class="lbl" style="margin-top:5px;">Signature of Witness</div>
                         <div class="signature-image">
-                            <apex:outputPanel rendered="{!NOT(ISBLANK(witnessSignatureUrl))}" layout="block">
-                                <img src="{!witnessSignatureUrl}" alt="Witness Signature"/>
-                            </apex:outputPanel>
+                            <apex:outputField value="{!FIR_Qualification_Form__c.Witness_Signature__c}"/>
                         </div>
                         <div class="lbl" style="margin-top:4px;">Date</div>
                         <div class="date-line">

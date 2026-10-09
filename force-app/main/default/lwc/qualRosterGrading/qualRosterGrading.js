@@ -654,7 +654,7 @@ export default class QualRosterGrading extends LightningElement {
             qualificationAttempt,
             qualified,
             qualified90,
-            otherWeaponType    : row.otherWeaponType,
+            otherWeaponType    : row.otherWeaponType || '',
             weaponCodeOptionsForRow,
             attemptOptionsForRow,
             isHighAttempt,

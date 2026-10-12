@@ -93,7 +93,7 @@ private class QualRosterGradingControllerTest {
 
         Test.startTest();
         QualRosterGradingController.saveGradingRow(
-            det.Id, 'Sig Sauer', 'P365', 'Optic', '', '1st', 'Yes', 'No');
+            det.Id, 'Sig Sauer', 'P365', 'Optic', '', '1st', 'Yes', 'No', '');
         Test.stopTest();
 
         FIR_Weapon_Qualification_Detail__c after =
@@ -221,15 +221,16 @@ private class QualRosterGradingControllerTest {
             QualRosterGradingController.addToRoster(
                 ROSTER, new List<String>{ newContact }, new List<String>{ 'Pistol 2' },
                 'Sig Sauer', 'P365', 'Optic');
-        // Second add same weapon: should be skipped (dedup per weapon type)
+        // Second add with the SAME weapon + manufacturer + model + sight:
+        // should be skipped (four-field uniqueness dedup).
         QualRosterGradingController.AddToRosterResult r2 =
             QualRosterGradingController.addToRoster(
                 ROSTER, new List<String>{ newContact }, new List<String>{ 'Pistol 2' },
-                null, null, null);
+                'Sig Sauer', 'P365', 'Optic');
         Test.stopTest();
 
         System.assertEquals(1, r1.rowsAdded, 'First add should add one row');
-        System.assertEquals(0, r2.rowsAdded, 'Duplicate weapon type should be skipped');
+        System.assertEquals(0, r2.rowsAdded, 'Identical weapon config should be skipped');
         System.assertEquals(1, r2.rowsSkipped, 'Skip count should reflect the dedup');
     }
 

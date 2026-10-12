@@ -120,15 +120,52 @@ private class QualRosterGradingControllerTest {
     @isTest
     static void testSaveSignatures_withWitness() {
         String sig = VALID_SIG;
+        String rl  = 'WITNESS-ROSTER';
+
+        // Member whose NAME matches a User's name -> this member IS the roster's
+        // certifying instructor, so the witness signature applies to THIS form only.
+        Account instrAcct    = TestDataFactory.createPersonAccount('Wit', 'Ness', 7100000001L);
+        Id instrContactId    = TestDataFactory.personContactId(instrAcct.Id);
+
+        User instrUser;
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            instrUser = new User(
+                FirstName = 'Wit', LastName = 'Ness',
+                Alias = 'witn', Email = 'witness.faqp@example.com',
+                Username = 'witness.faqp.' + System.now().getTime() + '@example.com',
+                EmailEncodingKey = 'UTF-8', LanguageLocaleKey = 'en_US',
+                LocaleSidKey = 'en_US', TimeZoneSidKey = 'America/Chicago',
+                ProfileId = UserInfo.getProfileId()
+            );
+            insert instrUser;
+        }
+
+        // A second, non-instructor member on the same roster.
+        Account memberAcct   = TestDataFactory.createPersonAccount('Reg', 'Member', 7100000002L);
+        Id memberContactId   = TestDataFactory.personContactId(memberAcct.Id);
+
+        FIR_Qualification_Form__c instrForm  = TestDataFactory.buildForm(rl, instrContactId, instrUser.Id);
+        FIR_Qualification_Form__c memberForm = TestDataFactory.buildForm(rl, memberContactId, instrUser.Id);
+        insert new List<FIR_Qualification_Form__c>{ instrForm, memberForm };
+
         Test.startTest();
-        QualRosterGradingController.saveSignatures(ROSTER, sig, 'Jane Witness', sig, '2026-08-01');
+        QualRosterGradingController.saveSignatures(rl, sig, 'Jane Witness', sig, '2026-08-01');
         Test.stopTest();
 
-        FIR_Qualification_Form__c f =
+        // Witness lands ONLY on the instructor's own form.
+        FIR_Qualification_Form__c fi =
             [SELECT Witness_Name__c, Witness_Signature__c, Witness_Signature_Date__c
-             FROM FIR_Qualification_Form__c WHERE Qual_Roster_Label__c = :ROSTER LIMIT 1];
-        System.assertEquals('Jane Witness', f.Witness_Name__c, 'Witness name should be saved');
-        System.assertEquals(Date.valueOf('2026-08-01'), f.Witness_Signature_Date__c, 'Witness date should be saved');
+             FROM FIR_Qualification_Form__c WHERE Id = :instrForm.Id];
+        System.assertEquals('Jane Witness', fi.Witness_Name__c, 'Witness name should be saved on the instructor form');
+        System.assert(fi.Witness_Signature__c != null, 'Witness signature should be stored on the instructor form');
+        System.assertEquals(Date.valueOf('2026-08-01'), fi.Witness_Signature_Date__c, 'Witness date should be saved');
+
+        // The non-instructor member must NOT receive a witness signature.
+        FIR_Qualification_Form__c mem =
+            [SELECT Witness_Name__c, Witness_Signature__c
+             FROM FIR_Qualification_Form__c WHERE Id = :memberForm.Id];
+        System.assertEquals(null, mem.Witness_Name__c, 'Non-instructor member must NOT receive a witness name');
+        System.assertEquals(null, mem.Witness_Signature__c, 'Non-instructor member must NOT receive a witness signature');
     }
 
     @isTest

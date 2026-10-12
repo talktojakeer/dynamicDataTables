@@ -368,7 +368,7 @@ public with sharing class QualRosterGradingController {
 
         try {
             List<FIR_Qualification_Form__c> forms = [
-                SELECT Id, Status__c
+                SELECT Id, Status__c, ContactName__r.Name, Firearms_Instrutor__r.Name
                 FROM   FIR_Qualification_Form__c
                 WHERE  Qual_Roster_Label__c = :rosterLabel
             ];
@@ -378,9 +378,16 @@ public with sharing class QualRosterGradingController {
             for (FIR_Qualification_Form__c f : forms) {
                 f.Firearms_Instructor_Signature__c = instructorHtml;
                 if (hasWitnessSignature) {
-                    f.Witness_Signature__c = witnessHtml;
-                    f.Witness_Name__c      = witnessName;
-                    f.Witness_Signature_Date__c = witnessDate;
+                    String memberName      = f.ContactName__r != null ? f.ContactName__r.Name : '';
+                    String rosterInstrName = f.Firearms_Instrutor__r != null ? f.Firearms_Instrutor__r.Name : '';
+                    Boolean isRosterInstr  = String.isNotBlank(memberName)
+                                             && String.isNotBlank(rosterInstrName)
+                                             && memberName.trim().equalsIgnoreCase(rosterInstrName.trim());
+                    if (isRosterInstr) {
+                        f.Witness_Signature__c = witnessHtml;
+                        f.Witness_Name__c      = witnessName;
+                        f.Witness_Signature_Date__c = witnessDate;
+                    }
                 }
                 // Signatures captured -> roster is ready for PDF (locks the screen).
                 // Don't downgrade a roster that's already Completed.

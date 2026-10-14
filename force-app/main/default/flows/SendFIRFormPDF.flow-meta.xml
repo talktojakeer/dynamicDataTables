@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+
+    <actionCalls>
+        <name>Send_Email</name>
+        <label>Send Email</label>
+        <locationX>176</locationX>
+        <locationY>458</locationY>
+        <actionName>FIRFormEmailAction</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Loop_Forms</targetReference>
+        </connector>
+        <inputParameters>
+            <name>formId</name>
+            <value>
+                <elementReference>Loop_Forms</elementReference>
+            </value>
+        </inputParameters>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </actionCalls>
+
+    <apiVersion>65.0</apiVersion>
+
+    <assignments>
+        <name>Assign_Single</name>
+        <label>Add Record Id</label>
+        <locationX>50</locationX>
+        <locationY>278</locationY>
+        <assignmentItems>
+            <assignToReference>formIds</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Loop_Forms</targetReference>
+        </connector>
+    </assignments>
+
+    <assignments>
+        <name>Assign_List</name>
+        <label>Add Selected Ids</label>
+        <locationX>300</locationX>
+        <locationY>278</locationY>
+        <assignmentItems>
+            <assignToReference>formIds</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>ids</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Loop_Forms</targetReference>
+        </connector>
+    </assignments>
+
+    <decisions>
+        <name>Record_Or_List</name>
+        <label>Record or List?</label>
+        <locationX>176</locationX>
+        <locationY>158</locationY>
+        <defaultConnector>
+            <targetReference>Assign_List</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>From List</defaultConnectorLabel>
+        <rules>
+            <name>Single_Record</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>recordId</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_Single</targetReference>
+            </connector>
+            <label>Single Record</label>
+        </rules>
+    </decisions>
+
+    <environments>Default</environments>
+    <interviewLabel>Send FIR Form PDF {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Send FIR Form PDF</label>
+
+    <loops>
+        <name>Loop_Forms</name>
+        <label>Loop Forms</label>
+        <locationX>176</locationX>
+        <locationY>358</locationY>
+        <collectionReference>formIds</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Send_Email</targetReference>
+        </nextValueConnector>
+        <noMoreValuesConnector>
+            <targetReference>Result_Screen</targetReference>
+        </noMoreValuesConnector>
+    </loops>
+
+    <processType>Flow</processType>
+
+    <screens>
+        <name>Result_Screen</name>
+        <label>Email Sent</label>
+        <locationX>176</locationX>
+        <locationY>578</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>Result_Message</name>
+            <fieldText>&lt;p&gt;The Firearms Qualification Form PDF(s) have been emailed to the employee and group admins.&lt;/p&gt;&lt;p&gt;&lt;em&gt;Forms with no attached PDF are skipped &amp;mdash; generate/attach the PDF first.&lt;/em&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Record_Or_List</targetReference>
+        </connector>
+    </start>
+
+    <status>Active</status>
+
+    <variables>
+        <name>formIds</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <variables>
+        <name>ids</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <variables>
+        <name>recordId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+</Flow>

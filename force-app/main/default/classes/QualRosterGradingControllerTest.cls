@@ -232,6 +232,18 @@ private class QualRosterGradingControllerTest {
         System.assertEquals(1, r1.rowsAdded, 'First add should add one row');
         System.assertEquals(0, r2.rowsAdded, 'Identical weapon config should be skipped');
         System.assertEquals(1, r2.rowsSkipped, 'Skip count should reflect the dedup');
+
+        // Attempt date must be captured from the roster's test date (set to
+        // today by TestDataFactory), even for members added via this screen.
+        FIR_Weapon_Qualification_Detail__c newDet = [
+            SELECT Attempt_Date__c
+            FROM   FIR_Weapon_Qualification_Detail__c
+            WHERE  FIR_Qualification_Form__r.ContactName__c = :newContact
+            AND    Weapon_Type__c = 'Pistol 2'
+            LIMIT  1
+        ];
+        System.assertEquals(Date.today(), newDet.Attempt_Date__c,
+            'Attempt date should be captured from the roster test date');
     }
 
     @isTest

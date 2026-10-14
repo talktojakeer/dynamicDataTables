@@ -651,6 +651,7 @@ public with sharing class QualRosterGradingController {
                     if (String.isNotBlank(manufacturer)) det.Manufacturer__c = manufacturer;
                     if (String.isNotBlank(model))        det.Model__c        = model;
                     if (String.isNotBlank(sightType))    det.Sight_Type__c   = sightType;
+                    if (ctx.Test_Date__c != null)        det.Attempt_Date__c = ctx.Test_Date__c;
                     newDetails.add(det);
                     affected.add(cId);
                     rowsAdded++;

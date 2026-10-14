@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+
+    <decisions>
+        <name>User_Found</name>
+        <label>User Found?</label>
+        <locationX>50</locationX>
+        <locationY>240</locationY>
+        <defaultConnectorLabel>No Matching User</defaultConnectorLabel>
+        <rules>
+            <name>Has_User</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_User</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Get_PermSets</targetReference>
+            </connector>
+            <label>Has User</label>
+        </rules>
+    </decisions>
+
+    <decisions>
+        <name>Direction</name>
+        <label>FI Status Direction</label>
+        <locationX>50</locationX>
+        <locationY>480</locationY>
+        <defaultConnectorLabel>No Actionable Status</defaultConnectorLabel>
+        <rules>
+            <name>Became_InActive</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.FI_Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>InActive</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Loop_Remove</targetReference>
+            </connector>
+            <label>Became InActive</label>
+        </rules>
+        <rules>
+            <name>Became_Active</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.FI_Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Active</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Loop_Add</targetReference>
+            </connector>
+            <label>Became Active</label>
+        </rules>
+    </decisions>
+
+    <decisions>
+        <name>Add_Needed</name>
+        <label>Not Yet Assigned?</label>
+        <locationX>300</locationX>
+        <locationY>840</locationY>
+        <defaultConnectorLabel>Already Assigned</defaultConnectorLabel>
+        <defaultConnector>
+            <targetReference>Loop_Add</targetReference>
+        </defaultConnector>
+        <rules>
+            <name>Not_Assigned</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_PSA_Add</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Create_PSA</targetReference>
+            </connector>
+            <label>Not Assigned</label>
+        </rules>
+    </decisions>
+
+    <decisions>
+        <name>Remove_Needed</name>
+        <label>Currently Assigned?</label>
+        <locationX>600</locationX>
+        <locationY>840</locationY>
+        <defaultConnectorLabel>Not Assigned</defaultConnectorLabel>
+        <defaultConnector>
+            <targetReference>Loop_Remove</targetReference>
+        </defaultConnector>
+        <rules>
+            <name>Is_Assigned</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_PSA_Remove</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Delete_PSA</targetReference>
+            </connector>
+            <label>Is Assigned</label>
+        </rules>
+    </decisions>
+
+    <description>When an FI account's FI Status changes, assign (Active) or remove (InActive) the FI Admin and FI Instructor permission sets on the matching User (matched by PersonEmail). Permission-set DML runs on the asynchronous path to avoid MIXED_DML_OPERATION.</description>
+    <environments>Default</environments>
+    <interviewLabel>FI Status Permission Sync {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>FI Status Permission Sync</label>
+
+    <loops>
+        <name>Loop_Add</name>
+        <label>Loop Add</label>
+        <locationX>300</locationX>
+        <locationY>600</locationY>
+        <collectionReference>Get_PermSets</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Get_PSA_Add</targetReference>
+        </nextValueConnector>
+    </loops>
+
+    <loops>
+        <name>Loop_Remove</name>
+        <label>Loop Remove</label>
+        <locationX>600</locationX>
+        <locationY>600</locationY>
+        <collectionReference>Get_PermSets</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Get_PSA_Remove</targetReference>
+        </nextValueConnector>
+    </loops>
+
+    <processType>AutoLaunchedFlow</processType>
+
+    <recordCreates>
+        <name>Create_PSA</name>
+        <label>Assign Permission Set</label>
+        <locationX>300</locationX>
+        <locationY>960</locationY>
+        <connector>
+            <targetReference>Loop_Add</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>AssigneeId</field>
+            <value>
+                <elementReference>Get_User.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>PermissionSetId</field>
+            <value>
+                <elementReference>Loop_Add.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <object>PermissionSetAssignment</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+
+    <recordDeletes>
+        <name>Delete_PSA</name>
+        <label>Remove Permission Set</label>
+        <locationX>600</locationX>
+        <locationY>960</locationY>
+        <connector>
+            <targetReference>Loop_Remove</targetReference>
+        </connector>
+        <inputReference>Get_PSA_Remove</inputReference>
+    </recordDeletes>
+
+    <recordLookups>
+        <name>Get_User</name>
+        <label>Get User</label>
+        <locationX>50</locationX>
+        <locationY>120</locationY>
+        <connector>
+            <targetReference>User_Found</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Email</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.PersonEmail</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>IsActive</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>User</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+
+    <recordLookups>
+        <name>Get_PermSets</name>
+        <label>Get Permission Set Groups</label>
+        <locationX>50</locationX>
+        <locationY>360</locationY>
+        <connector>
+            <targetReference>Direction</targetReference>
+        </connector>
+        <filterLogic>1 OR 2</filterLogic>
+        <filters>
+            <field>MasterLabel</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>FI Admin</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>MasterLabel</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>FI Instructor</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>PermissionSetGroup</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+
+    <recordLookups>
+        <name>Get_PSA_Add</name>
+        <label>Get Existing Assignment (Add)</label>
+        <locationX>300</locationX>
+        <locationY>720</locationY>
+        <connector>
+            <targetReference>Add_Needed</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>AssigneeId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>Get_User.Id</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>PermissionSetId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>Loop_Add.Id</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>PermissionSetAssignment</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+
+    <recordLookups>
+        <name>Get_PSA_Remove</name>
+        <label>Get Existing Assignment (Remove)</label>
+        <locationX>600</locationX>
+        <locationY>720</locationY>
+        <connector>
+            <targetReference>Remove_Needed</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>AssigneeId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>Get_User.Id</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>PermissionSetId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>Loop_Remove.Id</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>PermissionSetAssignment</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Is_Firearms_Instructor__pc</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>FI_Status__c</field>
+            <operator>IsChanged</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <object>Account</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <scheduledPaths>
+            <name>Run_Async</name>
+            <connector>
+                <targetReference>Get_User</targetReference>
+            </connector>
+            <pathType>AsyncAfterCommit</pathType>
+        </scheduledPaths>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+
+    <status>Active</status>
+
+</Flow>

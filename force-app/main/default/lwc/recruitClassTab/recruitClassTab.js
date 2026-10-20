@@ -117,8 +117,14 @@ export default class RecruitClassTab extends NavigationMixin(LightningElement) {
             this.prepareRecords(data);
         } else if (error) {
             console.error(error);
+            this.dispatchEvent(new ShowToastEvent({
+                title  : 'Unable to load groups',
+                message: this.reduceDeleteError(error),
+                variant: 'error',
+                mode   : 'sticky'
+            }));
         }
-    }    
+    }
 
     prepareRecords(data) {
         const baseUrl = window.location.origin;
@@ -180,8 +186,40 @@ export default class RecruitClassTab extends NavigationMixin(LightningElement) {
             })
             .catch(error => {
                 console.error(error);
+                this.dispatchEvent(new ShowToastEvent({
+                    title  : 'Unable to delete group',
+                    message: this.reduceDeleteError(error),
+                    variant: 'error',
+                    mode   : 'sticky'
+                }));
             });
         }
+    }
+
+    // Build a user-friendly message from a deleteRecord / wire error, with a
+    // clear line for the common "no delete access on Account" case.
+    reduceDeleteError(error) {
+        const parts = [];
+        const body  = error && error.body;
+        if (Array.isArray(body)) {
+            body.forEach(e => parts.push(e.message || e.errorCode || ''));
+        } else if (body && typeof body.message === 'string') {
+            parts.push(body.message);
+        } else if (typeof (error && error.message) === 'string') {
+            parts.push(error.message);
+        }
+        const text = parts.join(' ').toLowerCase();
+        const noAccess =
+            text.includes('insufficient access') ||
+            text.includes('insufficient privileges') ||
+            text.includes('access rights') ||
+            text.includes("don't have") ||
+            text.includes('do not have') ||
+            text.includes('not allowed to delete');
+        if (noAccess) {
+            return "You don't have permission to delete groups (Delete access on Account is required). Please contact your administrator.";
+        }
+        return parts.join(' ') || 'The group could not be deleted. Please try again or contact your administrator.';
     }
 
 

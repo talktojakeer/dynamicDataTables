@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>FIR_CC_TOD_Administration</fullName>
+        <categories>FAQP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HR-74 CC - TOD Administration</shortDescription>
+        <value>talktojakeer@gmail.com</value>
+    </labels>
+    <labels>
+        <fullName>FIR_CC_HR_Service_Team</fullName>
+        <categories>FAQP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HR-74 CC - HR Service Team (comma/semicolon separated)</shortDescription>
+        <value>talktojakeer@gmail.com;
+jakeerHussain515@gmail.com</value>
+    </labels>
+    <labels>
+        <fullName>FIR_CC_Special_Rangers_Program</fullName>
+        <categories>FAQP</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HR-74 CC - Special Rangers Program (Special Ranger only)</shortDescription>
+        <value>talktojakeer@gmail.com</value>
+    </labels>
+</CustomLabels>

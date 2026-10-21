@@ -1,31 +1,29 @@
-/**
- * FIRFormEmailAction
- * ---------------------------------------------------------------------------
- * Emails the PDF already attached (as a File) to a FIR Qualification Form to:
- *   - the employee  (the form's member - ContactName__r.Email), and
- *   - the Group Admins (active members of a Public Group).
- *
- * Invocable from a Screen Flow (record-page Quick Action and list-view button).
- * The actual PDF is the latest attached .pdf File on the form (produced by the
- * attach script / FAQPFormPDFExtension); nothing is rendered here.
- *
- * If a classic/Lightning email template with DeveloperName = EMAIL_TEMPLATE_DEV_NAME
- * exists it is used; otherwise a built-in HTML body is sent. Both configs are
- * @TestVisible so the test can force the inline path.
- * ---------------------------------------------------------------------------
- */
+
 public with sharing class FIRFormEmailAction {
 
-    // ===== CONFIG - adjust to the org =====
-    // Public Group whose ACTIVE user members are the "Group Admins".
-    @TestVisible private static String ADMIN_GROUP_DEV_NAME   = 'FIR_Group_Admins';
-    // Optional email template DeveloperName (blank/not-found -> inline body).
-    @TestVisible private static String EMAIL_TEMPLATE_DEV_NAME = 'Fir_form_pdf_email_template';
-    // ======================================
+    // ===== CONFIG =====
+    // Classic email template (FAQP-274). Blank / not-found -> inline body.
+    @TestVisible private static String EMAIL_TEMPLATE_DEV_NAME = 'FIR_HR74_Qualification_Completed';
+
+    // Officer-type tokens (FAQP-273 / FAQP-275).
+    @TestVisible private static final String OFFICER_TYPE_SPECIAL_RANGER = 'Special Ranger';
+    @TestVisible private static final String OFFICER_TYPE_RETIRED_PEACE  = 'Retired Peace Officer';
+    @TestVisible private static final String OFFICER_TYPE_COMMISSIONED   = 'Commissioned Officer';
+
+    // CC addresses, sourced from Custom Labels. @TestVisible + reassignable so
+    // tests inject deterministic values instead of the configured label text.
+    @TestVisible private static String CC_TOD_ADMINISTRATION     = System.Label.FIR_CC_TOD_Administration;
+    @TestVisible private static String CC_HR_SERVICE_TEAM        = System.Label.FIR_CC_HR_Service_Team;
+    @TestVisible private static String CC_SPECIAL_RANGERS        = System.Label.FIR_CC_Special_Rangers_Program;
+    // ==================
 
     public class Request {
-        @InvocableVariable(label='FIR Form Record Id' required=true)
+        @InvocableVariable(label='FIR Form Record Id'
+            description='Single form Id - record-page / per-record use.')
         public Id formId;
+        @InvocableVariable(label='FIR Form Record Ids'
+            description='Collection of form Ids - list-view bulk use. Pass the whole selection in ONE call; do not loop.')
+        public List<Id> formIds;
     }
 
     public class Result {
@@ -33,15 +31,24 @@ public with sharing class FIRFormEmailAction {
         @InvocableVariable(label='Message') public String  message;
     }
 
+    /**
+     * Single invocable for both entry points:
+     *   - record page / per-record: set Request.formId
+     *   - list-view bulk: set Request.formIds to the whole selection and call
+     *     this action ONCE (do not loop). One invocation = one bulk send, which
+     *     avoids the 10-sendEmail-per-transaction limit and stays bulk-safe.
+     */
     @InvocableMethod(
         label='Send FIR Form PDF'
-        description='Emails the attached PDF of a FIR Qualification Form to the employee and Group Admins.'
+        description='Emails the attached HR-74 PDF of FIR Qualification Form(s) to the qualifying individual and the CC audiences. Accepts a single formId or an formIds collection; pass bulk selections in one call.'
         category='FAQP')
     public static List<Result> send(List<Request> requests) {
         Set<Id> formIds = new Set<Id>();
         if (requests != null) {
             for (Request r : requests) {
-                if (r != null && r.formId != null) formIds.add(r.formId);
+                if (r == null) continue;
+                if (r.formId != null)  formIds.add(r.formId);
+                if (r.formIds != null) formIds.addAll(r.formIds);
             }
         }
 
@@ -62,28 +69,32 @@ public with sharing class FIRFormEmailAction {
         return out;
     }
 
-    // Core - also callable directly from Apex.
+    // Core - also callable directly from Apex (used by the list-view mass button).
     public static Integer sendForForms(Set<Id> formIds) {
         if (formIds == null || formIds.isEmpty()) return 0;
 
         Map<Id, FIR_Qualification_Form__c> forms = new Map<Id, FIR_Qualification_Form__c>([
-            SELECT Id, Name, ContactName__c, ContactName__r.Email, ContactName__r.Name
+            SELECT Id, Name, ContactName__c,
+                   ContactName__r.Email, ContactName__r.Name,
+                   ContactName__r.FAQP_Is_Retired_Officer__c
             FROM   FIR_Qualification_Form__c
             WHERE  Id IN :formIds
         ]);
         if (forms.isEmpty()) return 0;
 
-        Map<Id, Id>  formToPdfCv = latestPdfPerForm(forms.keySet());
-        List<String> adminEmails = adminGroupEmails();
-        Id           tmplId      = templateId();
+        Map<Id, Id> formToPdfCv = latestPdfPerForm(forms.keySet());
+        Id          tmplId      = templateId();
 
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
+        List<Id> formIdByEmail = new List<Id>(); // parallel to emails - result[i] <-> form[i]
 
         for (FIR_Qualification_Form__c f : forms.values()) {
             Id cvId = formToPdfCv.get(f.Id);
-            if (cvId == null) continue; // no attached PDF -> skip this form
+            if (cvId == null) continue; // no attached HR-74 PDF -> skip this form
 
-            String memberEmail = (f.ContactName__r != null) ? f.ContactName__r.Email : null;
+            String memberEmail  = (f.ContactName__r != null) ? f.ContactName__r.Email : null;
+            String officerType  = resolveOfficerType(f);
+            List<String> ccList = ccAddressesFor(officerType);
 
             Messaging.SingleEmailMessage msg = new Messaging.SingleEmailMessage();
             msg.setSaveAsActivity(false);
@@ -94,31 +105,87 @@ public with sharing class FIRFormEmailAction {
                                    && String.isNotBlank(memberEmail));
 
             if (useTemplate) {
-                // Template renders against the member Contact; form = whatId.
+                // Template (FAQP-274) renders against the member Contact; form = whatId.
                 msg.setTemplateId(tmplId);
                 msg.setTargetObjectId(f.ContactName__c);
                 msg.setWhatId(f.Id);
-                if (!adminEmails.isEmpty()) msg.setCcAddresses(adminEmails);
+                if (!ccList.isEmpty()) msg.setCcAddresses(ccList);
             } else {
                 List<String> toList = new List<String>();
                 if (String.isNotBlank(memberEmail)) toList.add(memberEmail);
-                if (toList.isEmpty()) toList.addAll(adminEmails); // nobody else -> admins only
-                if (toList.isEmpty()) continue;                   // no recipients at all
+                if (toList.isEmpty()) toList.addAll(ccList); // no member email -> CC audiences only
+                if (toList.isEmpty()) continue;              // no recipients at all
                 msg.setToAddresses(toList);
-                if (String.isNotBlank(memberEmail) && !adminEmails.isEmpty()) {
-                    msg.setCcAddresses(adminEmails);
+                if (String.isNotBlank(memberEmail) && !ccList.isEmpty()) {
+                    msg.setCcAddresses(ccList);
                 }
-                msg.setSubject('Firearms Qualification Form - ' + f.Name);
+                msg.setSubject('Firearms Qualification Completed - HR-74 Results Available');
                 msg.setHtmlBody(defaultBody(f));
             }
             emails.add(msg);
+            formIdByEmail.add(f.Id);
         }
 
-        if (!emails.isEmpty()) Messaging.sendEmail(emails);
-        return emails.size();
+        if (emails.isEmpty()) return 0;
+
+        // Partial-success send: one bad address/message does not roll back the
+        // whole batch. Results come back in the same order as the input list.
+        List<Messaging.SendEmailResult> sendResults = Messaging.sendEmail(emails, false);
+
+        // Mark Completed only the forms whose email actually sent.
+        Integer sentCount = 0;
+        List<FIR_Qualification_Form__c> toComplete = new List<FIR_Qualification_Form__c>();
+        for (Integer i = 0; i < sendResults.size(); i++) {
+            if (sendResults[i] != null && sendResults[i].isSuccess()) {
+                sentCount++;
+                toComplete.add(new FIR_Qualification_Form__c(
+                    Id = formIdByEmail[i], Status__c = 'Completed'));
+            }
+        }
+        if (!toComplete.isEmpty()) Database.update(toComplete, false);
+
+        return sentCount;
     }
 
     // ---- helpers ----------------------------------------------------------
+
+    // Resolve the qualifying individual's officer type (FAQP-273 / FAQP-275).
+    // NOTE: "Special Ranger" is not yet a field in the data model. Until a
+    // Special-Ranger indicator exists on the Contact, this returns Retired /
+    // Commissioned only, so the Special Rangers Program CC stays inert. When
+    // the indicator field is added, branch to OFFICER_TYPE_SPECIAL_RANGER here
+    // and that CC activates automatically.
+    @TestVisible
+    private static String resolveOfficerType(FIR_Qualification_Form__c f) {
+        Boolean retired = (f.ContactName__r != null
+                           && f.ContactName__r.FAQP_Is_Retired_Officer__c == true);
+        return retired ? OFFICER_TYPE_RETIRED_PEACE : OFFICER_TYPE_COMMISSIONED;
+    }
+
+    // TOD Admin + HR CC on every email; Special Rangers Program only for a
+    // Special Ranger. De-duplicated case-insensitively.
+    @TestVisible
+    private static List<String> ccAddressesFor(String officerType) {
+        List<String> rawValues = new List<String>{ CC_TOD_ADMINISTRATION, CC_HR_SERVICE_TEAM };
+        if (OFFICER_TYPE_SPECIAL_RANGER.equalsIgnoreCase(officerType)) {
+            rawValues.add(CC_SPECIAL_RANGERS);
+        }
+
+        Set<String> seen    = new Set<String>();
+        List<String> result = new List<String>();
+        for (String val : rawValues) {
+            if (String.isBlank(val)) continue;
+            for (String part : val.split('[,;\\n\\r]')) {
+                String addr = (part == null) ? '' : part.trim();
+                if (String.isBlank(addr)) continue;
+                String key = addr.toLowerCase();
+                if (seen.contains(key)) continue;
+                seen.add(key);
+                result.add(addr);
+            }
+        }
+        return result;
+    }
 
     // Newest attached .pdf ContentVersion for each form (one per form).
     private static Map<Id, Id> latestPdfPerForm(Set<Id> formIds) {
@@ -162,28 +229,6 @@ public with sharing class FIRFormEmailAction {
         return formToCv;
     }
 
-    private static List<String> adminGroupEmails() {
-        List<String> emails = new List<String>();
-        if (String.isBlank(ADMIN_GROUP_DEV_NAME)) return emails;
-
-        List<Group> groups = [
-            SELECT Id FROM Group
-            WHERE DeveloperName = :ADMIN_GROUP_DEV_NAME AND Type = 'Regular' LIMIT 1
-        ];
-        if (groups.isEmpty()) return emails;
-
-        Set<Id> userIds = new Set<Id>();
-        for (GroupMember gm : [SELECT UserOrGroupId FROM GroupMember WHERE GroupId = :groups[0].Id]) {
-            if (String.valueOf(gm.UserOrGroupId).startsWith('005')) userIds.add(gm.UserOrGroupId);
-        }
-        if (userIds.isEmpty()) return emails;
-
-        for (User u : [SELECT Email FROM User WHERE Id IN :userIds AND IsActive = true AND Email != null]) {
-            emails.add(u.Email);
-        }
-        return emails;
-    }
-
     private static Id templateId() {
         if (String.isBlank(EMAIL_TEMPLATE_DEV_NAME)) return null;
         List<EmailTemplate> t = [
@@ -192,15 +237,17 @@ public with sharing class FIRFormEmailAction {
         return t.isEmpty() ? null : t[0].Id;
     }
 
+    // Inline fallback - mirrors the FAQP-274 template content.
     private static String defaultBody(FIR_Qualification_Form__c f) {
         String member = (f.ContactName__r != null && String.isNotBlank(f.ContactName__r.Name))
-                        ? f.ContactName__r.Name : 'Employee';
+                        ? f.ContactName__r.Name : 'Qualifying Individual';
         return '<p>Dear ' + member + ',</p>'
-             + '<p>Please find attached your Texas Department of Public Safety '
-             + 'Firearms Qualification Form.</p>'
-             + '<p><strong>Form:</strong> ' + f.Name + '</p>'
-             + '<p>If you have any questions, please contact your firearms instructor '
-             + 'or group administrator.</p>'
-             + '<p>Regards,<br/>Texas DPS Firearms Qualification Program</p>';
+             + '<p>This email is to notify you that your firearms qualification has been '
+             + 'successfully completed and your results are now available for review.</p>'
+             + '<p>Attached is a copy of your completed HR-74 Firearms Qualification Form '
+             + 'for your records.</p>'
+             + '<p>Please retain a copy of the attached form for future reference.</p>'
+             + '<p>Thank you,<br/>Texas Department of Public Safety<br/>'
+             + 'Firearms Training Unit<br/>Training Operations Division</p>';
     }
 }

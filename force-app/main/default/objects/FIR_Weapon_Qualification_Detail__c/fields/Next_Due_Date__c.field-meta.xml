@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Next_Due_Date__c</fullName>
+    <label>Next Due Date</label>
+    <description>The date by which this weapon must be re-qualified: the end of the cycle AFTER the one in which it was last qualified. Derived from Period_End__c.</description>
+    <type>Date</type>
+    <formula>IF(
+    MONTH(Period_End__c) = 6,
+    DATE(YEAR(Period_End__c), 12, 31),
+    DATE(YEAR(Period_End__c) + 1, 6, 30)
+)</formula>
+    <formulaTreatBlanksAs>BlankAsBlank</formulaTreatBlanksAs>
+    <required>false</required>
+</CustomField>

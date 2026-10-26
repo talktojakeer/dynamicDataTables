@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Due_Status__c</fullName>
+    <label>Due Status</label>
+    <description>Qualification standing for this weapon, recalculated whenever a report runs. Filter reports to the current record per officer+weapon (Is_Current_Qual__c = TRUE).</description>
+    <type>Text</type>
+    <formula>IF( ISBLANK(Period_End__c), "",
+IF( ISPICKVAL(Qualified__c, "No"), "Retest Required",
+IF( TODAY() &gt; Next_Due_Date__c, "Overdue",
+IF( TODAY() &gt; Period_End__c, "Due",
+"Current"))))</formula>
+    <formulaTreatBlanksAs>BlankAsBlank</formulaTreatBlanksAs>
+    <required>false</required>
+</CustomField>

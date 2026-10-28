@@ -3,6 +3,7 @@
     <fullName>Status__c</fullName>
     <label>Status</label>
     <required>false</required>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
@@ -10,24 +11,24 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Draft</fullName>
-                <default>false</default>
-                <label>Draft</label>
-            </value>
-            <value>
                 <fullName>Pending grading</fullName>
                 <default>false</default>
                 <label>Pending grading</label>
             </value>
             <value>
-                <fullName>Ready for Pdf</fullName>
+                <fullName>Graded</fullName>
                 <default>false</default>
-                <label>Ready for Pdf</label>
+                <label>Graded</label>
             </value>
             <value>
-                <fullName>Completed</fullName>
+                <fullName>Generate PDF</fullName>
                 <default>false</default>
-                <label>Completed</label>
+                <label>Generate PDF</label>
+            </value>
+            <value>
+                <fullName>Sent to HR</fullName>
+                <default>false</default>
+                <label>Sent to HR</label>
             </value>
         </valueSetDefinition>
     </valueSet>

@@ -280,6 +280,7 @@ export default class QualRosterGrading extends LightningElement {
     @track newLastName        = '';
     @track newIsRetired       = false;
     @track newMiddleName      = '';
+    @track newEmail           = '';
     @track newDob             = '';
     @track newYearRetired     = '';
     @track newRetiredType     = '';
@@ -362,6 +363,7 @@ export default class QualRosterGrading extends LightningElement {
         this.showCreateEmployee  = false;
         this.newFirstName        = '';
         this.newLastName         = '';
+        this.newEmail            = '';
         this.newIsRetired        = false;
         this.addWeaponType       = '';
         this._fetchAvailableEmployees();
@@ -522,6 +524,7 @@ export default class QualRosterGrading extends LightningElement {
     handleNewLastName(event)  { this.newLastName  = event.target.value; }
     handleNewIsRetired(event) { this.newIsRetired = event.target.checked; }
     handleNewMiddleName(event)  { this.newMiddleName  = event.target.value; }
+    handleNewEmail(event)       { this.newEmail       = event.target.value; }
     handleNewDob(event)         { this.newDob         = event.target.value; }
     handleNewYearRetired(event) { this.newYearRetired = event.target.value; }
     handleNewRetiredType(event) { this.newRetiredType = event.detail.value; }
@@ -541,12 +544,22 @@ export default class QualRosterGrading extends LightningElement {
             this.addError = 'Last name is required to create an employee.';
             return;
         }
+        const email = this.newEmail ? this.newEmail.trim() : '';
+        if (!email) {
+            this.addError = 'Email is required to create an employee.';
+            return;
+        }
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+            this.addError = 'Please enter a valid email address.';
+            return;
+        }
         this.isCreatingEmployee = true;
         this.addError = '';
         createEmployee({
             firstName  : this.newFirstName ? this.newFirstName.trim() : null,
             middleName : this.newMiddleName ? this.newMiddleName.trim() : null,
             lastName   : this.newLastName.trim(),
+            email      : email,
             dateOfBirth: this.newDob || null,
             yearRetired: this.newYearRetired || null,
             retiredType: this.newRetiredType ? this.newRetiredType.trim() : null,
@@ -560,6 +573,7 @@ export default class QualRosterGrading extends LightningElement {
                 }));
                 this.newFirstName       = '';
                 this.newLastName        = '';
+                this.newEmail           = '';
                 this.newIsRetired       = false;
                 this.newMiddleName      = '';
                 this.newDob             = '';

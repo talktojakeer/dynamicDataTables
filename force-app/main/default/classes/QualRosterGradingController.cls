@@ -683,11 +683,15 @@ public with sharing class QualRosterGradingController {
         if (val == null) return;
         try { rec.put(field, val); } catch (Exception e) { /* field absent - skip */ }
     }
+    // Record type applied to a newly created retired peace officer Person Account.
+    @TestVisible private static String RETIRED_PEACE_OFFICER_RT = 'Retire_Peace_Officer';
+
     @AuraEnabled
     public static AvailableEmployee createEmployee(
         String firstName,
         String middleName,
         String lastName,
+        String email,
         String dateOfBirth,
         String yearRetired,
         String retiredType,
@@ -696,23 +700,30 @@ public with sharing class QualRosterGradingController {
         if (String.isBlank(lastName)) {
             throw new AuraHandledException('Last name is required.');
         }
+        if (String.isBlank(email)) {
+            throw new AuraHandledException('Email is required.');
+        }
 
+        // Retired peace officers use the Retire_Peace_Officer record type;
+        // everyone else uses the standard employee Person Account record type.
+        String rtDevName = (isRetired == true) ? RETIRED_PEACE_OFFICER_RT : EMPLOYEE_RT;
         Id rtId;
         try {
             rtId = Schema.SObjectType.Account
                        .getRecordTypeInfosByDeveloperName()
-                       .get(EMPLOYEE_RT).getRecordTypeId();
+                       .get(rtDevName).getRecordTypeId();
         } catch (Exception e) {
             rtId = null;
         }
         if (rtId == null) {
-            throw new AuraHandledException('Employee record type not found. Check the "' + EMPLOYEE_RT + '" record type.');
+            throw new AuraHandledException('Account record type not found. Check the "' + rtDevName + '" record type.');
         }
 
         Account acc = new Account(
             RecordTypeId = rtId,
             FirstName    = String.isNotBlank(firstName) ? firstName.trim() : null,
             LastName     = lastName.trim(),
+            PersonEmail  = email.trim(),
             Active__c    = (isRetired == true) ? 'No' : 'Yes'
         );
 

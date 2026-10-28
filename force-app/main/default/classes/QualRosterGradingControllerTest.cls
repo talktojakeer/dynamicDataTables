@@ -270,25 +270,46 @@ private class QualRosterGradingControllerTest {
     // ---- Create employee --------------------------------------------------
     @isTest
     static void testCreateEmployee() {
+        // Point the retired record type at an existing person-account RT so the
+        // test does not depend on the new Retire_Peace_Officer RT being present.
+        QualRosterGradingController.RETIRED_PEACE_OFFICER_RT = 'PersonAccount';
+
         Test.startTest();
         QualRosterGradingController.AvailableEmployee emp =
             QualRosterGradingController.createEmployee(
-                'Retired', 'M', 'Officer', '1960-01-15', '2020-06-30', 'Retired DPS Trooper', true);
+                'Retired', 'M', 'Officer', 'retired.officer@example.com',
+                '1960-01-15', '2020-06-30', 'Retired DPS Trooper', true);
         Test.stopTest();
 
         System.assertNotEquals(null, emp.accountId, 'New employee account Id should be returned');
         System.assert(emp.name.contains('Retired') && emp.name.contains('Officer'),
             'Composed name should contain first and last name');
-        Account created = [SELECT IsPersonAccount FROM Account WHERE Id = :emp.accountId];
+        Account created = [
+            SELECT IsPersonAccount, PersonEmail, RecordType.DeveloperName
+            FROM Account WHERE Id = :emp.accountId];
         System.assert(created.IsPersonAccount, 'Created record should be a Person Account');
+        System.assertEquals('retired.officer@example.com', created.PersonEmail,
+            'Email should be saved to PersonEmail');
+        System.assertEquals('PersonAccount', created.RecordType.DeveloperName,
+            'Retired officer should use the configured retired record type');
     }
 
     @isTest
     static void testCreateEmployee_missingLastName() {
         Test.startTest();
         try {
-            QualRosterGradingController.createEmployee('First', null, '', null, null, null, false);
+            QualRosterGradingController.createEmployee('First', null, '', 'x@y.com', null, null, null, false);
             System.assert(false, 'Missing last name should throw');
+        } catch (AuraHandledException e) { System.assert(true); }
+        Test.stopTest();
+    }
+
+    @isTest
+    static void testCreateEmployee_missingEmail() {
+        Test.startTest();
+        try {
+            QualRosterGradingController.createEmployee('First', null, 'Last', '', null, null, null, false);
+            System.assert(false, 'Missing email should throw');
         } catch (AuraHandledException e) { System.assert(true); }
         Test.stopTest();
     }

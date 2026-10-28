@@ -4,30 +4,45 @@
     
         <lightning-quick-action-panel header="Add Recruit Class Members">
 
-            <div class="slds-p-around_medium">
-                <lightning-input
-                    type="search"
-                    label="Search Contact"
-                    placeholder="Search by Name"
-                    onchange={handleContactSearch}>
-                </lightning-input>
-            </div>
-            <template if:true={showDataTable}>   
-                <div class="modal-body">
-                    <lightning-datatable
-                        key-field="Id"
-                        data={visibleEmployees}
-                        columns={columns}
-                        onrowselection={handleRowSelection}
-                        selected-rows={selectedEmployeeIds}>
-                    </lightning-datatable>
-                </div> 
+            <!-- Read-only users: show a message instead of the add form -->
+            <template if:true={noEditAccess}>
+                <div class="slds-p-around_medium">
+                    <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-bottom_small" role="alert">
+                        <lightning-icon icon-name="utility:warning" size="x-small"
+                            alternative-text="Warning" class="slds-m-right_x-small"></lightning-icon>
+                        <span>{noAccessMessage}</span>
+                    </div>
+                </div>
             </template>
-            
+
+            <!-- Edit users: the normal add-member form -->
+            <template if:true={hasEditAccess}>
+                <div class="slds-p-around_medium">
+                    <lightning-input
+                        type="search"
+                        label="Search Contact"
+                        placeholder="Search by Name"
+                        onchange={handleContactSearch}>
+                    </lightning-input>
+                </div>
+                <template if:true={showDataTable}>
+                    <div class="modal-body">
+                        <lightning-datatable
+                            key-field="Id"
+                            data={visibleEmployees}
+                            columns={columns}
+                            onrowselection={handleRowSelection}
+                            selected-rows={selectedEmployeeIds}>
+                        </lightning-datatable>
+                    </div>
+                </template>
+            </template>
 
             <div slot="footer">
                 <lightning-button variant="neutral" onclick={handleClose} label="Cancel"></lightning-button>
-                <lightning-button variant="brand" label="Add to Recruit Class" onclick={handleSubmit} class="slds-m-left_x-small"></lightning-button>
+                <template if:true={hasEditAccess}>
+                    <lightning-button variant="brand" label="Add to Recruit Class" onclick={handleSubmit} class="slds-m-left_x-small"></lightning-button>
+                </template>
             </div>
         </lightning-quick-action-panel>
     </template>

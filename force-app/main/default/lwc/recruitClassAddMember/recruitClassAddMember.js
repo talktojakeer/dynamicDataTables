@@ -1,6 +1,7 @@
 import { LightningElement, track, api } from 'lwc';
 import searchEmployees             from '@salesforce/apex/recruitClassController.searchEmployees';
 import linkEmployeesToRecruitClass from '@salesforce/apex/recruitClassController.linkEmployeesToRecruitClass';
+import getRecruitClassAccess       from '@salesforce/apex/recruitClassController.getRecruitClassAccess';
 import { ShowToastEvent }          from 'lightning/platformShowToastEvent';
 import { CloseActionScreenEvent }  from 'lightning/actions';
 
@@ -11,9 +12,37 @@ export default class RecruitClassAddMember extends LightningElement {
     @track selectedEmployeeIds = [];
     @track showDataTable     = false;
 
+    @track hasEditAccess = false;
+    @track accessChecked = false;
+    @track accountName   = '';
+
     isShowModal   = true;
     selectedIdSet = new Set();
     searchKey     = '';
+
+    // Gate the action by the user's record-level access to the Recruit Class.
+    connectedCallback() {
+        getRecruitClassAccess({ recruitClassId: this.recordId })
+            .then(result => {
+                this.hasEditAccess = result.hasEditAccess;
+                this.accountName   = result.name;
+                this.accessChecked = true;
+            })
+            .catch(error => {
+                this.accessChecked = true;
+                this.showToast('Error', this.reduceError(error), 'error');
+            });
+    }
+
+    // Show the read-only message only after the access check has returned.
+    get noEditAccess() {
+        return this.accessChecked && !this.hasEditAccess;
+    }
+
+    get noAccessMessage() {
+        const name = this.accountName ? ` "${this.accountName}"` : '';
+        return `You have read-only access to${name}. Edit access to this Account is required to add Recruit Class members.`;
+    }
 
     columns = [
         { label: 'Last name',     fieldName: 'LastName' },

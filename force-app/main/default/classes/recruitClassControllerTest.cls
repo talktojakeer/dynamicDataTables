@@ -70,6 +70,24 @@ private class recruitClassControllerTest {
         System.assert(count >= empIds.size(), 'Each employee should be linked to the recruit class');
     }
 
+    // ---- getRecruitClassAccess (edit-access gate) ------------------------
+    @isTest
+    static void testGetRecruitClassAccess() {
+        Account rc = [SELECT Id, Name FROM Account WHERE Name = 'A-2026' LIMIT 1];
+
+        Test.startTest();
+        recruitClassController.RecruitClassAccess acc =
+            recruitClassController.getRecruitClassAccess(rc.Id);
+        recruitClassController.RecruitClassAccess none =
+            recruitClassController.getRecruitClassAccess(null);
+        Test.stopTest();
+
+        System.assertEquals(true, acc.hasEditAccess,
+            'Running admin user should have edit access to the recruit class');
+        System.assertEquals('A-2026', acc.name, 'Account name should be returned');
+        System.assertEquals(false, none.hasEditAccess, 'Null id -> no access');
+    }
+
     @isTest
     static void testLinkEmployees_validation() {
         Test.startTest();

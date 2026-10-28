@@ -63,11 +63,54 @@ public with sharing class recruitClassController {
     // @param recruitClassId  - Id of the Recruit Class (Business Account)
     // @param employeeIds     - List of Person Account Ids to link
     // -----------------------------------------------------------------------
+    // -----------------------------------------------------------------------
+    // Record-level access for the current user on a Recruit Class (Account).
+    // Used by the Add Members UI to gate the action, and as a server backstop.
+    // -----------------------------------------------------------------------
+    public class RecruitClassAccess {
+        @AuraEnabled public Boolean hasEditAccess = false;
+        @AuraEnabled public String  name;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static RecruitClassAccess getRecruitClassAccess(Id recruitClassId) {
+        RecruitClassAccess acc = new RecruitClassAccess();
+        if (recruitClassId == null) return acc;
+
+        for (Account a : [SELECT Name FROM Account WHERE Id = :recruitClassId LIMIT 1]) {
+            acc.name = a.Name;
+        }
+        for (UserRecordAccess ura : [
+            SELECT HasEditAccess,RecordId
+            FROM   UserRecordAccess
+            WHERE  UserId = :UserInfo.getUserId()
+            AND    RecordId = :recruitClassId
+            LIMIT  1
+        ]) {
+            acc.hasEditAccess = ura.HasEditAccess;
+        }
+        return acc;
+    }
+
     @AuraEnabled
     public static void linkEmployeesToRecruitClass(Id recruitClassId, List<Id> employeeIds) {
         if (recruitClassId == null || employeeIds == null || employeeIds.isEmpty()) {
             throw new AuraHandledException('Recruit Class Id and at least one employee are required.');
         }
+
+        // Backstop: block the action for users without edit access to the Account.
+        Boolean canEdit = false;
+        for (UserRecordAccess ura : [
+            SELECT HasEditAccess,RecordId FROM UserRecordAccess
+            WHERE  UserId = :UserInfo.getUserId() AND RecordId = :recruitClassId LIMIT 1
+        ]) {
+            canEdit = ura.HasEditAccess;
+        }
+        if (!canEdit) {
+            throw new AuraHandledException(
+                'You have read-only access to this Recruit Class. Edit access is required to add members.');
+        }
+
         try {
             List<Account> employees = [
                 SELECT Id, PersonContactId, FirstName, LastName

@@ -97,6 +97,8 @@ public with sharing class RandomDrugTestSelectionService {
             SELECT Id, Name, PersonContactId
             FROM Account
             WHERE IsPersonAccount = true
+              AND Extended_Leave__c = false
+              AND Job_Code__r.Random_Eligible__c = true
               AND Id NOT IN (
                     SELECT AccountId FROM Case
                     WHERE RecordTypeId = :rtId

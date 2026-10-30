@@ -212,6 +212,7 @@ public with sharing class QualRosterController {
                 Light_Condition__c   = mp.lightningCondition,
                 ContactName__c       = mp.contactId,
                 Recruit_Class_FTU_Group__c     = recruitClassId,
+                Status__c            = 'Pending grading',
                 Qual_Roster_Label__c = String.isNotBlank(rosterLabel) ? rosterLabel.trim() : null
             );
             if (instructorId != null) fir.Firearms_Instrutor__c = instructorId;

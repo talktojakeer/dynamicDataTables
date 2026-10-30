@@ -70,7 +70,20 @@ public class FAQPFormPDFExtension {
                 }
                
                 insert linksToInsert;
-               
+
+                // Mark the forms as PDF generated (don't downgrade one already Sent to HR).
+                Set<Id> pdfFormIds = new Set<Id>();
+                for (FIR_Qualification_Form__c c : selectedForms) pdfFormIds.add(c.Id);
+                List<FIR_Qualification_Form__c> statusUpdates = new List<FIR_Qualification_Form__c>();
+                for (FIR_Qualification_Form__c f : [
+                    SELECT Id, Status__c FROM FIR_Qualification_Form__c WHERE Id IN :pdfFormIds
+                ]) {
+                    if (f.Status__c != 'Sent to HR') {
+                        statusUpdates.add(new FIR_Qualification_Form__c(Id = f.Id, Status__c = 'Generate PDF'));
+                    }
+                }
+                if (!statusUpdates.isEmpty()) update statusUpdates;
+
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'PDFs generated and attached successfully to ' + selectedForms.size() + ' FIR_Qualification_Form(s).'));
             } catch (Exception e) {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error attaching PDFs: ' + e.getMessage()));

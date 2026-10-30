@@ -1,4 +1,3 @@
-
 public with sharing class FIRFormEmailAction {
 
     // ===== CONFIG =====
@@ -76,7 +75,8 @@ public with sharing class FIRFormEmailAction {
         Map<Id, FIR_Qualification_Form__c> forms = new Map<Id, FIR_Qualification_Form__c>([
             SELECT Id, Name, ContactName__c,
                    ContactName__r.Email, ContactName__r.Name,
-                   ContactName__r.FAQP_Is_Retired_Officer__c
+                   ContactName__r.FAQP_Is_Retired_Officer__c,
+                   ContactName__r.FAQP_Retired_Peace_Officer_Type__c
             FROM   FIR_Qualification_Form__c
             WHERE  Id IN :formIds
         ]);
@@ -132,14 +132,14 @@ public with sharing class FIRFormEmailAction {
         // whole batch. Results come back in the same order as the input list.
         List<Messaging.SendEmailResult> sendResults = Messaging.sendEmail(emails, false);
 
-        // Mark Completed only the forms whose email actually sent.
+        // Mark 'Sent to HR' only the forms whose email actually sent.
         Integer sentCount = 0;
         List<FIR_Qualification_Form__c> toComplete = new List<FIR_Qualification_Form__c>();
         for (Integer i = 0; i < sendResults.size(); i++) {
             if (sendResults[i] != null && sendResults[i].isSuccess()) {
                 sentCount++;
                 toComplete.add(new FIR_Qualification_Form__c(
-                    Id = formIdByEmail[i], Status__c = 'Completed'));
+                    Id = formIdByEmail[i], Status__c = 'Sent to HR'));
             }
         }
         if (!toComplete.isEmpty()) Database.update(toComplete, false);
@@ -150,16 +150,20 @@ public with sharing class FIRFormEmailAction {
     // ---- helpers ----------------------------------------------------------
 
     // Resolve the qualifying individual's officer type (FAQP-273 / FAQP-275).
-    // NOTE: "Special Ranger" is not yet a field in the data model. Until a
-    // Special-Ranger indicator exists on the Contact, this returns Retired /
-    // Commissioned only, so the Special Rangers Program CC stays inert. When
-    // the indicator field is added, branch to OFFICER_TYPE_SPECIAL_RANGER here
-    // and that CC activates automatically.
+    // A "Special Ranger" / "Special Texas Ranger" (FAQP_Retired_Peace_Officer_Type__c)
+    // routes the Special Rangers Program CC; otherwise retired vs commissioned.
     @TestVisible
     private static String resolveOfficerType(FIR_Qualification_Form__c f) {
-        Boolean retired = (f.ContactName__r != null
-                           && f.ContactName__r.FAQP_Is_Retired_Officer__c == true);
-        return retired ? OFFICER_TYPE_RETIRED_PEACE : OFFICER_TYPE_COMMISSIONED;
+        if (f.ContactName__r != null) {
+            String t = f.ContactName__r.FAQP_Retired_Peace_Officer_Type__c;
+            if (t == 'Special Ranger' || t == 'Special Texas Ranger') {
+                return OFFICER_TYPE_SPECIAL_RANGER;
+            }
+            if (f.ContactName__r.FAQP_Is_Retired_Officer__c == true) {
+                return OFFICER_TYPE_RETIRED_PEACE;
+            }
+        }
+        return OFFICER_TYPE_COMMISSIONED;
     }
 
     // TOD Admin + HR CC on every email; Special Rangers Program only for a

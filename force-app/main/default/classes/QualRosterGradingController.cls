@@ -389,10 +389,10 @@ public with sharing class QualRosterGradingController {
                         f.Witness_Signature_Date__c = witnessDate;
                     }
                 }
-                // Signatures captured -> roster is ready for PDF (locks the screen).
-                // Don't downgrade a roster that's already Completed.
-                if (f.Status__c != 'Completed') {
-                    f.Status__c = 'Ready for Pdf';
+                // Grading + signatures complete -> Graded.
+                // Don't downgrade a form already further along the lifecycle.
+                if (f.Status__c != 'Generate PDF' && f.Status__c != 'Sent to HR') {
+                    f.Status__c = 'Graded';
                 }
             }
             update forms;

@@ -4,6 +4,7 @@
     <formula>AND( MONTH(Test_Date__c) = MONTH(TODAY()), YEAR(Test_Date__c) = YEAR(TODAY()) )</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>IS THIS MONTH</label>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

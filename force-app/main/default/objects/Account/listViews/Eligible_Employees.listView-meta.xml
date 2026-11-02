@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Eligible_Employees</fullName>
+    <columns>Job_Code__c</columns>
+    <columns>Last_Test_Date__c</columns>
+    <columns>Pool_Hold_Until__c</columns>
+    <columns>Is_Eligible_For_Testing__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Is_Eligible_For_Testing__c</field>
+        <operation>equals</operation>
+        <value>1</value>
+    </filters>
+    <label>Eligible Employees</label>
+    <language>en_US</language>
+    <sharedTo>
+        <allInternalUsers></allInternalUsers>
+    </sharedTo>
+</ListView>

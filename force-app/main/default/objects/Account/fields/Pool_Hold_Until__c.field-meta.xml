@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Pool_Hold_Until__c</fullName>
+    <description>Rule 3 - Set to TODAY()+180 when drug test completed. Employee ineligible for random selection until this date passes.</description>
+    <label>Pool Hold Until</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Date</type>
+</CustomField>

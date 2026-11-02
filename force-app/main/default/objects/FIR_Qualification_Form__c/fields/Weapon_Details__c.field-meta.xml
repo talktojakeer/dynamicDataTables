@@ -3,6 +3,7 @@
     <fullName>Weapon_Details__c</fullName>
     <label>Weapon Details</label>
     <length>32768</length>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>LongTextArea</type>
     <visibleLines>3</visibleLines>

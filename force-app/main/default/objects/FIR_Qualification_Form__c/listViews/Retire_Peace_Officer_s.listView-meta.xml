@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Retire_Peace_Officer_s</fullName>
+    <columns>NAME</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>is_Retired_Peace_Officer__c</field>
+        <operation>equals</operation>
+        <value>1</value>
+    </filters>
+    <label>Retire Peace Officer&apos;s</label>
+</ListView>

@@ -3,6 +3,7 @@
     <fullName>Rifle_Qualified90__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Rifle Qualified90</label>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

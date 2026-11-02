@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Drug_Test_Type__c</fullName>
+    <description>Differentiates the three drug testing use cases.</description>
+    <label>Drug Test Type</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Random</fullName>
+                <default>false</default>
+                <label>Random</label>
+            </value>
+            <value>
+                <fullName>For Cause</fullName>
+                <default>false</default>
+                <label>For Cause</label>
+            </value>
+            <value>
+                <fullName>Critical Incident</fullName>
+                <default>false</default>
+                <label>Critical Incident</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

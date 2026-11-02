@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Supervisor_Delegation__c</fullName>
+    <description>Parent delegation record.</description>
+    <label>Supervisor Delegation</label>
+    <referenceTo>Supervisor_Delegation__c</referenceTo>
+    <relationshipLabel>Delegation Members</relationshipLabel>
+    <relationshipName>Delegation_Members</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

@@ -4,6 +4,7 @@
     <defaultValue>true</defaultValue>
     <description>Most Recent weapon qual detail tracking for Same person + same Weapon..</description>
     <label>Is Current Qual</label>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

@@ -4,6 +4,7 @@
     <defaultValue>false</defaultValue>
     <description>True for the latest attempt for this member + weapon type within the current qualification period (Jan-Jun / Jul-Dec). Maintained by the FIR_Weapon_Latest_Attempt flow. Filter reports on this = true for current status.</description>
     <label>Is Latest Attempt</label>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

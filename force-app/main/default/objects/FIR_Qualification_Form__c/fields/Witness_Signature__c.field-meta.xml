@@ -3,6 +3,7 @@
     <fullName>Witness_Signature__c</fullName>
     <label>Witness Signature</label>
     <length>131072</length>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Html</type>
     <visibleLines>25</visibleLines>

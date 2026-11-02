@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Manufacturer__c</fullName>
-    <externalId>false</externalId>
     <label>Manufacturer</label>
     <required>false</required>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
         <controllingField>Weapon_Type__c</controllingField>
-        <restricted>true</restricted>
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
@@ -93,16 +92,32 @@
             </value>
         </valueSetDefinition>
         <valueSettings>
-            <controllingFieldValue>Precision Rifle</controllingFieldValue>
-            <valueName>Accuracy International (Precision Rifle)</valueName>
+            <controllingFieldValue>Shotgun</controllingFieldValue>
+            <valueName>Mossberg (Shotgun)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
-            <valueName>Daniel Defense (Automatic Weapon)</valueName>
+            <controllingFieldValue>Shotgun</controllingFieldValue>
+            <valueName>Remington (Shotgun)</valueName>
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Rifle</controllingFieldValue>
             <valueName>Daniel Defense (Rifle)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Rifle</controllingFieldValue>
+            <valueName>Heckler Koch (Rifle)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Rifle</controllingFieldValue>
+            <valueName>Hodge Defense (Rifle)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Rifle</controllingFieldValue>
+            <valueName>Sig Sauer (Rifle)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
+            <valueName>Daniel Defense (Automatic Weapon)</valueName>
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Automatic Weapon</controllingFieldValue>
@@ -113,36 +128,24 @@
             <valueName>Heckler Koch (Automatic Weapon)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Rifle</controllingFieldValue>
-            <valueName>Heckler Koch (Rifle)</valueName>
-        </valueSettings>
-        <valueSettings>
             <controllingFieldValue>Automatic Weapon</controllingFieldValue>
             <valueName>Hodge Defense (Automatic Weapon)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Rifle</controllingFieldValue>
-            <valueName>Hodge Defense (Rifle)</valueName>
+            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
+            <valueName>Sig Sauer (Automatic Weapon)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Precision Rifle</controllingFieldValue>
+            <valueName>Accuracy International (Precision Rifle)</valueName>
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Precision Rifle</controllingFieldValue>
             <valueName>LaRue (Precision Rifle)</valueName>
         </valueSettings>
         <valueSettings>
-            <controllingFieldValue>Shotgun</controllingFieldValue>
-            <valueName>Mossberg (Shotgun)</valueName>
-        </valueSettings>
-        <valueSettings>
             <controllingFieldValue>Precision Rifle</controllingFieldValue>
             <valueName>Remington (Precision Rifle)</valueName>
-        </valueSettings>
-        <valueSettings>
-            <controllingFieldValue>Shotgun</controllingFieldValue>
-            <valueName>Remington (Shotgun)</valueName>
-        </valueSettings>
-        <valueSettings>
-            <controllingFieldValue>Automatic Weapon</controllingFieldValue>
-            <valueName>Sig Sauer (Automatic Weapon)</valueName>
         </valueSettings>
         <valueSettings>
             <controllingFieldValue>Pistol 1</controllingFieldValue>
@@ -151,10 +154,6 @@
         <valueSettings>
             <controllingFieldValue>Pistol 2</controllingFieldValue>
             <valueName>Sig Sauer (Pistol 2)</valueName>
-        </valueSettings>
-        <valueSettings>
-            <controllingFieldValue>Rifle</controllingFieldValue>
-            <valueName>Sig Sauer (Rifle)</valueName>
         </valueSettings>
     </valueSet>
 </CustomField>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Reverted__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>TRUE when this employee Reports_To has been restored to original.</description>
+    <label>Reverted</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

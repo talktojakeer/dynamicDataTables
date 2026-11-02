@@ -3,6 +3,7 @@
     <fullName>Light_Condition__c</fullName>
     <label>Light Condition</label>
     <required>false</required>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Is_Test_Over_Due__c</fullName>
+    <formula>AND (
+  Test_Due_Date__c &lt; TODAY (),
+  NOT (ISPICKVAL (Status, &apos;Completed&apos;)),
+  NOT (ISPICKVAL (Status, &apos;Cancelled&apos;))
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Is Test Over Due</label>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

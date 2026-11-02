@@ -6,6 +6,7 @@
     <columns>Firearms_Instrutor__c</columns>
     <columns>Light_Condition__c</columns>
     <columns>Location__c</columns>
+    <columns>is_Retired_Peace_Officer__c</columns>
     <columns>CREATED_DATE</columns>
     <filterScope>Mine</filterScope>
     <label>My Roster&apos;s</label>

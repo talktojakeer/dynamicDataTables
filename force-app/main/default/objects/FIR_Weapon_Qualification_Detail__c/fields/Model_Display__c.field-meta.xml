@@ -3,8 +3,11 @@
     <fullName>Model_Display__c</fullName>
     <description>Clean model name without the weapon-type suffix. Use this in reports/PDF instead of Model__c.</description>
     <externalId>false</externalId>
-    <formula>IF(CONTAINS(TEXT(Model__c), " ("), LEFT(TEXT(Model__c), FIND(" (", TEXT(Model__c)) - 1), TEXT(Model__c))</formula>
+    <formula>IF(CONTAINS(TEXT(Model__c), &quot; (&quot;), LEFT(TEXT(Model__c), FIND(&quot; (&quot;, TEXT(Model__c)) - 1), TEXT(Model__c))</formula>
     <label>Model (Display)</label>
     <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Text</type>
+    <unique>false</unique>
 </CustomField>

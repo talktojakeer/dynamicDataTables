@@ -3,6 +3,7 @@
     <fullName>Weapon_Code__c</fullName>
     <label>Weapon Code</label>
     <required>false</required>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>

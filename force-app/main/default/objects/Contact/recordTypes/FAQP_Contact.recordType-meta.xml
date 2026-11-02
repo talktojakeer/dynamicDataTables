@@ -15,6 +15,25 @@
         </values>
     </picklistValues>
     <picklistValues>
+        <picklist>FAQP_Retired_Peace_Officer_Type__c</picklist>
+        <values>
+            <fullName>Retired DPS Trooper</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Retired Peace Officer%2FNon-DPS</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Special Ranger</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Special Texas Ranger</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
         <picklist>GenderIdentity</picklist>
         <values>
             <fullName>Female</fullName>

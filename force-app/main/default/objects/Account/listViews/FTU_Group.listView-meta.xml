@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FTU_Group</fullName>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>ACCOUNT.CREATED_DATE</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>ACCOUNT.RECORDTYPE</field>
+        <operation>equals</operation>
+        <value>Account.FAQP_Account</value>
+    </filters>
+    <filters>
+        <field>FAQP_Group_Type__c</field>
+        <operation>equals</operation>
+        <value>FTU Group</value>
+    </filters>
+    <label>FTU Group</label>
+</ListView>

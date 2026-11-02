@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Is_Eligible_For_Testing__c</fullName>
+    <defaultValue>true</defaultValue>
+    <description>Master eligibility flag. NOTE: In production, replace this with a Formula field once all dependent fields exist. Formula: AND(Exclude_From_Selection__c=FALSE, On_Leave__c=FALSE, Has_Open_Absence_Case__c=FALSE, OR(ISBLANK(Pool_Hold_Until__c), Pool_Hold_Until__c &lt; TODAY())). Deployed as Checkbox initially to avoid dependency issues during deployment.</description>
+    <label>Is Eligible For Testing</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Checkbox</type>
+</CustomField>

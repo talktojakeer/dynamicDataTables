@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Must_Test_By__c</fullName>
+    <description>Rule 1 - Auto-calculates 30-day retest deadline from Absence_Return_Date__c.</description>
+    <formula>IF(
+  Is_Approved_Absence__c,
+  Absence_Return_Date__c + 30,
+  NULL
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Must Test By</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Date</type>
+</CustomField>

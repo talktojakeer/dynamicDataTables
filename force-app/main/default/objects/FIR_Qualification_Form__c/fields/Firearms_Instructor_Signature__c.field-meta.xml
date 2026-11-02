@@ -3,6 +3,7 @@
     <fullName>Firearms_Instructor_Signature__c</fullName>
     <label>Firearms Instructor Signature</label>
     <length>131072</length>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Html</type>
     <visibleLines>25</visibleLines>

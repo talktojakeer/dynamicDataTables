@@ -6,6 +6,7 @@
     <referenceTo>Contact</referenceTo>
     <relationshipName>FIR_Forms</relationshipName>
     <required>false</required>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

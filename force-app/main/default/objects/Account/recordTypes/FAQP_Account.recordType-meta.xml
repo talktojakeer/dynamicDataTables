@@ -65,6 +65,17 @@
         </values>
     </picklistValues>
     <picklistValues>
+        <picklist>FAQP_Group_Type__c</picklist>
+        <values>
+            <fullName>FTU Group</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Recruit Class</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
         <picklist>FAQP_Recruit_model__c</picklist>
         <values>
             <fullName>File Upload</fullName>
@@ -72,6 +83,17 @@
         </values>
         <values>
             <fullName>Manual</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>FI_Status__c</picklist>
+        <values>
+            <fullName>Active</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>InActive</fullName>
             <default>false</default>
         </values>
     </picklistValues>

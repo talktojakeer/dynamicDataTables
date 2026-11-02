@@ -14,6 +14,21 @@
                 <default>false</default>
                 <label>Retired Peace Officer/Non-DPS</label>
             </value>
+            <value>
+                <fullName>Retired DPS Trooper</fullName>
+                <default>false</default>
+                <label>Retired DPS Trooper</label>
+            </value>
+            <value>
+                <fullName>Special Ranger</fullName>
+                <default>false</default>
+                <label>Special Ranger</label>
+            </value>
+            <value>
+                <fullName>Special Texas Ranger</fullName>
+                <default>false</default>
+                <label>Special Texas Ranger</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

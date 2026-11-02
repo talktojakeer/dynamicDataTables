@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Is_Approved_Absence__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Rule 1 - Checked when HR-175 returned with sick/vacation. Triggers 30-day retest tracking.</description>
+    <label>Is Approved Absence</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

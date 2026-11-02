@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Require_Return_Date_For_Absence</fullName>
+    <active>true</active>
+    <errorConditionFormula>AND(
+  Is_Approved_Absence__c = TRUE,
+  ISBLANK(Absence_Return_Date__c)
+)</errorConditionFormula>
+    <errorDisplayField>Absence_Return_Date__c</errorDisplayField>
+    <errorMessage>Absence Return Date is required when Is Approved Absence is checked.</errorMessage>
+</ValidationRule>

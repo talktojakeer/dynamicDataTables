@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Original_Supervisor__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Stores the ORIGINAL Reports_To value before swap. Critical for safe reversion.</description>
+    <label>Original Supervisor</label>
+    <referenceTo>Account</referenceTo>
+    <relationshipLabel>Delegation Originals</relationshipLabel>
+    <relationshipName>Delegation_Originals</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

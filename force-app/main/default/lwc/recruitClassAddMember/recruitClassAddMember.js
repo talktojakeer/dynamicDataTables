@@ -1,4 +1,4 @@
-import { LightningElement, track, api } from 'lwc';
+import { LightningElement, track, api, wire } from 'lwc';
 import searchEmployees             from '@salesforce/apex/recruitClassController.searchEmployees';
 import linkEmployeesToRecruitClass from '@salesforce/apex/recruitClassController.linkEmployeesToRecruitClass';
 import getRecruitClassAccess       from '@salesforce/apex/recruitClassController.getRecruitClassAccess';
@@ -20,28 +20,27 @@ export default class RecruitClassAddMember extends LightningElement {
     selectedIdSet = new Set();
     searchKey     = '';
 
-    // Gate the action by the user's record-level access to the Recruit Class.
-    connectedCallback() {
-        getRecruitClassAccess({ recruitClassId: this.recordId })
-            .then(result => {
-                this.hasEditAccess = result.hasEditAccess;
-                this.accountName   = result.name;
-                this.accessChecked = true;
-            })
-            .catch(error => {
-                this.accessChecked = true;
-                this.showToast('Error', this.reduceError(error), 'error');
-            });
-    }
-
-    // Show the read-only message only after the access check has returned.
-    get noEditAccess() {
-        return this.accessChecked && !this.hasEditAccess;
-    }
-
-    get noAccessMessage() {
-        const name = this.accountName ? ` "${this.accountName}"` : '';
-        return `You have read-only access to${name}. Edit access to this Account is required to add Recruit Class members.`;
+    @wire(getRecruitClassAccess, { recruitClassId: '$recordId' })
+    wiredAccess({ data, error }) {
+        if (!this.recordId) return;   // skip until recordId is available
+        if (data) {
+            this.accessChecked = true;
+            if (!data.hasEditAccess) {
+                const name = data.name ? ` "${data.name}"` : '';
+                this.showToast(
+                    'Read-only access',
+                    `You have read-only access to${name}. Edit access to this Account is required to add Recruit Class members.`,
+                    'error');
+                this.handleClose();
+                return;
+            }
+            this.hasEditAccess = true;
+            this.accountName   = data.name;
+        } else if (error) {
+            this.accessChecked = true;
+            this.showToast('Error', this.reduceError(error), 'error');
+            this.handleClose();
+        }
     }
 
     columns = [

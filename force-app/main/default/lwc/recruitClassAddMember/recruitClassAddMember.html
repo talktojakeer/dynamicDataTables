@@ -4,18 +4,6 @@
     
         <lightning-quick-action-panel header="Add Recruit Class Members">
 
-            <!-- Read-only users: show a message instead of the add form -->
-            <template if:true={noEditAccess}>
-                <div class="slds-p-around_medium">
-                    <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-bottom_small" role="alert">
-                        <lightning-icon icon-name="utility:warning" size="x-small"
-                            alternative-text="Warning" class="slds-m-right_x-small"></lightning-icon>
-                        <span>{noAccessMessage}</span>
-                    </div>
-                </div>
-            </template>
-
-            <!-- Edit users: the normal add-member form -->
             <template if:true={hasEditAccess}>
                 <div class="slds-p-around_medium">
                     <lightning-input

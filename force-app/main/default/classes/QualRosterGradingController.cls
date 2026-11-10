@@ -158,6 +158,21 @@ public with sharing class QualRosterGradingController {
             formToRosterInstr.put(f.Id, isRosterInstr);
         }
 
+        // Record-level edit access: if the user cannot edit every form in this
+        // roster, lock the screen read-only with the "no access" message.
+        Integer editableCount = 0;
+        for (UserRecordAccess ura : [
+            SELECT RecordId, HasEditAccess
+            FROM   UserRecordAccess
+            WHERE  UserId = :UserInfo.getUserId() AND RecordId IN :formIds
+        ]) {
+            if (ura.HasEditAccess) editableCount++;
+        }
+        if (editableCount < formIds.size()) {
+            wrapper.noEditAccess = true;
+            wrapper.isReadOnly   = true;
+        }
+
         List<FIR_Weapon_Qualification_Detail__c> details = [
             SELECT Id,
                    FIR_Qualification_Form__c,
@@ -798,6 +813,7 @@ public with sharing class QualRosterGradingController {
         @AuraEnabled public String              recruitClassName = '';
         @AuraEnabled public String              status           = '';
         @AuraEnabled public Boolean             isReadOnly       = false;
+        @AuraEnabled public Boolean             noEditAccess     = false;
         @AuraEnabled public List<WeaponSection> weaponSections   = new List<WeaponSection>();
     }
 

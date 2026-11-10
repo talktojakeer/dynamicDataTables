@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <flexiPageRegions>
+        <name>region1</name>
+        <itemInstances>
+            <componentInstance>
+                <componentName>flowruntime:flowComponent</componentName>
+                <componentInstanceProperties>
+                    <name>flowApiName</name>
+                    <value>Reassign_Supervisor</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>showLabel</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <identifier>flowruntime_flowComponent-1</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>flexipage:filterListCard</componentName>
+                <componentInstanceProperties>
+                    <name>entityName</name>
+                    <value>Account</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>filterName</name>
+                    <value>All_Person_Accounts</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>pageSize</name>
+                    <value>10</value>
+                </componentInstanceProperties>
+                <identifier>flexipage_filterListCard-1</identifier>
+            </componentInstance>
+        </itemInstances>
+        <type>Region</type>
+    </flexiPageRegions>
+    <masterLabel>Supervisor Reassignment Home</masterLabel>
+    <template>
+        <name>flexipage:defaultAppHomeTemplate</name>
+    </template>
+    <type>AppPage</type>
+</FlexiPage>

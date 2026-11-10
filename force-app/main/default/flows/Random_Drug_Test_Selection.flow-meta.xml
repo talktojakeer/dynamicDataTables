@@ -17,7 +17,7 @@
         <inputParameters>
             <name>numberOfEmployees</name>
             <value>
-                <elementReference>Number_To_Select</elementReference>
+                <elementReference>NumberToSelectInt</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -71,6 +71,12 @@
     </decisions>
     <description>Screen flow for Random Drug Test (HR.375) selection. UI here; selection logic in RandomDrugTestSelectionAction / RandomDrugTestSelectionService.</description>
     <environments>Default</environments>
+    <formulas>
+        <name>NumberToSelectInt</name>
+        <dataType>Number</dataType>
+        <expression>VALUE({!Number_To_Select})</expression>
+        <scale>0</scale>
+    </formulas>
     <interviewLabel>Random Drug Test Selection {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Random Drug Test Selection</label>
     <processMetadataValues>
@@ -113,19 +119,18 @@
         </connector>
         <fields>
             <name>Intro_Text</name>
-            <fieldText>&lt;p&gt;&lt;b style=&quot;font-size: 14px;&quot;&gt;Random Drug Testing&lt;/b&gt;&lt;/p&gt;&lt;p&gt;Employees are randomly selected for drug testing based on job code eligibility.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Define Random Selection&lt;/b&gt;&lt;/p&gt;</fieldText>
+            <fieldText>&lt;p&gt;Randomly select employees for drug testing. Selection is based on job code eligibility.&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
         </fields>
         <fields>
             <name>Number_To_Select</name>
-            <dataType>Number</dataType>
-            <fieldText>Enter No. of Employees to Select</fieldText>
+            <dataType>String</dataType>
+            <fieldText>No. of Employees to Select</fieldText>
             <fieldType>InputField</fieldType>
-            <isRequired>true</isRequired>
-            <scale>0</scale>
+            <isRequired>false</isRequired>
             <validationRule>
-                <errorMessage>Enter a whole number between 1 and 1000.</errorMessage>
-                <formulaExpression>AND({!Number_To_Select} &gt;= 1, {!Number_To_Select} &lt;= 1000)</formulaExpression>
+                <errorMessage>Please enter a whole number from 1 to 1000.</errorMessage>
+                <formulaExpression>AND(NOT(ISBLANK({!Number_To_Select})), REGEX({!Number_To_Select}, &quot;^([1-9][0-9]{0,2}|1000)$&quot;))</formulaExpression>
             </validationRule>
         </fields>
         <fields>
@@ -134,7 +139,7 @@
             <defaultValue>
                 <elementReference>$Flow.CurrentDate</elementReference>
             </defaultValue>
-            <fieldText>Selection Date</fieldText>
+            <fieldText>Date</fieldText>
             <fieldType>InputField</fieldType>
             <isRequired>true</isRequired>
         </fields>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Availability_Supervisor_Email__c</fullName>
+    <label>Availability Sent To</label>
+    <description>Supervisor email the request was sent to. Replies are only accepted from this address.</description>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Email</type>
+</CustomField>

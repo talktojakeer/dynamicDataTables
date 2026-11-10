@@ -91,6 +91,9 @@ export default class QualRosterGrading extends LightningElement {
         return this.hasGradingData && !this.isReadOnly;
     }
     get statusBanner() {
+        if (this.gradingData && this.gradingData.noEditAccess) {
+            return "You Don't have access to edit Qual Roster";
+        }
         if (!this.isReadOnly) return '';
         const instr = (this.gradingData.instructorName || 'the Firearms Instructor');
         const date  = (this.gradingData.testDate || '');

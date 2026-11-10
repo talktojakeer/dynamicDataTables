@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Reassignment_Temporary_Supervisor__c</fullName>
+    <description>Snapshot of who PersonReportsToId was set to by this reassignment. The revert batch only restores PersonReportsToId if it still equals this value - if something else changed it during the window, revert leaves it alone.</description>
+    <externalId>false</externalId>
+    <label>Reassignment Temporary Supervisor</label>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <referenceTo>Account</referenceTo>
+    <relationshipLabel>Reassignments as Temporary Supervisor</relationshipLabel>
+    <relationshipName>Reassignments_As_Temporary</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

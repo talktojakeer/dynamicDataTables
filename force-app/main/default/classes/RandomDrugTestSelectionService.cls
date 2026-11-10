@@ -1,28 +1,13 @@
-/**
- * Backend logic for Random Drug Test selection (HR.375).
- *
- * Pool rules
- *  - Person Account employees only
- *  - Job Code must be flagged random-eligible
- *  - Rule 2: employees flagged Extended Leave are excluded
- *  - Rule 3: employees whose last Random test completed normally are held out for 6 months
- *  - Employees with an open Random case (incl. approved-absence retests, Rule 1) are excluded,
- *    so nobody is selected twice while a test is still pending
- *
- * Selection is a Fisher-Yates shuffle using Crypto.getRandomInteger() for an audit-defensible draw.
- */
+
 public with sharing class RandomDrugTestSelectionService {
 
     // ===== ADJUST THESE TO MATCH THE ORG METADATA =====
-    @TestVisible static final String CASE_RT_DEV_NAME   = 'Drug_Test';
-    @TestVisible static final String TEST_TYPE_RANDOM   = 'Random';
-    @TestVisible static final String STATUS_SCHEDULED   = 'Scheduled';
-    @TestVisible static final String STATUS_COMPLETED   = 'Test completed';
-    @TestVisible static final String DEFAULT_PRIORITY   = 'Medium';
-    static final Integer HOLD_MONTHS   = 6;      // Rule 3
+    @TestVisible static final String CASE_RT_DEV_NAME = 'MSA_Drug_Test';
+    @TestVisible static final String TEST_TYPE_RANDOM = 'Random';
+    @TestVisible static final String STATUS_NEW        = 'New';
+    @TestVisible static final String STATUS_COMPLETED  = 'Completed';
+    @TestVisible static final String DEFAULT_PRIORITY  = 'Medium';
     static final Integer MAX_SELECTION = 1000;   // keep in sync with the flow validation rule
-    // Custom fields assumed: Case.Drug_Test_Type__c, Case.Selection_Date__c,
-    //   Account.Extended_Leave__c, Account.Job_Code__c (lookup), Job_Code__c.Random_Eligible__c
     // ===================================================
 
     public class SelectionResult {
@@ -51,7 +36,12 @@ public with sharing class RandomDrugTestSelectionService {
         }
         Id rtId = rtInfo.getRecordTypeId();
 
-        List<Account> pool = getEligiblePool(rtId, selectionDate);
+        Set<String> eligibleJobCodes = getEligibleJobCodes();
+        if (eligibleJobCodes.isEmpty()) {
+            return fail(res, 'No active, random-eligible job codes are configured.');
+        }
+
+        List<Account> pool = getEligiblePool(eligibleJobCodes);
         res.eligibleCount = pool.size();
         if (pool.isEmpty()) {
             return fail(res, 'No eligible employees are available for random selection.');
@@ -66,7 +56,7 @@ public with sharing class RandomDrugTestSelectionService {
                 AccountId          = a.Id,
                 ContactId          = a.PersonContactId,
                 Drug_Test_Type__c  = TEST_TYPE_RANDOM,
-                Status             = STATUS_SCHEDULED,
+                Status             = STATUS_NEW,
                 Priority           = DEFAULT_PRIORITY,
                 Selection_Date__c  = selectionDate,
                 Subject            = 'Random Drug Test - ' + a.Name
@@ -91,24 +81,31 @@ public with sharing class RandomDrugTestSelectionService {
     }
 
     @TestVisible
-    private static List<Account> getEligiblePool(Id rtId, Date selectionDate) {
-        Date holdStart = selectionDate.addMonths(-HOLD_MONTHS);
+    private static Set<String> getEligibleJobCodes() {
+        Set<String> codes = new Set<String>();
+        for (Job_Code__c jc : [
+            SELECT Job_Code__c
+            FROM Job_Code__c
+            WHERE Active__c = true
+              AND Eligible_For_Random_Testing__c = true
+              AND Job_Code__c != null
+        ]) {
+            codes.add(jc.Job_Code__c);
+        }
+        return codes;
+    }
+
+    @TestVisible
+    private static List<Account> getEligiblePool(Set<String> eligibleJobCodes) {
         return [
             SELECT Id, Name, PersonContactId
             FROM Account
             WHERE IsPersonAccount = true
-              AND Extended_Leave__c = false
-              AND Job_Code__r.Random_Eligible__c = true
-              AND Id NOT IN (
-                    SELECT AccountId FROM Case
-                    WHERE RecordTypeId = :rtId
-                      AND Drug_Test_Type__c = :TEST_TYPE_RANDOM
-                      AND AccountId != null
-                      AND (
-                            IsClosed = false
-                            OR (Status = :STATUS_COMPLETED AND Selection_Date__c > :holdStart)
-                      )
-              )
+              AND Job_Code__c IN :eligibleJobCodes
+              AND Exclude_From_Selection__c = false
+              AND On_Leave__c = false
+              AND Has_Open_Absence_Case__c = false
+              AND (Pool_Hold_Until__c = null OR Pool_Hold_Until__c < TODAY)
             LIMIT 50000
         ];
     }

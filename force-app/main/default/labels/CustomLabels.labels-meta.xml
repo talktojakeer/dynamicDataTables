@@ -6,7 +6,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>HR-74 CC - TOD Administration</shortDescription>
-        <value>talktojakeer@gmail.com</value>
+        <value>fir.tod@mailinator.com</value>
     </labels>
     <labels>
         <fullName>FIR_CC_HR_Service_Team</fullName>
@@ -14,8 +14,8 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>HR-74 CC - HR Service Team (comma/semicolon separated)</shortDescription>
-        <value>talktojakeer@gmail.com;
-jakeerHussain515@gmail.com</value>
+        <value>fir.hr1@mailinator.com;
+fir.hr2@mailinator.com</value>
     </labels>
     <labels>
         <fullName>FIR_CC_Special_Rangers_Program</fullName>
@@ -23,6 +23,27 @@ jakeerHussain515@gmail.com</value>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>HR-74 CC - Special Rangers Program (Special Ranger only)</shortDescription>
-        <value>talktojakeer@gmail.com</value>
+        <value>fir.rangersprogram@mailinator.com</value>
+    </labels>
+    <labels>
+        <fullName>Availability_Reply_To_Address</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Availability reply-to address</shortDescription>
+        <value>not-configured</value>
+    </labels>
+    <labels>
+        <fullName>Availability_Request_Subject</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Availability email subject</shortDescription>
+        <value>Employee availability request - action required</value>
+    </labels>
+    <labels>
+        <fullName>Availability_Request_Intro</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Availability email intro</shortDescription>
+        <value>Please confirm whether the following employees who report to you will be available during the upcoming scheduled period</value>
     </labels>
 </CustomLabels>

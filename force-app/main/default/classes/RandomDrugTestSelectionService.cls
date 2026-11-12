@@ -77,6 +77,17 @@ public with sharing class RandomDrugTestSelectionService {
         res.message = (cases.size() < requested)
             ? 'Only ' + cases.size() + ' eligible employee(s) were available, so all of them were selected (requested ' + requested + ').'
             : cases.size() + ' employee(s) randomly selected.';
+
+                // Ask each supervisor to confirm availability. An email problem must never undo the selection.
+        try {
+            AvailabilityRequestService.RequestResult ar = AvailabilityRequestService.sendRequests(res.caseIds);
+            res.message += ' Availability requests sent to ' + ar.supervisorsEmailed + ' supervisor(s)';
+            res.message += ar.casesSkipped > 0
+                ? '; ' + ar.casesSkipped + ' employee(s) skipped (no supervisor/email or send failed).'
+                : '.';
+        } catch (Exception e) {
+            res.message += ' Availability emails could not be sent: ' + e.getMessage();
+        }
         return res;
     }
 
